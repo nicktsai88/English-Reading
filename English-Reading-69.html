@@ -87,28 +87,38 @@
             transform: scale(0.95);
         }
 
-        /* Tooltip Style */
+        /* Tooltip Style - Enhanced for interactivity */
         .vocab-tooltip {
             visibility: hidden;
             width: max-content;
-            min-width: 120px;
+            min-width: 180px;
+            max-width: 250px;
             background-color: #1f2937;
             color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 8px 12px;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
             position: absolute;
             z-index: 100;
-            bottom: 140%; /* Position above */
+            bottom: 140%; 
             left: 50%;
             transform: translateX(-50%);
             opacity: 0;
             transition: opacity 0.2s, transform 0.2s;
             font-size: 0.9rem;
-            pointer-events: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            pointer-events: none; /* Default none */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             line-height: 1.4;
         }
+        
+        /* Enable pointer events when hovered so user can click the heart */
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
         .vocab-tooltip::after {
             content: "";
             position: absolute;
@@ -119,22 +129,19 @@
             border-style: solid;
             border-color: #1f2937 transparent transparent transparent;
         }
-        .vocab-word:hover .vocab-tooltip {
-            visibility: visible;
-            opacity: 1;
-            transform: translateX(-50%) translateY(-5px);
-        }
         
         /* POS Tag Style in Tooltip */
         .pos-tag {
             font-size: 0.75em;
             text-transform: uppercase;
             background-color: #4f46e5;
-            padding: 1px 4px;
-            border-radius: 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
             margin-right: 6px;
             font-weight: bold;
             color: #e0e7ff;
+            display: inline-block;
+            margin-bottom: 4px;
         }
 
         /* Translation Text Style */
@@ -181,13 +188,63 @@
             user-select: none;
             pointer-events: none;
         }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            /* Hide non-print elements */
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-12">
 
     <!-- Navbar / Audio Player Sticky Header -->
-    <div class="sticky top-0 z-50 bg-indigo-700 text-white shadow-xl transition-all duration-300" id="audio-player-bar">
-        <!-- Changed max-w-4xl to max-w-6xl for wider navbar alignment -->
+    <div class="sticky top-0 z-50 bg-indigo-700 text-white shadow-xl transition-all duration-300 no-print" id="audio-player-bar">
         <div class="max-w-6xl mx-auto px-4 py-3">
             <div class="flex flex-col md:flex-row items-center justify-between gap-3">
                 
@@ -244,14 +301,13 @@
             </div>
         </div>
         <!-- Progress Bar -->
-        <div class="w-full bg-indigo-900 h-1.5">
+        <div class="w-full bg-indigo-900 h-1.5 no-print">
             <div id="progress-bar" class="h-full bg-amber-400 w-0 transition-all duration-300"></div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <!-- Changed max-w-3xl to max-w-6xl to widen the content area -->
-    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-8">
+    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-8 no-print">
         
         <!-- Image Card -->
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
@@ -275,12 +331,41 @@
             </div>
         </div>
 
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="openVocabModal()" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-800">完整單字表</h3>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </button>
+
+            <button onclick="openStudyModal()" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-800">我的學習清單</h3>
+                        <p class="text-sm text-gray-500" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </button>
+        </div>
+
         <!-- Text Content Area -->
         <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200 relative">
             <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b">The Great Wall: A Dragon of Stone</h2>
             
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 text-sm text-blue-700">
-                <i class="fas fa-mouse-pointer mr-1"></i> <strong>Tip:</strong> 點擊單字可聽發音並查看解釋 (Click words to hear pronunciation)。
+                <i class="fas fa-mouse-pointer mr-1"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
             </div>
 
             <!-- Hidden Message Overlay -->
@@ -295,8 +380,7 @@
                 </button>
             </div>
 
-            <!-- Article Container (Sentences will be injected here via JS for control) -->
-            <!-- Modified classes: text-xl md:text-2xl (larger text), text-gray-800 (darker contrast), leading-loose (more line height), tracking-wide -->
+            <!-- Article Container -->
             <div id="article-display" class="prose max-w-none text-gray-800 text-xl md:text-2xl leading-loose tracking-wide space-y-6">
                 <!-- Content injected by JS -->
             </div>
@@ -308,31 +392,144 @@
                 <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
                     <i class="fas fa-pen"></i>
                 </span>
-                Comprehension Quiz
+                Comprehension Quiz (15 Questions)
             </h3>
             
             <form id="quizForm" class="space-y-8">
                 <!-- Questions will be generated here -->
             </form>
 
-            <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center">
+            <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-4">
                 <button type="button" onclick="showFinalScore()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95">
                     Show Final Score
                 </button>
                 
-                <div id="score-card" class="hidden mt-6 text-center w-full bg-indigo-50 p-6 rounded-xl border border-indigo-100 animate-fade-in">
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-indigo-50 p-6 rounded-xl border border-indigo-100 animate-fade-in relative">
                     <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
                     <div class="text-5xl font-extrabold text-indigo-600 my-2" id="final-score">0</div>
-                    <p id="feedback-msg" class="text-gray-700 font-medium"></p>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-4"></p>
+                    
+                    <button id="mistake-review-btn" onclick="openMistakeModal()" class="hidden w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-bold shadow transition flex items-center justify-center gap-2 mx-auto">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <button onclick="closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="vocab-table-container"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="printList('vocab')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="closeModal('vocab-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="study-table-container"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="printList('study')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="closeModal('study-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal (New) -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-red-800"><i class="fas fa-times-circle text-red-600 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="mistake-table-container"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="printList('mistakes')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="closeModal('mistake-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
     <script>
         // --- Data & State ---
         
-        // Structured Article Data with Translations
+        // Extended Vocabulary Dictionary with Examples
+        const vocabulary = {
+            "structures": { pos: "n.", trans: "建築物；結構", example: "The Eiffel Tower is a famous structure in Paris." },
+            "stretching": { pos: "v.", trans: "延伸；伸展", example: "The road stretches for miles through the desert." },
+            "landscape": { pos: "n.", trans: "風景；地貌", example: "The mountain landscape is breathtaking in winter." },
+            "myth": { pos: "n.", trans: "迷思；神話", example: "It is a myth that camels store water in their humps." },
+            "visible": { pos: "adj.", trans: "可見的", example: "The stars are visible only at night." },
+            "naked": { pos: "adj.", trans: "裸露的 (naked eye: 肉眼)", example: "Bacteria are too small to be seen with the naked eye." },
+            "astronauts": { pos: "n.", trans: "太空人", example: "Astronauts float in space because there is no gravity." },
+            "feat": { pos: "n.", trans: "壯舉；功績", example: "Climbing Mount Everest is an incredible feat." },
+            "engineering": { pos: "n.", trans: "工程", example: "Software engineering requires logical thinking." },
+            "constructed": { pos: "v.", trans: "建造", example: "The bridge was constructed in 1990." },
+            "centuries": { pos: "n.", trans: "世紀", example: "The castle has stood here for five centuries." },
+            "warring": { pos: "adj.", trans: "交戰的", example: "The warring countries finally signed a peace treaty." },
+            "divided": { pos: "v.", trans: "分裂；分開", example: "The cake was divided into eight equal slices." },
+            "separate": { pos: "adj.", trans: "分開的；獨立的", example: "They sleep in separate rooms." },
+            "defend": { pos: "v.", trans: "防禦", example: "Soldiers defend their country from attacks." },
+            "borders": { pos: "n.", trans: "邊界", example: "We crossed the border between France and Spain." },
+            "unified": { pos: "adj.", trans: "統一的", example: "They hope to see a unified Korea one day." },
+            "empire": { pos: "n.", trans: "帝國", example: "The Roman Empire was very powerful." },
+            "nomadic": { pos: "adj.", trans: "遊牧的", example: "Nomadic tribes move from place to place." },
+            "tribes": { pos: "n.", trans: "部落", example: "There are many indigenous tribes in the Amazon." },
+            "general": { pos: "n.", trans: "將軍", example: "The general led his army to victory." },
+            "massive": { pos: "adj.", trans: "巨大的", example: "The elephant is a massive animal." },
+            "peasants": { pos: "n.", trans: "農民", example: "In the past, peasants worked on the land for lords." },
+            "harsh": { pos: "adj.", trans: "惡劣的；嚴酷的", example: "The harsh winter killed many plants." },
+            "cemetery": { pos: "n.", trans: "墓地", example: "He visited his grandfather's grave in the cemetery." },
+            "dynasty": { pos: "n.", trans: "朝代", example: "The Ming Dynasty is famous for its porcelain." },
+            "rammed": { pos: "adj.", trans: "夯實的 (rammed earth: 夯土)", example: "Rammed earth walls are very sustainable." },
+            "bricks": { pos: "n.", trans: "磚塊", example: "The house is built of red bricks." },
+            "durable": { pos: "adj.", trans: "耐用的", example: "Denim is a durable fabric." },
+            "watchtowers": { pos: "n.", trans: "瞭望塔；烽火台", example: "Guards stood in the watchtowers to spot enemies." },
+            "communication": { pos: "n.", trans: "通訊", example: "Good communication is key to a happy marriage." },
+            "signals": { pos: "n.", trans: "信號", example: "Red lights are signals to stop." },
+            "symbol": { pos: "n.", trans: "象徵", example: "The dove is a symbol of peace." },
+            "perseverance": { pos: "n.", trans: "毅力", example: "Success requires hard work and perseverance." },
+            "crumbling": { pos: "v.", trans: "崩塌；破碎", example: "The old cookie was crumbling in my hand." },
+            "erosion": { pos: "n.", trans: "侵蝕", example: "Soil erosion is a serious environmental problem." },
+            "heritage": { pos: "n.", trans: "遺產", example: "We should preserve our cultural heritage." },
+            "immense": { pos: "adj.", trans: "巨大的", example: "He felt immense relief when he passed the exam." },
+            "mortar": { pos: "n.", trans: "砂漿", example: "Bricks are held together by mortar." },
+            "bind": { pos: "v.", trans: "結合；黏合", example: "Glue binds the two pieces of paper together." },
+            "legend": { pos: "n.", trans: "傳說", example: "The legend of King Arthur is very famous." },
+            "weeping": { pos: "n./v.", trans: "哭泣", example: "She was weeping with joy at the wedding." },
+            "collapse": { pos: "v.", trans: "倒塌", example: "The roof collapsed under the weight of the snow." },
+            "merchants": { pos: "n.", trans: "商人", example: "Merchants traveled the Silk Road to trade spices." },
+            "routes": { pos: "n.", trans: "路線", example: "We planned our hiking routes on the map." }
+        };
+
+        // Expanded Article Data (B1-B2 Level)
         const articleData = [
             { en: "The Great Wall of China is one of the most famous structures in the world.", zh: "中國萬里長城是世界上最著名的建築之一。" },
             { en: "Stretching thousands of kilometers across mountains and deserts, it looks like a giant stone dragon winding through the landscape.", zh: "它綿延數千公里，穿越山脈和沙漠，看起來就像一條巨石龍蜿蜒在風景之中。" },
@@ -355,9 +552,15 @@
             { en: "Most of the Great Wall that tourists see today was built much later, during the Ming Dynasty (1368-1644).", zh: "遊客今天看到的大部分長城是在更晚的明朝（1368-1644）建造的。" },
             { en: "Unlike the earlier walls which were made of rammed earth and wood, the Ming wall was built with bricks and stone.", zh: "與早期用夯土和木頭建造的城牆不同，明長城是用磚石建造的。" },
             { en: "This made it much stronger and more durable.", zh: "這使得它更加堅固耐用。" },
+            { en: "Interestingly, ancient builders used a special mortar made with sticky rice soup to bind the bricks together.", zh: "有趣的是，古代建築工使用了一種用糯米湯製成的特殊砂漿來黏合磚塊。" },
+            { en: "This organic mixture was incredibly strong and resistant to earthquakes.", zh: "這種有機混合物非常堅固，甚至能抵抗地震。" },
+
             { en: "The Ming rulers added watchtowers, which served as lookout points and shelters for soldiers.", zh: "明朝統治者增加了烽火台，作為瞭望點和士兵的避難所。" },
             { en: "They also used a clever communication system: smoke signals by day and fire by night to send messages quickly along the wall.", zh: "他們還使用了一套聰明的通訊系統：白天用煙霧信號，晚上用火光，沿著城牆快速傳遞訊息。" },
-            
+            { en: "Beyond defense, the wall also protected merchants traveling along the Silk Road, securing trade routes.", zh: "除了防禦之外，長城還保護了沿絲路旅行的商人，確保了貿易路線的安全。" },
+            { en: "However, not all stories about the wall are about construction and war; some are tragic legends.", zh: "然而，並非所有關於長城的故事都關於建造和戰爭；有些是悲劇傳說。" },
+            { en: "One famous legend tells of Meng Jiangnu, whose bitter weeping caused a section of the wall to collapse, revealing her husband's bones.", zh: "一個著名的傳說講述了孟姜女，她的痛哭導致一段城牆倒塌，露出了她丈夫的屍骨。" },
+
             { en: "Today, the Great Wall is no longer used for defense.", zh: "如今，萬里長城已不再用於防禦。" },
             { en: "Instead, it stands as a symbol of Chinese history and the perseverance of its people.", zh: "取而代之的是，它作為中國歷史和人民毅力的象徵而矗立。" },
             { en: "While some parts are crumbling and disappearing due to erosion and human activity, other sections are well-preserved.", zh: "雖然有些部分因侵蝕和人類活動而崩塌消失，但其他部分保存完好。" },
@@ -365,60 +568,24 @@
             { en: "Walking on the wall today is like walking through history itself.", zh: "今天走在長城上，就像走在歷史之中。" }
         ];
 
+        // Expanded Quiz Data (15 Questions)
         const quizData = [
-            { id: 'q1', q: "1. What is a common myth about the Great Wall mentioned in the text?", options: {A: "It was built by aliens.", B: "It is visible from space with the naked eye.", C: "It never ends.", D: "It is made of gold."}, ans: 'B', expl: "文章提到一個常見的迷思是長城可以從太空用肉眼看到 (visible from space with the naked eye)，但這不是真的。" },
-            { id: 'q2', q: "2. When did the story of the wall's construction begin?", options: {A: "During the Ming Dynasty.", B: "In 2022.", C: "During the Warring States Period.", D: "After the Xiongnu attacked."}, ans: 'C', expl: "第二段提到故事始於兩千多年前的戰國時期 (Warring States Period)。" },
+            { id: 'q1', q: "1. What is a common myth about the Great Wall mentioned in the text?", options: {A: "It was built by aliens.", B: "It is visible from space with the naked eye.", C: "It never ends.", D: "It is made of gold."}, ans: 'B', expl: "文章提到一個常見的迷思是長城可以從太空用肉眼看到，但這不是真的。" },
+            { id: 'q2', q: "2. When did the story of the wall's construction begin?", options: {A: "During the Ming Dynasty.", B: "In 2022.", C: "During the Warring States Period.", D: "After the Xiongnu attacked."}, ans: 'C', expl: "文章提到故事始於兩千多年前的戰國時期 (Warring States Period)。" },
             { id: 'q3', q: "3. Who was the first emperor to connect the walls?", options: {A: "Meng Tian.", B: "Confucius.", C: "Qin Shi Huang.", D: "The Ming Emperor."}, ans: 'C', expl: "文中提到統一中國的首位皇帝秦始皇 (Qin Shi Huang) 下令連接城牆。" },
-            { id: 'q4', q: "4. What was the main purpose of the Great Wall?", options: {A: "To mark the border for trade.", B: "To defend against northern nomadic tribes.", C: "To provide jobs for peasants.", D: "To look beautiful."}, ans: 'B', expl: "主要目的是為了防禦來自北方的遊牧部落 (defend... from the north)，如匈奴。" },
-            { id: 'q5', q: "5. Why is the wall sometimes called 'the longest cemetery on earth'?", options: {A: "It was built near a graveyard.", B: "Many workers died during its construction.", C: "It looks like a tomb.", D: "It is very quiet there."}, ans: 'B', expl: "因為建造條件惡劣，許多工人在過程中死亡 (many died during construction)。" },
-            { id: 'q6', q: "6. Which dynasty built the sections of the wall most tourists see today?", options: {A: "The Qin Dynasty.", B: "The Han Dynasty.", C: "The Ming Dynasty.", D: "The Qing Dynasty."}, ans: 'C', expl: "第四段開頭提到遊客今天看到的大部分長城是明朝 (Ming Dynasty) 建造的。" },
+            { id: 'q4', q: "4. What was the *main* purpose of the Great Wall originally?", options: {A: "To mark the border for trade.", B: "To defend against northern nomadic tribes.", C: "To provide jobs for peasants.", D: "To look beautiful."}, ans: 'B', expl: "主要目的是為了防禦來自北方的遊牧部落 (defend... from the north)，如匈奴。" },
+            { id: 'q5', q: "5. Why is the wall sometimes called 'the longest cemetery on earth'?", options: {A: "It was built near a graveyard.", B: "Many workers died during its construction.", C: "It looks like a tomb.", D: "It is very quiet there."}, ans: 'B', expl: "因為建造條件惡劣，許多工人在過程中死亡。" },
+            { id: 'q6', q: "6. Which dynasty built the sections of the wall most tourists see today?", options: {A: "The Qin Dynasty.", B: "The Han Dynasty.", C: "The Ming Dynasty.", D: "The Qing Dynasty."}, ans: 'C', expl: "文章提到遊客今天看到的大部分長城是明朝 (Ming Dynasty) 建造的。" },
             { id: 'q7', q: "7. How was the Ming wall different from earlier walls?", options: {A: "It was shorter.", B: "It was made of bricks and stone.", C: "It was made of wood only.", D: "It was invisible."}, ans: 'B', expl: "明長城是用磚石 (bricks and stone) 建造的，而早期是用夯土和木頭。" },
-            { id: 'q8', q: "8. How did soldiers communicate along the wall?", options: {A: "By running very fast.", B: "Using pigeons.", C: "Using smoke signals and fire.", D: "Shouting loudly."}, ans: 'C', expl: "他們使用白天煙霧 (smoke signals)、晚上火光 (fire) 的通訊系統。" },
-            { id: 'q9', q: "9. What is the current status of the Great Wall?", options: {A: "It is used for war.", B: "It is completely destroyed.", C: "It is a UNESCO World Heritage site.", D: "It is closed to everyone."}, ans: 'C', expl: "最後一段提到它是聯合國教科文組織的世界遺產 (UNESCO World Heritage site)。" },
-            { id: 'q10', q: "10. What does the Great Wall symbolize today?", options: {A: "Chinese history and perseverance.", B: "Modern technology.", C: "Space exploration.", D: "Economic trade."}, ans: 'A', expl: "它象徵著中國歷史和人民的毅力 (symbol of Chinese history and the perseverance)。" }
+            { id: 'q8', q: "8. What special ingredient was used in the mortar to make it strong?", options: {A: "Egg whites.", B: "Sticky rice soup.", C: "Honey.", D: "Clay."}, ans: 'B', expl: "文章提到古代建築工使用糯米湯 (sticky rice soup) 製成的特殊砂漿。" },
+            { id: 'q9', q: "9. How did soldiers communicate quickly along the wall?", options: {A: "By running very fast.", B: "Using pigeons.", C: "Using smoke signals and fire.", D: "Shouting loudly."}, ans: 'C', expl: "他們使用白天煙霧 (smoke signals)、晚上火光 (fire) 的通訊系統。" },
+            { id: 'q10', q: "10. Besides defense, what else did the wall protect?", options: {A: "The ocean.", B: "Merchants on the Silk Road.", C: "Wild animals.", D: "The sky."}, ans: 'B', expl: "長城也保護了沿絲路 (Silk Road) 旅行的商人。" },
+            { id: 'q11', q: "11. According to the legend, why did a section of the wall collapse?", options: {A: "An earthquake hit.", B: "It was built poorly.", C: "Meng Jiangnu's bitter weeping.", D: "Enemies attacked it."}, ans: 'C', expl: "傳說孟姜女的痛哭 (bitter weeping) 導致一段城牆倒塌。" },
+            { id: 'q12', q: "12. Who were the main workers building the Qin wall?", options: {A: "Robots.", B: "Soldiers, peasants, and prisoners.", C: "Foreign experts.", D: "Only volunteers."}, ans: 'B', expl: "文章提到工人包括士兵、農民和囚犯 (soldiers, peasants, and prisoners)。" },
+            { id: 'q13', q: "13. What is damaging the Great Wall today?", options: {A: "Space debris.", B: "Erosion and human activity.", C: "Too much sticky rice.", D: "Nothing, it is perfect."}, ans: 'B', expl: "部分長城因侵蝕和人類活動 (erosion and human activity) 而崩塌。" },
+            { id: 'q14', q: "14. What is the current status of the Great Wall?", options: {A: "It is used for war.", B: "It is completely destroyed.", C: "It is a UNESCO World Heritage site.", D: "It is closed to everyone."}, ans: 'C', expl: "它是聯合國教科文組織的世界遺產 (UNESCO World Heritage site)。" },
+            { id: 'q15', q: "15. What does the Great Wall symbolize today?", options: {A: "Chinese history and perseverance.", B: "Modern technology.", C: "Space exploration.", D: "Economic trade."}, ans: 'A', expl: "它象徵著中國歷史和人民的毅力 (perseverance)。" }
         ];
-
-        // Extended Vocabulary Dictionary with Part of Speech (POS)
-        const vocabulary = {
-            "structures": { pos: "n.", trans: "建築物；結構" },
-            "stretching": { pos: "v.", trans: "延伸" },
-            "landscape": { pos: "n.", trans: "風景；地貌" },
-            "myth": { pos: "n.", trans: "迷思；神話" },
-            "visible": { pos: "adj.", trans: "可見的" },
-            "naked": { pos: "adj.", trans: "裸露的 (naked eye: 肉眼)" },
-            "astronauts": { pos: "n.", trans: "太空人" },
-            "feat": { pos: "n.", trans: "壯舉；功績" },
-            "engineering": { pos: "n.", trans: "工程" },
-            "constructed": { pos: "v.", trans: "建造" },
-            "centuries": { pos: "n.", trans: "世紀" },
-            "warring": { pos: "adj.", trans: "交戰的" },
-            "divided": { pos: "v.", trans: "分裂；分開" },
-            "separate": { pos: "adj.", trans: "分開的；獨立的" },
-            "defend": { pos: "v.", trans: "防禦" },
-            "borders": { pos: "n.", trans: "邊界" },
-            "unified": { pos: "adj.", trans: "統一的" },
-            "empire": { pos: "n.", trans: "帝國" },
-            "nomadic": { pos: "adj.", trans: "遊牧的" },
-            "tribes": { pos: "n.", trans: "部落" },
-            "general": { pos: "n.", trans: "將軍" },
-            "massive": { pos: "adj.", trans: "巨大的" },
-            "peasants": { pos: "n.", trans: "農民" },
-            "harsh": { pos: "adj.", trans: "惡劣的；嚴酷的" },
-            "cemetery": { pos: "n.", trans: "墓地" },
-            "dynasty": { pos: "n.", trans: "朝代" },
-            "rammed": { pos: "adj.", trans: "夯實的 (rammed earth: 夯土)" },
-            "bricks": { pos: "n.", trans: "磚塊" },
-            "durable": { pos: "adj.", trans: "耐用的" },
-            "watchtowers": { pos: "n.", trans: "瞭望塔；烽火台" },
-            "communication": { pos: "n.", trans: "通訊" },
-            "signals": { pos: "n.", trans: "信號" },
-            "symbol": { pos: "n.", trans: "象徵" },
-            "perseverance": { pos: "n.", trans: "毅力" },
-            "crumbling": { pos: "v.", trans: "崩塌；破碎" },
-            "erosion": { pos: "n.", trans: "侵蝕" },
-            "heritage": { pos: "n.", trans: "遺產" },
-            "immense": { pos: "adj.", trans: "巨大的" }
-        };
 
         let synth = window.speechSynthesis;
         let sentences = [];
@@ -427,9 +594,10 @@
         let textHidden = false;
         let showTranslation = false;
         let selectedVoice = null;
-        let userScore = 0; 
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; // New: Track wrong answers
         
-        // --- Web Audio API Context ---
         let audioCtx;
 
         function initAudioContext() {
@@ -441,7 +609,7 @@
             }
         }
         
-        // --- Synthesized Sound Effects (No External Files Needed) ---
+        // ... (Sound functions unchanged) ...
         function playCorrectSound() {
             initAudioContext();
             const osc = audioCtx.createOscillator();
@@ -472,17 +640,16 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // --- Initialization ---
         window.onload = function() {
             renderArticle();
             renderQuiz();
             initVoice();
         };
 
-        // --- 1. Smart Voice Engine (Neural Voice Engine) ---
+        // ... (initVoice, renderArticle, processWords, speakAndShowDef, toggleFavorite, updateHeartIcon, openVocabModal, openStudyModal, closeModal, generateTableHTML, printList - UNCHANGED logic but vocabulary updated above) ...
+
         function initVoice() {
             const voiceStatus = document.getElementById('voice-indicator');
-            
             const loadVoices = () => {
                 const voices = synth.getVoices();
                 if (voices.length > 0) {
@@ -493,13 +660,7 @@
                                     voices.find(v => v.lang === 'en-US');
                     
                     if (selectedVoice) {
-                        let displayName = selectedVoice.name
-                            .replace('Microsoft', '')
-                            .replace('Google', '')
-                            .replace('English', '')
-                            .replace(' United States', '')
-                            .replace('(Natural) - Online', 'Natural')
-                            .trim();
+                        let displayName = selectedVoice.name.replace('Microsoft', '').replace('Google', '').replace('English', '').replace(' United States', '').replace('(Natural) - Online', 'Natural').trim();
                         voiceStatus.innerHTML = `<i class="fas fa-check-circle text-green-300"></i> Voice: ${displayName.substring(0, 20)}`;
                     } else {
                         voiceStatus.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-300"></i> Standard Voice`;
@@ -512,64 +673,42 @@
             }
         }
 
-        // --- 2. Render Article with Structured Data ---
         function renderArticle() {
             const displayArea = document.getElementById('article-display');
             displayArea.innerHTML = '';
             
             let p;
-            
-            sentences = []; // Reset sentences array
+            sentences = []; 
             
             articleData.forEach((item, index) => {
-                // Start a new paragraph block every 5 sentences (0, 5, 10, 15, 20)
                 if (index % 5 === 0) {
                     const paragraphNum = (index / 5) + 1;
-                    
-                    // Create Image element
                     const img = document.createElement('img');
                     img.src = `English-Reading-69-images/p${paragraphNum}.jpg`;
                     img.alt = `Illustration for section ${paragraphNum}`;
-                    
-                    // Keep aspect ratio dimensions but use CSS to limit visual size
                     img.width = 1024;
                     img.height = 576;
-
-                    // Modified CSS: w-full md:w-2/3 (smaller width on desktop), mx-auto (centered), mb-8 (more spacing)
                     img.className = "w-full md:w-2/3 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
-                    
-                    // Optional: Hide if image not found to prevent broken icon
-                    img.onerror = function() { 
-                        this.style.display = 'none'; 
-                        console.log(`Image p${paragraphNum}.jpg not found`);
-                    };
-
+                    img.onerror = function() { this.style.display = 'none'; };
                     displayArea.appendChild(img);
                     
-                    // Create new paragraph element
                     p = document.createElement('p');
-                    p.className = "mb-10"; // Increased bottom spacing for better readability
+                    p.className = "mb-10"; 
                     displayArea.appendChild(p);
                 }
                 
                 const spanEn = document.createElement('span');
-                
-                // Process words for dictionary lookup
                 spanEn.innerHTML = processWords(item.en);
-                
                 spanEn.id = `sent-${index}`;
                 spanEn.className = 'cursor-pointer hover:bg-gray-100 rounded transition leading-loose mr-1';
                 spanEn.onclick = (e) => {
-                    // Prevent playing full sentence if user clicked a vocab word
-                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word')) return;
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
                     playFromSentence(index);
                 };
                 
-                // Add Sentence
                 p.appendChild(spanEn);
                 sentences.push({ text: item.en, id: `sent-${index}` });
 
-                // Add Translation (Hidden by default)
                 const divZh = document.createElement('div');
                 divZh.className = 'translation-text hidden';
                 divZh.innerText = item.zh;
@@ -577,32 +716,236 @@
             });
         }
 
-        // Wrap words with definitions in a span
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
                 const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 const originalWord = word;
-                
                 if (vocabulary[cleanWord]) {
                     const data = vocabulary[cleanWord];
-                    return `<span class="vocab-word" onclick="speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip"><span class="pos-tag">${data.pos}</span>${data.trans}</span></span>`;
+                    const isFav = favoriteWords.has(cleanWord);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    return `<span class="vocab-word" onclick="speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag">${data.pos}</span>
+                            <button onclick="toggleFavorite(event, '${cleanWord}')" class="text-lg hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-yellow-300 mb-1">${cleanWord}</div>
+                        <div class="mb-2">${data.trans}</div>
+                        <div class="text-xs text-gray-300 italic border-t border-gray-600 pt-2">"${data.example}"</div>
+                    </span></span>`;
                 }
                 return originalWord;
             }).join(' ');
         }
         
         function speakAndShowDef(e, word) {
-            e.stopPropagation(); // Stop the event from bubbling up to sentence click
-            
-            // Speak the word
-            synth.cancel(); // Stop current speech
+            e.stopPropagation(); 
+            synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.rate = 0.9; // Slower for single word
+            utterance.rate = 0.9; 
             synth.speak(utterance);
         }
 
+        function toggleFavorite(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#f472b6']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') openVocabModal();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+        }
+
+        function openVocabModal() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        function openStudyModal() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p>您的學習清單是空的。</p><p class="text-sm">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        function openMistakeModal() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-300"></i><p>太棒了！您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-50 border-b border-red-200">
+                                <th class="p-3 font-bold text-gray-700 w-4/12">題目 (Question)</th>
+                                <th class="p-3 font-bold text-gray-700 w-2/12">您的答案</th>
+                                <th class="p-3 font-bold text-gray-700 w-2/12">正確答案</th>
+                                <th class="p-3 font-bold text-gray-700 w-4/12">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-red-50">
+                            <td class="p-3 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-3 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-600 text-sm">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-300">
+                            <th class="p-3 font-bold text-gray-700 w-1/12">收藏</th>
+                            <th class="p-3 font-bold text-gray-700 w-2/12">單字 (Word)</th>
+                            <th class="p-3 font-bold text-gray-700 w-1/12">詞性</th>
+                            <th class="p-3 font-bold text-gray-700 w-3/12">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold text-gray-700 w-5/12">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-lg focus:outline-none"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-3 font-bold text-indigo-700">${word}</td>
+                        <td class="p-3 text-sm"><span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-gray-800">${data.trans}</td>
+                        <td class="p-3 text-gray-600 text-sm italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        function printList(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                // Vocabulary or Study List Print Logic
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: The Great Wall</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        // ... (toggleTranslation, togglePlay, playAudio, speakSentence, pauseAudio, restartAudio, playFromSentence, updatePlayBtn, highlightSentence, updateProgressBar, toggleText - UNCHANGED) ...
         function toggleTranslation() {
             showTranslation = !showTranslation;
             const transElements = document.querySelectorAll('.translation-text');
@@ -634,7 +977,6 @@
             isPlaying = true;
             updatePlayBtn(true);
             document.getElementById('visualizer').classList.add('playing');
-            
             if (currentSentenceIndex >= sentences.length) {
                 currentSentenceIndex = 0;
             }
@@ -666,7 +1008,6 @@
             utterance.rate = 1.0; 
             utterance.pitch = 1.05; 
             
-            // Natural Pacing
             utterance.onend = function() {
                 if (isPlaying) {
                     setTimeout(() => {
@@ -743,7 +1084,6 @@
             textHidden = !textHidden;
             const overlay = document.getElementById('hidden-overlay');
             const btn = document.getElementById('toggle-text-btn');
-            
             if (textHidden) {
                 overlay.classList.remove('hidden');
                 btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
@@ -756,8 +1096,6 @@
                 btn.classList.replace('hover:bg-indigo-600', 'hover:bg-amber-600');
             }
         }
-
-        // --- Revised Interactive Quiz Logic ---
 
         function renderQuiz() {
             const form = document.getElementById('quizForm');
@@ -794,28 +1132,29 @@
 
             const isCorrect = selectedKey === questionObj.ans;
             
-            // Visual feedback for selected option
             const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
             const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
             
             if (isCorrect) {
-                playCorrectSound(); // Sound enabled for Quiz only (internal synth)
+                playCorrectSound(); 
                 selectedLabel.classList.add('correct');
                 selectedIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
                 selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
-                userScore += 10;
+                userScore += (100 / quizData.length); // Adjust score calc for 15 questions
             } else {
-                playFailSound(); // Sound enabled for Quiz only (internal synth)
+                playFailSound(); 
                 selectedLabel.classList.add('wrong');
                 selectedIcon.classList.add('border-red-500', 'text-red-600', 'bg-red-100');
                 selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
                 
-                // Highlight the correct answer
                 const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
                 const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
                 correctLabel.classList.add('correct');
                 correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
                 correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                // Add to mistakes list
+                wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
             }
 
             const optionsDiv = document.getElementById(`${questionId}-options`);
@@ -844,11 +1183,18 @@
             const scoreDisplay = document.getElementById('final-score');
             const feedback = document.getElementById('feedback-msg');
             const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
             
             resultCard.classList.remove('hidden');
-            scoreDisplay.innerText = `${userScore} / 100`;
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
             
-            if (userScore >= 80) {
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
                 confetti({
                     particleCount: 150,
                     spread: 70,
@@ -856,26 +1202,12 @@
                     colors: ['#6366f1', '#fbbf24', '#10b981', '#f472b6']
                 });
                 
-                if (userScore === 100) {
-                    setTimeout(() => {
-                        confetti({
-                            particleCount: 100,
-                            angle: 60,
-                            spread: 55,
-                            origin: { x: 0 }
-                        });
-                        confetti({
-                            particleCount: 100,
-                            angle: 120,
-                            spread: 55,
-                            origin: { x: 1 }
-                        });
-                    }, 500);
+                if (finalScore >= 95) {
                     feedback.innerText = "Perfect! Your listening is amazing!";
                 } else {
                     feedback.innerText = "Great job! Almost perfect.";
                 }
-            } else if (userScore >= 60) {
+            } else if (finalScore >= 60) {
                 feedback.innerText = "Good pass. Review the text and try again.";
             } else {
                 feedback.innerText = "Don't give up! Listen to the audio a few more times.";
