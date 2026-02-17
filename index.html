@@ -498,7 +498,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         // 設定專屬的 App ID 以區隔中文版資料
-        const appId = 'english-learning-hq'; 
+        const appId = 'English-Reading'; 
 
         const getPublicRef = (col) => collection(db, 'artifacts', appId, 'public', 'data', col);
         const getUserRef = (uid, col) => collection(db, 'artifacts', appId, 'users', uid, col);
