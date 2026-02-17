@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：The Evolution of an Icon: The History of Mario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #f0f2f5;
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #fef3c7; /* amber-100 */
+            color: #d97706; /* amber-600 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+        }
+        .quiz-option.correct {
+            background-color: #ecfdf5 !important;
+            border-color: #10b981 !important;
+            color: #065f46;
+        }
+        .quiz-option.wrong {
+            background-color: #fef2f2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b;
+            opacity: 0.8;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.1em; /* Increased for better readability */
+            color: #4b5563;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+            background-color: #f8fafc;
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #818cf8;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #1e40af;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #e0e7ff;
+            color: #1e3a8a;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            /* Increased dimensions for larger text */
+            min-width: 220px; 
+            max-width: 320px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            line-height: 1.5;
+        }
+        
+        /* Enable pointer events when hovered so user can click the heart */
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+        
+        /* POS Tag Style in Tooltip */
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #4f46e5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #e0e7ff;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block;
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            padding-left: 8px;
+            border-left: 3px solid #e5e7eb;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #fff;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(12px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            /* Hide non-print elements */
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen pb-12">
+
+    <!-- Navbar / Audio Player Sticky Header -->
+    <div class="sticky top-0 z-50 bg-indigo-700 text-white shadow-xl transition-all duration-300 no-print" id="audio-player-bar">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title & Status -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
+                            <i class="fas fa-headphones-alt text-lg"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-sm font-bold text-indigo-100 uppercase tracking-wide">Listening Quiz</h1>
+                            <div class="text-xs text-indigo-200 flex items-center gap-1" id="voice-indicator">
+                                <i class="fas fa-robot"></i> Initializing Voice...
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Mobile Play Button -->
+                    <button onclick="togglePlay()" class="md:hidden w-10 h-10 bg-white text-indigo-700 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4">
+                    <!-- Rewind -->
+                    <button onclick="restartAudio()" class="text-indigo-200 hover:text-white transition" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <!-- Main Play Button (Desktop) -->
+                    <button onclick="togglePlay()" class="hidden md:flex w-12 h-12 bg-white text-indigo-700 rounded-full shadow-lg items-center justify-center hover:scale-105 transition hover:shadow-white/20">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <!-- Visualizer -->
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-2 text-sm w-full md:w-auto justify-center md:justify-end border-t md:border-t-0 border-indigo-600 pt-2 md:pt-0 mt-2 md:mt-0">
+                    
+                    <!-- Translation Toggle -->
+                    <button onclick="toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-indigo-800 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold transition shadow border border-indigo-500">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <!-- Toggle Text -->
+                    <button onclick="toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg font-bold transition shadow">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-indigo-900 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-amber-400 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-200">
+             <!-- Image with fallback -->
+             <div class="w-full h-64 md:h-80 bg-gray-200 relative overflow-hidden group">
+                <img 
+                    src="images/mario_main.jpg" 
+                    alt="The Evolution of Mario: From 8-bit to Modern 3D" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <!-- Dark Gradient Overlay for better text readability -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-4 left-4 right-4 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium opacity-90 backdrop-blur-sm bg-black/30 w-fit px-3 py-1 rounded-full">
+                        <i class="fas fa-gamepad"></i> Listening Focus: Video Game History & Pop Culture
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="openVocabModal()" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-800">完整單字表</h3>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </button>
+
+            <button onclick="openStudyModal()" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-800">我的學習清單</h3>
+                        <p class="text-sm text-gray-500" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200 relative">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b">The Evolution of an Icon: The History of Mario</h2>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 text-sm text-blue-700">
+                <i class="fas fa-mouse-pointer mr-1"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-indigo-100 p-6 rounded-full mb-4">
+                    <i class="fas fa-ear-listen text-4xl text-indigo-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Listen Carefully</h3>
+                <p class="text-gray-600 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="toggleText()" class="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition shadow-lg">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <!-- Modified font size: text-lg (mobile) and md:text-xl (desktop) for slightly smaller text -->
+            <div id="article-display" class="prose max-w-none text-gray-800 text-lg md:text-xl leading-loose tracking-wide space-y-6">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
+                    <i class="fas fa-pen"></i>
+                </span>
+                Reading Comprehension Quiz
+            </h3>
+            
+            <form id="quizForm" class="space-y-8">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-4">
+                <button type="button" onclick="showFinalScore()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-indigo-50 p-6 rounded-xl border border-indigo-100 animate-fade-in relative">
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-5xl font-extrabold text-indigo-600 my-2" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-4"></p>
+                    
+                    <button id="mistake-review-btn" onclick="openMistakeModal()" class="hidden w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-bold shadow transition flex items-center justify-center gap-2 mx-auto">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <button onclick="closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="vocab-table-container"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="printList('vocab')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="closeModal('vocab-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="study-table-container"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="printList('study')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="closeModal('study-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal (New) -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-red-800"><i class="fas fa-times-circle text-red-600 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="mistake-table-container"></div>
+            <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="printList('mistakes')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="closeModal('mistake-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <script>
+        // --- Data & State ---
+        
+        // Extended Vocabulary Dictionary with Examples
+        const vocabulary = {
+            "icon": { pos: "n.", trans: "象徵；圖示", example: "Elvis Presley is a pop culture icon." },
+            "overalls": { pos: "n.", trans: "吊帶褲；工作服", example: "The painter wore overalls to protect his clothes." },
+            "mustache": { pos: "n.", trans: "鬍子", example: "He grew a thick mustache for the movie role." },
+            "symbol": { pos: "n.", trans: "象徵", example: "The dove is a universal symbol of peace." },
+            "superstar": { pos: "n.", trans: "超級巨星", example: "Michael Jordan is a basketball superstar." },
+            "designer": { pos: "n.", trans: "設計師", example: "She is a famous fashion designer in Paris." },
+            "legal": { pos: "adj.", trans: "法律的；合法的", example: "You should seek legal advice before signing the contract." },
+            "plumber": { pos: "n.", trans: "水管工", example: "We called a plumber to fix the leaking pipe." },
+            "carpenter": { pos: "n.", trans: "木匠", example: "The carpenter built a beautiful wooden table." },
+            "warehouse": { pos: "n.", trans: "倉庫", example: "The goods are stored in a large warehouse." },
+            "landlord": { pos: "n.", trans: "房東", example: "Our landlord comes to collect rent every month." },
+            "side-scrolling": { pos: "adj.", trans: "橫向捲軸的", example: "Super Mario Bros. is a classic side-scrolling game." },
+            "mushroom": { pos: "n.", trans: "蘑菇", example: "Mario eats a mushroom to grow bigger." },
+            "crash": { pos: "n.", trans: "崩盤；撞擊", example: "The stock market crash caused many people to lose money." },
+            "three-dimensional": { pos: "adj.", trans: "三維的；立體的", example: "3D movies make the images look three-dimensional." },
+            "analog": { pos: "adj.", trans: "類比的", example: "Analog sticks provide smoother control than directional pads." },
+            "controller": { pos: "n.", trans: "控制器；手把", example: "Pass me the game controller, it's my turn." },
+            "cultural": { pos: "adj.", trans: "文化的", example: "The city hosts many cultural events throughout the year." },
+            "theme": { pos: "n.", trans: "主題", example: "Disneyland is a famous theme park." },
+            "adventure": { pos: "n.", trans: "冒險", example: "They went on an exciting adventure in the jungle." }
+        };
+
+        // Article Data (Mario History)
+        const articleData = [
+            // Paragraph 1
+            { en: "In the world of video games, Mario is one of the most famous characters.", zh: "在電玩遊戲的世界裡，瑪利歐是最著名的角色之一。" },
+            { en: "Everyone knows his red hat, blue overalls, and big mustache.", zh: "大家都認得他的紅帽子、藍色吊帶褲和大鬍子。" },
+            { en: "He is the symbol of Nintendo.", zh: "他是任天堂的象徵。" },
+            { en: "However, Mario was not always a superstar.", zh: "然而，瑪利歐並非一直都是超級巨星。" },
+            { en: "His story began with Shigeru Miyamoto, a famous game designer.", zh: "他的故事始於著名的遊戲設計師宮本茂。" },
+            { en: "In the early 1980s, Nintendo wanted to sell games in America, but it was difficult.", zh: "在 1980 年代初期，任天堂想在美國銷售遊戲，但這很困難。" },
+            { en: "They needed a popular game to succeed.", zh: "他們需要一款受歡迎的遊戲才能成功。" },
+            { en: "Originally, Miyamoto wanted to make a game about the cartoon character Popeye.", zh: "起初，宮本茂想製作一款關於卡通人物「大力水手卜派」的遊戲。" },
+            { en: "However, Nintendo could not get the legal rights to use Popeye.", zh: "但是，任天堂無法取得使用卜派的法律版權。" },
+            { en: "Because of this problem, Miyamoto had to create a new character.", zh: "因為這個問題，宮本茂必須創造一個新角色。" },
+            { en: "This led to the birth of Mario, who is now more famous than Mickey Mouse.", zh: "這導致了瑪利歐的誕生，他現在比米老鼠還要有名。" },
+
+            // Paragraph 2
+            { en: "Mario first appeared in 1981 in the game Donkey Kong.", zh: "瑪利歐於 1981 年在遊戲《大金剛》中首次亮相。" },
+            { en: "Interestingly, he was not a plumber back then.", zh: "有趣的是，他當時並不是水管工。" },
+            { en: "He also did not have the name \"Mario.\"", zh: "也不叫瑪利歐。" },
+            { en: "In this first game, he was a carpenter named \"Jumpman.\"", zh: "在這款初代遊戲中，他是一個名叫「Jumpman（跳跳人）」的木匠。" },
+            { en: "His goal was to save a woman named Pauline from a giant ape.", zh: "他的目標是從一隻巨猿手中救出一名叫做波琳的女子。" },
+            { en: "The game was a big success, but the character needed a better name for American players.", zh: "這款遊戲非常成功，但這個角色需要一個對美國玩家來說更好的名字。" },
+            { en: "The story says that the name \"Mario\" came from a real person.", zh: "據說「瑪利歐」這個名字來自一個真實的人。" },
+            { en: "Nintendo of America rented a warehouse in Seattle.", zh: "當時任天堂美國分公司在西雅圖租了一個倉庫。" },
+            { en: "Their landlord, Mario Segale, came to ask for the rent money.", zh: "他們的房東 Mario Segale 跑來催討房租。" },
+            { en: "The team decided to name the character after him.", zh: "團隊決定以他的名字來為這個角色命名。" },
+            { en: "Later, in the 1983 game Mario Bros., he officially became a plumber.", zh: "後來，在 1983 年的遊戲《瑪利歐兄弟》中，他正式成為了一名水管工。" },
+
+            // Paragraph 3
+            { en: "A very important moment came in 1985.", zh: "1985 年是一個非常重要的時刻。" },
+            { en: "Nintendo released Super Mario Bros. for the Nintendo Entertainment System (NES).", zh: "任天堂在紅白機 (NES) 上發布了《超級瑪利歐兄弟》。" },
+            { en: "Before this, most video games were simple.", zh: "在此之前，大多數電玩遊戲都很簡單。" },
+            { en: "The screen did not move much.", zh: "畫面不太會移動。" },
+            { en: "Super Mario Bros. was different.", zh: "《超級瑪利歐兄弟》則不同。" },
+            { en: "It introduced a \"side-scrolling\" style.", zh: "它引入了「橫向捲軸」風格。" },
+            { en: "This means the screen moved with the player to show a large world called the Mushroom Kingdom.", zh: "這意味著螢幕會隨著玩家移動，展示一個叫做蘑菇王國的廣大世界。" },
+            { en: "Players could collect items like the Super Mushroom to make Mario bigger.", zh: "玩家可以收集像「超級蘑菇」這樣的道具讓瑪利歐變大。" },
+            { en: "They could also use the Fire Flower to throw fireballs.", zh: "也可以使用「火焰花」來丟火球。" },
+            { en: "This game saved the video game industry in America after a big market crash in 1983.", zh: "這款遊戲在 1983 年市場大崩盤後拯救了美國的電玩產業。" },
+            { en: "It also introduced the bad guy Bowser and Princess Peach.", zh: "它還介紹了反派庫巴和碧姬公主。" },
+
+            // Paragraph 4
+            { en: "As technology got better, Mario faced a big challenge: moving from 2D (flat) games to 3D (three-dimensional) games.", zh: "隨著科技進步，瑪利歐面臨了一個巨大的挑戰：從 2D（平面）遊戲轉向 3D（立體）遊戲。" },
+            { en: "In the 1990s, many games tried to move to 3D but failed.", zh: "在 1990 年代，許多遊戲試圖轉向 3D 但都失敗了。" },
+            { en: "The controls were often hard to use.", zh: "操作控制往往很難使用。" },
+            { en: "However, Mario succeeded again with Super Mario 64 in 1996.", zh: "然而，瑪利歐在 1996 年憑藉《超級瑪利歐 64》再次取得成功。" },
+            { en: "This game was special.", zh: "這款遊戲很特別。" },
+            { en: "It gave players freedom.", zh: "它給了玩家自由。" },
+            { en: "They could move anywhere in an open world.", zh: "讓他們可以在開放世界中去任何地方。" },
+            { en: "It was not just moving left to right anymore.", zh: "不再只是從左向右移動。" },
+            { en: "The game introduced the \"analog stick\" on the controller for better movement.", zh: "遊戲引入了控制器上的「類比搖桿」以提供更好的移動控制。" },
+            { en: "It also had a camera system that players could control.", zh: "還有玩家可以控制的視角系統。" },
+            { en: "Super Mario 64 showed everyone how to make a great 3D game.", zh: "《超級瑪利歐 64》向所有人展示了如何製作一款優秀的 3D 遊戲。" },
+
+            // Paragraph 5
+            { en: "Today, Mario is not just a video game character.", zh: "今天，瑪利歐不僅僅是一個電玩角色。" },
+            { en: "He is a cultural icon.", zh: "他是一個文化象徵。" },
+            { en: "In recent years, games like Super Mario Odyssey have shown new and creative ideas.", zh: "近年來，像《超級瑪利歐奧德賽》這樣的遊戲展示了創新意念。" },
+            { en: "Mario is now on smartphones, in theme parks, and in movies.", zh: "瑪利歐現在出現在智慧型手機、主題樂園和電影中。" },
+            { en: "The Super Mario Bros. Movie was a huge hit in theaters.", zh: "《超級瑪利歐兄弟電影版》在電影院大受歡迎。" },
+            { en: "Even though technology changes, Mario stays popular.", zh: "儘管科技在變，瑪利歐依然受歡迎。" },
+            { en: "He represents fun and adventure.", zh: "他代表了樂趣和冒險。" },
+            { en: "Whether you are a child playing your first game or an adult remembering the old days, Mario is a hero for everyone.", zh: "無論你是第一次玩遊戲的孩子，還是回憶往昔的成年人，瑪利歐是屬於每個人的英雄。" }
+        ];
+
+        // Quiz Data (10 Questions)
+        const quizData = [
+            { id: 'q1', q: "1. What is the main idea of this article?", options: {A: "How to win in Super Mario Bros.", B: "The history and success of Mario.", C: "Why Popeye is better than Mario.", D: "The life of Mario Segale."}, ans: 'B', expl: "The article talks about Mario's creation, history, and how he became famous. (這篇文章講述了瑪利歐的創作、歷史以及他如何成名。)" },
+            { id: 'q2', q: "2. Why did Miyamoto create Mario?", options: {A: "Nintendo could not use Popeye.", B: "He liked plumbers very much.", C: "He wanted to make a movie.", D: "His landlord asked him to."}, ans: 'A', expl: "Paragraph 1 says Nintendo could not get the legal rights to use Popeye, so Miyamoto created a new character. (第一段提到任天堂無法取得卜派的版權，所以宮本茂創造了一個新角色。)" },
+            { id: 'q3', q: "3. In the game Donkey Kong, what was Mario's job?", options: {A: "Plumber", B: "Doctor", C: "Carpenter", D: "Driver"}, ans: 'C', expl: "Paragraph 2 says he was a \"carpenter\" named Jumpman. (第二段提到他是一個名叫 Jumpman 的木匠。)" },
+            { id: 'q4', q: "4. Who was Mario named after?", options: {A: "A famous movie star.", B: "The landlord of Nintendo's warehouse.", C: "Miyamoto's brother.", D: "A character in Donkey Kong."}, ans: 'B', expl: "Paragraph 2 explains the name came from Mario Segale, their landlord. (第二段解釋名字來自他們的房東 Mario Segale。)" },
+            { id: 'q5', q: "5. The word \"introduced\" in Paragraph 3 means:", options: {A: "Stopped", B: "Broke", C: "Brought into use for the first time", D: "Hid from everyone"}, ans: 'C', expl: "\"Introduced\" means to bring something new into use. The game brought a new style of play. (Introduced 意指首次引入使用。)" },
+            { id: 'q6', q: "6. How did Super Mario Bros. change video games?", options: {A: "It was the first game in black and white.", B: "It had a screen that moved with the player (side-scrolling).", C: "It was played on a computer.", D: "It had no enemies."}, ans: 'B', expl: "Paragraph 3 says it introduced a \"side-scrolling\" style where the screen moved. (第三段說它引入了螢幕會移動的橫向捲軸風格。)" },
+            { id: 'q7', q: "7. What was the big challenge for Mario in the 1990s?", options: {A: "Making a movie.", B: "Changing his clothes.", C: "Moving from 2D to 3D games.", D: "Fighting Donkey Kong again."}, ans: 'C', expl: "Paragraph 4 mentions the challenge was \"moving from 2D (flat) games to 3D\". (第四段提到挑戰是從 2D 轉向 3D。)" },
+            { id: 'q8', q: "8. What new tool did Super Mario 64 use for better movement?", options: {A: "A keyboard", B: "A mouse", C: "The analog stick", D: "A touch screen"}, ans: 'C', expl: "Paragraph 4 mentions the \"analog stick\" on the controller. (第四段提到了控制器上的類比搖桿。)" },
+            { id: 'q9', q: "9. According to the text, where can you find Mario today?", options: {A: "Only in old games.", B: "On smartphones, in movies, and theme parks.", C: "Only in Japan.", D: "In comic books only."}, ans: 'B', expl: "Paragraph 5 says Mario is on smartphones, theme parks, and in movies. (第五段說瑪利歐出現在手機、主題樂園和電影中。)" },
+            { id: 'q10', q: "10. Why is Mario still popular today?", options: {A: "Because he is rich.", B: "Because he represents fun and adventure.", C: "Because he never changes his clothes.", D: "Because he is very serious."}, ans: 'B', expl: "Paragraph 5 says \"He represents fun and adventure.\" (第五段說他代表了樂趣和冒險。)" }
+        ];
+
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; // New: Track wrong answers
+        
+        let audioCtx;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        // ... (Sound functions unchanged) ...
+        function playCorrectSound() {
+            initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        function playFailSound() {
+            initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        window.onload = function() {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        };
+
+        // ... (initVoice, renderArticle, processWords, speakAndShowDef, toggleFavorite, updateHeartIcon, openVocabModal, openStudyModal, closeModal, generateTableHTML, printList - UNCHANGED logic but vocabulary updated above) ...
+
+        function initVoice() {
+            const voiceStatus = document.getElementById('voice-indicator');
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                    
+                    if (selectedVoice) {
+                        let displayName = selectedVoice.name.replace('Microsoft', '').replace('Google', '').replace('English', '').replace(' United States', '').replace('(Natural) - Online', 'Natural').trim();
+                        voiceStatus.innerHTML = `<i class="fas fa-check-circle text-green-300"></i> Voice: ${displayName.substring(0, 20)}`;
+                    } else {
+                        voiceStatus.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-300"></i> Standard Voice`;
+                    }
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Determine paragraph breaks by sentence index ranges logic or heuristic
+                // Para 1: 0-10, Para 2: 11-21, Para 3: 22-32, Para 4: 33-43, Para 5: 44-51
+                // We'll use specific indices to insert images for correct paragraph structure
+                if (index === 0) {
+                    // Para 1 Image
+                    const img = document.createElement('img');
+                    img.src = `English-Reading-1/p1.jpg`; 
+                    img.alt = `Illustration for The Birth of a Legend`;
+                    img.width = 1024;
+                    img.height = 576;
+                    img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
+                    img.onerror = function() { this.style.display = 'none'; };
+                    displayArea.appendChild(img);
+                    
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                } else if (index === 11) {
+                    // Para 2 Image
+                    const img = document.createElement('img');
+                    img.src = `English-Reading-1/p2.jpg`; 
+                    img.alt = `Illustration for Jumpman to Mario`;
+                    img.width = 1024;
+                    img.height = 576;
+                    img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
+                    img.onerror = function() { this.style.display = 'none'; };
+                    displayArea.appendChild(img);
+                    
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                } else if (index === 22) {
+                    // Para 3 Image
+                    const img = document.createElement('img');
+                    img.src = `English-Reading-1/p3.jpg`; 
+                    img.alt = `Illustration for Changing the Industry`;
+                    img.width = 1024;
+                    img.height = 576;
+                    img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
+                    img.onerror = function() { this.style.display = 'none'; };
+                    displayArea.appendChild(img);
+                    
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                } else if (index === 33) {
+                    // Para 4 Image
+                    const img = document.createElement('img');
+                    img.src = `English-Reading-1/p4.jpg`; 
+                    img.alt = `Illustration for Moving into 3D`;
+                    img.width = 1024;
+                    img.height = 576;
+                    img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
+                    img.onerror = function() { this.style.display = 'none'; };
+                    displayArea.appendChild(img);
+                    
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                } else if (index === 44) {
+                    // Para 5 Image
+                    const img = document.createElement('img');
+                    img.src = `English-Reading-1/p5.jpg`; 
+                    img.alt = `Illustration for A Modern Hero`;
+                    img.width = 1024;
+                    img.height = 576;
+                    img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
+                    img.onerror = function() { this.style.display = 'none'; };
+                    displayArea.appendChild(img);
+                    
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-gray-100 rounded transition leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                const divZh = document.createElement('div');
+                divZh.className = 'translation-text hidden';
+                divZh.innerText = item.zh;
+                p.appendChild(divZh);
+            });
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                const originalWord = word;
+                if (vocabulary[cleanWord]) {
+                    const data = vocabulary[cleanWord];
+                    const isFav = favoriteWords.has(cleanWord);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    // Modified HTML structure for larger text
+                    return `<span class="vocab-word" onclick="speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-yellow-300 text-2xl mb-2">${cleanWord}</div>
+                        <div class="mb-3 text-lg font-medium">${data.trans}</div>
+                        <!-- Increased example text size from text-base to text-lg -->
+                        <div class="text-lg text-gray-300 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        function speakAndShowDef(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        function toggleFavorite(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#f472b6']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') openVocabModal();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+        }
+
+        function openVocabModal() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        function openStudyModal() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p>您的學習清單是空的。</p><p class="text-sm">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        function openMistakeModal() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-300"></i><p>太棒了！您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-50 border-b border-red-200">
+                                <th class="p-3 font-bold text-gray-700 w-4/12">題目 (Question)</th>
+                                <th class="p-3 font-bold text-gray-700 w-2/12">您的答案</th>
+                                <th class="p-3 font-bold text-gray-700 w-2/12">正確答案</th>
+                                <th class="p-3 font-bold text-gray-700 w-4/12">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-red-50">
+                            <td class="p-3 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-3 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-600 text-sm">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-300">
+                            <th class="p-3 font-bold text-gray-700 w-1/12">收藏</th>
+                            <th class="p-3 font-bold text-gray-700 w-2/12">單字 (Word)</th>
+                            <th class="p-3 font-bold text-gray-700 w-1/12">詞性</th>
+                            <th class="p-3 font-bold text-gray-700 w-3/12">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold text-gray-700 w-5/12">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-lg focus:outline-none"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-3 font-bold text-indigo-700">${word}</td>
+                        <td class="p-3 text-sm"><span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-gray-800">${data.trans}</td>
+                        <td class="p-3 text-gray-600 text-sm italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        function printList(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                // Vocabulary or Study List Print Logic
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: The Evolution of Mario</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        // ... (toggleTranslation, togglePlay, playAudio, speakSentence, pauseAudio, restartAudio, playFromSentence, updatePlayBtn, highlightSentence, updateProgressBar, toggleText - UNCHANGED) ...
+        function toggleTranslation() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-indigo-600', 'ring-2', 'ring-indigo-300');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-indigo-600', 'ring-2', 'ring-indigo-300');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pauseAudio();
+            } else {
+                playAudio();
+            }
+        }
+
+        function playAudio() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            speakSentence(currentSentenceIndex);
+        }
+
+        function speakSentence(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    highlightSentence(-1);
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            highlightSentence(index);
+            updateProgressBar();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.05; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        function pauseAudio() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        function restartAudio() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            updateProgressBar();
+            highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => speakSentence(0), 100);
+            }
+        }
+        
+        function playFromSentence(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        function highlightSentence(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        function updateProgressBar() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        function toggleText() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.replace('bg-amber-500', 'bg-indigo-500');
+                btn.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-600');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.replace('bg-indigo-500', 'bg-amber-500');
+                btn.classList.replace('hover:bg-indigo-600', 'hover:bg-amber-600');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-800 mb-4 text-xl">${item.q}</p>
+                    <div class="space-y-3" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-200" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="checkAnswer('${item.id}', '${key}')">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-3 font-bold text-gray-500 transition-colors" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-700 font-medium text-lg">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box">
+                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p>${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        function checkAnswer(questionId, selectedKey) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                userScore += 10; 
+            } else {
+                playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-600', 'bg-red-100');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                // Add to mistakes list
+                wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#10b981';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-700";
+            } else {
+                explBox.style.borderLeftColor = '#ef4444';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-700";
+            }
+        }
+
+        function showFinalScore() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#fbbf24', '#10b981', '#f472b6']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Perfect! Your listening is amazing!";
+                } else {
+                    feedback.innerText = "Great job! Almost perfect.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Review the text and try again.";
+            } else {
+                feedback.innerText = "Don't give up! Listen to the audio a few more times.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>
