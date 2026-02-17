@@ -92,13 +92,14 @@
         .vocab-tooltip {
             visibility: hidden;
             width: max-content;
-            min-width: 180px;
-            max-width: 250px;
+            /* Increased dimensions for larger text */
+            min-width: 220px; 
+            max-width: 320px;
             background-color: #1f2937;
             color: #fff;
             text-align: left;
             border-radius: 8px;
-            padding: 12px;
+            padding: 16px; /* Increased padding */
             position: absolute;
             z-index: 100;
             bottom: 140%; 
@@ -106,10 +107,10 @@
             transform: translateX(-50%);
             opacity: 0;
             transition: opacity 0.2s, transform 0.2s;
-            font-size: 0.9rem;
+            font-size: 1.1rem; /* Increased base font size from 0.9rem */
             pointer-events: none; /* Default none */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            line-height: 1.4;
+            line-height: 1.5;
         }
         
         /* Enable pointer events when hovered so user can click the heart */
@@ -727,16 +728,18 @@
                     const data = vocabulary[cleanWord];
                     const isFav = favoriteWords.has(cleanWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    // Modified HTML structure for larger text
                     return `<span class="vocab-word" onclick="speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
-                            <span class="pos-tag">${data.pos}</span>
-                            <button onclick="toggleFavorite(event, '${cleanWord}')" class="text-lg hover:scale-110 transition p-1" title="加入學習清單">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
                                 <i class="${heartClass}" id="heart-${cleanWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-yellow-300 mb-1">${cleanWord}</div>
-                        <div class="mb-2">${data.trans}</div>
-                        <div class="text-xs text-gray-300 italic border-t border-gray-600 pt-2">"${data.example}"</div>
+                        <div class="font-bold text-yellow-300 text-2xl mb-2">${cleanWord}</div>
+                        <div class="mb-3 text-lg font-medium">${data.trans}</div>
+                        <div class="text-sm text-gray-300 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
                 }
                 return originalWord;
