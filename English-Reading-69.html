@@ -296,7 +296,8 @@
             </div>
 
             <!-- Article Container (Sentences will be injected here via JS for control) -->
-            <div id="article-display" class="prose max-w-none text-gray-700 text-lg leading-relaxed space-y-4">
+            <!-- Modified classes: text-xl md:text-2xl (larger text), text-gray-800 (darker contrast), leading-loose (more line height), tracking-wide -->
+            <div id="article-display" class="prose max-w-none text-gray-800 text-xl md:text-2xl leading-loose tracking-wide space-y-6">
                 <!-- Content injected by JS -->
             </div>
         </div>
@@ -530,12 +531,12 @@
                     img.src = `English-Reading-69-images/p${paragraphNum}.jpg`;
                     img.alt = `Illustration for section ${paragraphNum}`;
                     
-                    // Set explicit dimensions as requested (1024x576)
+                    // Keep aspect ratio dimensions but use CSS to limit visual size
                     img.width = 1024;
                     img.height = 576;
 
-                    // Add styling: w-full for responsiveness, h-auto to maintain aspect ratio defined by width/height attributes
-                    img.className = "w-full h-auto object-cover rounded-xl mb-6 shadow-md hover:opacity-95 transition";
+                    // Modified CSS: w-full md:w-2/3 (smaller width on desktop), mx-auto (centered), mb-8 (more spacing)
+                    img.className = "w-full md:w-2/3 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition";
                     
                     // Optional: Hide if image not found to prevent broken icon
                     img.onerror = function() { 
@@ -547,7 +548,7 @@
                     
                     // Create new paragraph element
                     p = document.createElement('p');
-                    p.className = "mb-8"; // Add bottom spacing
+                    p.className = "mb-10"; // Increased bottom spacing for better readability
                     displayArea.appendChild(p);
                 }
                 
