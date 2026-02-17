@@ -1,511 +1,468 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英語學習總部 - English Learning HQ</title>
-    
-    <!-- 字體 -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@600;900&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>English Learning HQ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
     
     <!-- React & ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Import Map for Firebase -->
     <script type="importmap">
-    {
+      {
         "imports": {
-            "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
-            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"
+          "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"
         }
-    }
+      }
     </script>
 
     <style>
         :root {
-            /* 基礎配色 */
-            --bg: #f3f4f6;
-            --text-main: #1f2937;
+            --bg: #f5f7ff;
+            --text-main: #1a237e;
             --card-bg: #ffffff;
         }
 
         body {
-            font-family: 'Poppins', 'Noto Sans TC', sans-serif;
+            font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--bg);
-            background-image: 
-                linear-gradient(rgba(200, 200, 200, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(200, 200, 200, 0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
-            color: var(--text-main);
+            background-image: radial-gradient(#e8eaf6 1px, transparent 1px);
+            background-size: 20px 20px;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             min-height: 100vh;
+            color: var(--text-main);
         }
 
-        .font-serif { font-family: 'Noto Serif TC', serif; }
+        h1, h2, .font-serif { font-family: 'Noto Serif TC', serif; }
 
-        /* === 15 大分類主題色系定義 (CSS Variables) === */
-        /* 定義每個分類的主色 (--theme-c) 與背景色 (--theme-bg) */
-        .theme-cat1 { --theme-c: #e60012; --theme-bg: #ffebee; } /* Gaming - Mario Red */
-        .theme-cat2 { --theme-c: #00bcd4; --theme-bg: #e0f7fa; } /* Sci-Fi - Neon Cyan */
-        .theme-cat3 { --theme-c: #7b1fa2; --theme-bg: #f3e5f5; } /* Horror - Deep Purple */
-        .theme-cat4 { --theme-c: #ff6d00; --theme-bg: #fff3e0; } /* Sports - Energetic Orange */
-        .theme-cat5 { --theme-c: #ec407a; --theme-bg: #fce4ec; } /* Pop Culture - Hot Pink */
-        .theme-cat6 { --theme-c: #43a047; --theme-bg: #e8f5e9; } /* Nature - Grass Green */
-        .theme-cat7 { --theme-c: #795548; --theme-bg: #efebe9; } /* History - Vintage Brown */
-        .theme-cat8 { --theme-c: #455a64; --theme-bg: #eceff1; } /* Survival - Slate Grey */
-        .theme-cat9 { --theme-c: #3f51b5; --theme-bg: #e8eaf6; } /* Teen Life - Indigo */
-        .theme-cat10 { --theme-c: #fdd835; --theme-bg: #fffde7; } /* Laughs - Bright Yellow */
-        .theme-cat11 { --theme-c: #2e7d32; --theme-bg: #e8f5e9; } /* Money - Dollar Green */
-        .theme-cat12 { --theme-c: #006064; --theme-bg: #e0f2f1; } /* Geography - Deep Teal */
-        .theme-cat13 { --theme-c: #37474f; --theme-bg: #cfd8dc; } /* Machines - Metal */
-        .theme-cat14 { --theme-c: #d84315; --theme-bg: #fbe9e7; } /* Food - Burnt Orange */
-        .theme-cat15 { --theme-c: #827717; --theme-bg: #f0f4c3; } /* Animals - Olive */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 900px;
+        }
 
-        /* 卡片基礎樣式 */
+        .header h1 {
+            font-family: 'Noto Serif TC', serif;
+            color: var(--text-main);
+            font-size: 3.5em; 
+            font-weight: 900; 
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+        }
+
+        .header p {
+            color: #5c6bc0;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+            padding: 15px 50px;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.3em;
+            box-shadow: 0 6px 15px rgba(63, 81, 181, 0.3);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .home-btn:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 20px rgba(63, 81, 181, 0.4); 
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1300px;
+            margin-bottom: 40px;
+        }
+
         .app-card {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px 20px;
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
             color: #333;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            
-            /* 預設邊框 (未完成時) */
-            border-top: 6px solid #ccc; 
-            border-left: 1px solid rgba(0,0,0,0.05);
-            border-right: 1px solid rgba(0,0,0,0.05);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            
-            position: relative;
-            cursor: pointer;
+            border-top: 6px solid #ccc;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100%;
+            text-align: center;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+            min-height: 200px;
         }
-
-        /* 應用主題色到未完成卡片的頂部 */
-        .theme-item { border-top-color: var(--theme-c); }
-        .theme-item .card-icon { background: var(--theme-bg); color: var(--theme-c); }
-        .theme-item .card-title { color: #374151; }
-        .theme-item:hover .card-title { color: var(--theme-c); transition: color 0.3s; }
 
         .app-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
         }
 
-        /* === 已完成特效 (動態顏色) === */
-        /* 重點修改：使用 var(--theme-c) 讓螢光邊框跟隨該 Category 的顏色 */
+        /* Completed state styling is now handled dynamically in React */
         .app-card.completed {
-            border: 3px solid var(--theme-c) !important;
-            border-top: 6px solid var(--theme-c) !important;
-            /* 螢光光暈效果 */
-            box-shadow: 0 0 15px var(--theme-c) !important; 
             transform: scale(1.02);
-            /* 背景微微透出該主題色 */
-            background-color: var(--theme-bg);
-            z-index: 10;
+            background-color: #ffffff; 
         }
 
-        .app-card.completed .card-badge {
-            background: var(--theme-c) !important;
-            color: #fff;
-        }
-
-        .app-card.completed .card-icon {
-            background: #fff !important;
-            color: var(--theme-c) !important;
-            border: 2px solid var(--theme-c);
-        }
-
-        /* 圖示容器 */
-        .card-icon {
-            width: 64px;
-            height: 64px;
+        .card-icon-wrapper {
+            font-size: 2.2em;
+            margin-bottom: 12px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2em;
-            margin-bottom: 16px;
-            transition: all 0.3s;
+            background: #f5f5f5;
         }
 
-        /* 分隔線 */
-        .divider {
+        .card-title {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            color: #444;
+            flex-grow: 1;
             display: flex;
             align-items: center;
-            margin: 50px 0 30px 0;
-            color: #374151;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.8em;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            justify-content: center;
         }
-        .divider::before, .divider::after {
-            content: "";
-            flex: 1;
-            border-bottom: 3px solid #e5e7eb;
-        }
-        .divider::before { margin-right: 20px; }
-        .divider::after { margin-left: 20px; }
-        
-        /* 每個 Category 標題也套用主題色 */
-        .cat-title-1 { color: #e60012; }
-        .cat-title-2 { color: #00bcd4; }
-        .cat-title-3 { color: #7b1fa2; }
-        .cat-title-4 { color: #ff6d00; }
-        .cat-title-5 { color: #ec407a; }
-        .cat-title-6 { color: #43a047; }
-        .cat-title-7 { color: #795548; }
-        .cat-title-8 { color: #455a64; }
-        .cat-title-9 { color: #3f51b5; }
-        .cat-title-10 { color: #fbc02d; } /* Darker yellow for text visibility */
-        .cat-title-11 { color: #2e7d32; }
-        .cat-title-12 { color: #006064; }
-        .cat-title-13 { color: #37474f; }
-        .cat-title-14 { color: #d84315; }
-        .cat-title-15 { color: #827717; }
 
-        /* 狀態燈號 */
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
+        .card-desc {
+            font-size: 0.8em;
+            color: #888;
+            background: #f9f9f9;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-family: monospace;
+            margin-top: auto;
         }
-        .status-loading { background-color: #fdd835; }
-        .status-success { background-color: #4caf50; }
-        .status-error { background-color: #ef5350; }
-        .status-offline { background-color: #9e9e9e; }
 
-        /* 核取方塊樣式 */
-        .check-circle {
+        .card-checkbox {
+            position: absolute;
+            top: 12px;
+            right: 12px;
             width: 26px;
             height: 26px;
-            border-radius: 50%;
             border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
-            background: white;
+            z-index: 10;
         }
-        .app-card:hover .check-circle { border-color: #bbb; }
-        .app-card.completed .check-circle {
-            background: var(--theme-c);
-            border-color: var(--theme-c);
-            color: white;
+        
+        .card-checkbox:hover {
+            transform: scale(1.1);
         }
 
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .card-checkbox.checked {
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-loading { background-color: #fdd835; box-shadow: 0 0 5px #fdd835; }
+        .status-success { background-color: #4caf50; box-shadow: 0 0 5px #4caf50; }
+        .status-error { background-color: #ef5350; box-shadow: 0 0 5px #ef5350; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+
+        .section-divider {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            margin: 60px 0 30px 0;
+            color: #333;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 1.8em;
+            font-weight: 900;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+        }
+        .section-divider::before, .section-divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .section-divider::before { margin-right: 20px; }
+        .section-divider::after { margin-left: 20px; }
+
+        .quick-user-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 2px solid #c5cae9;
+            color: #283593;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .quick-user-btn:hover {
+            background: #e8eaf6;
+            border-color: #3f51b5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
     </style>
 </head>
 <body>
+
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
         import { initializeApp } from "firebase/app";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "firebase/auth";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayUnion } from "firebase/firestore";
+        import { getFirestore, doc, setDoc, updateDoc, getDoc, onSnapshot, arrayUnion } from "firebase/firestore";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
+
+        // ==========================================
+        // 1. Firebase Config
+        // ==========================================
         
-        const { useState, useEffect } = React;
-
-        /* ================= 資料定義 (150 Items) ================= */
-        const ALL_CATEGORIES = [
-            {
-                title: "1. Gaming & Esports",
-                theme: "theme-cat1",
-                textClass: "cat-title-1",
-                items: [
-                    { id: "E1", title: "The History of Mario", subtitle: "瑪利歐的進化史", file: "English-Reading-1.html", icon: "🍄" },
-                    { id: "E2", title: "How to Go Pro", subtitle: "如何成為職業電競選手？", file: "English-Reading-2.html", icon: "🎮" },
-                    { id: "E3", title: "Minecraft World", subtitle: "麥塊：打造虛擬世界", file: "English-Reading-3.html", icon: "⛏️" },
-                    { id: "E4", title: "Most Expensive Items", subtitle: "史上賣最貴的虛擬寶物", file: "English-Reading-4.html", icon: "💎" },
-                    { id: "E5", title: "Why Do We Rage Quit?", subtitle: "為什麼玩遊戲會爆氣？", file: "English-Reading-5.html", icon: "😡" },
-                    { id: "E6", title: "Top 5 Cheat Codes", subtitle: "遊戲史上最強的 5 個作弊碼", file: "English-Reading-6.html", icon: "⌨️" },
-                    { id: "E7", title: "VR Gaming Future", subtitle: "VR 遊戲：未來還是曇花一現？", file: "English-Reading-7.html", icon: "🥽" },
-                    { id: "E8", title: "Story of LoL", subtitle: "英雄聯盟背後的故事", file: "English-Reading-8.html", icon: "🏆" },
-                    { id: "E9", title: "Glitches as Features", subtitle: "變成遊戲特色的 Bug", file: "English-Reading-9.html", icon: "👾" },
-                    { id: "E10", title: "Addictive Design", subtitle: "遊戲開發者如何讓你上癮", file: "English-Reading-10.html", icon: "🧠" }
-                ]
-            },
-            {
-                title: "2. Sci-Fi, Tech & AI",
-                theme: "theme-cat2",
-                textClass: "cat-title-2",
-                items: [
-                    { id: "E11", title: "AI and Your Job", subtitle: "AI 會搶走你未來的工作嗎？", file: "English-Reading-11.html", icon: "🤖" },
-                    { id: "E12", title: "Living on Mars", subtitle: "火星移民：馬斯克的夢想", file: "English-Reading-12.html", icon: "🚀" },
-                    { id: "E13", title: "The Dark Web", subtitle: "暗網是什麼？", file: "English-Reading-13.html", icon: "🕵️" },
-                    { id: "E14", title: "Flying Cars", subtitle: "飛天車離我們還有多遠？", file: "English-Reading-14.html", icon: "🛸" },
-                    { id: "E15", title: "Password Theft", subtitle: "駭客如何偷走你的密碼", file: "English-Reading-15.html", icon: "🔐" },
-                    { id: "E16", title: "Time Travel", subtitle: "時光旅行真的可行嗎？", file: "English-Reading-16.html", icon: "⏳" },
-                    { id: "E17", title: "Black Holes", subtitle: "黑洞的科學", file: "English-Reading-17.html", icon: "🕳️" },
-                    { id: "E18", title: "Robots with Pain", subtitle: "會有痛覺的機器人", file: "English-Reading-18.html", icon: "🦾" },
-                    { id: "E19", title: "5 Cool Gadgets", subtitle: "5 個你超想擁有的黑科技小物", file: "English-Reading-19.html", icon: "⌚" },
-                    { id: "E20", title: "ChatGPT", subtitle: "是朋友還是敵人？", file: "English-Reading-20.html", icon: "💬" }
-                ]
-            },
-            {
-                title: "3. Mystery & Urban Legends",
-                theme: "theme-cat3",
-                textClass: "cat-title-3",
-                items: [
-                    { id: "E21", title: "Bermuda Triangle", subtitle: "百慕達三角洲之謎", file: "English-Reading-21.html", icon: "📐" },
-                    { id: "E22", title: "Real-Life Zombies", subtitle: "自然界真實存在的殭屍生物", file: "English-Reading-22.html", icon: "🧟" },
-                    { id: "E23", title: "Legend of Kraken", subtitle: "北歐海怪：深海巨獸", file: "English-Reading-23.html", icon: "🦑" },
-                    { id: "E24", title: "Japanese Legends", subtitle: "5 個最毛的日本都市傳說", file: "English-Reading-24.html", icon: "👻" },
-                    { id: "E25", title: "Dyatlov Pass", subtitle: "雪山離奇死亡之謎", file: "English-Reading-25.html", icon: "🏔️" },
-                    { id: "E26", title: "Area 51 Secrets", subtitle: "外星人存在嗎？51 區的秘密", file: "English-Reading-26.html", icon: "👽" },
-                    { id: "E27", title: "Pharaohs' Curse", subtitle: "法老的詛咒", file: "English-Reading-27.html", icon: "⚰️" },
-                    { id: "E28", title: "Sleep Paralysis", subtitle: "鬼壓床：房間裡的惡魔？", file: "English-Reading-28.html", icon: "🛌" },
-                    { id: "E29", title: "Nazca Lines", subtitle: "納斯卡線：給外星人看的畫？", file: "English-Reading-29.html", icon: "🏜️" },
-                    { id: "E30", title: "Hope Diamond", subtitle: "希望鑽石的詛咒", file: "English-Reading-30.html", icon: "💎" }
-                ]
-            },
-            {
-                title: "4. Sports & Extreme",
-                theme: "theme-cat4",
-                textClass: "cat-title-4",
-                items: [
-                    { id: "E31", title: "Mamba Mentality", subtitle: "曼巴精神：Kobe Bryant", file: "English-Reading-31.html", icon: "🏀" },
-                    { id: "E32", title: "Why AJ is Expensive", subtitle: "為什麼 AJ 鞋這麼貴？", file: "English-Reading-32.html", icon: "👟" },
-                    { id: "E33", title: "Parkour", subtitle: "跑酷：移動的藝術", file: "English-Reading-33.html", icon: "🏃" },
-                    { id: "E34", title: "Usain Bolt", subtitle: "地表最速男", file: "English-Reading-34.html", icon: "⚡" },
-                    { id: "E35", title: "Rise of UFC", subtitle: "UFC 的崛起：綜合格鬥", file: "English-Reading-35.html", icon: "🥊" },
-                    { id: "E36", title: "F1 Racing", subtitle: "F1 賽車：速度與科學", file: "English-Reading-36.html", icon: "🏎️" },
-                    { id: "E37", title: "Brain Training", subtitle: "頂尖運動員如何訓練大腦", file: "English-Reading-37.html", icon: "🧠" },
-                    { id: "E38", title: "Dangerous Sports", subtitle: "世界上最危險的運動", file: "English-Reading-38.html", icon: "🧗" },
-                    { id: "E39", title: "Sneaker Culture", subtitle: "球鞋文化：炒鞋賺錢？", file: "English-Reading-39.html", icon: "👟" },
-                    { id: "E40", title: "Messi vs. Ronaldo", subtitle: "誰是史上最佳？", file: "English-Reading-40.html", icon: "⚽" }
-                ]
-            },
-            {
-                title: "5. Movies & Pop Culture",
-                theme: "theme-cat5",
-                textClass: "cat-title-5",
-                items: [
-                    { id: "E41", title: "Why Capes?", subtitle: "為什麼超級英雄要穿披風？", file: "English-Reading-41.html", icon: "🦸" },
-                    { id: "E42", title: "Naruto's Way", subtitle: "火影忍者的哲學", file: "English-Reading-42.html", icon: "🍥" },
-                    { id: "E43", title: "Godzilla", subtitle: "哥吉拉：怪獸還是英雄？", file: "English-Reading-43.html", icon: "🦖" },
-                    { id: "E44", title: "Special Effects", subtitle: "電影特效是怎麼做出來的？", file: "English-Reading-44.html", icon: "🎬" },
-                    { id: "E45", title: "Marvel vs. DC", subtitle: "終極對決", file: "English-Reading-45.html", icon: "💥" },
-                    { id: "E46", title: "Studio Ghibli", subtitle: "吉卜力工作室：動畫的魔法", file: "English-Reading-46.html", icon: "🎐" },
-                    { id: "E47", title: "One Piece", subtitle: "為什麼航海王是第一名？", file: "English-Reading-47.html", icon: "☠️" },
-                    { id: "E48", title: "MillionaireTubers", subtitle: "變成百萬富翁的 YouTuber", file: "English-Reading-48.html", icon: "💰" },
-                    { id: "E49", title: "K-Pop Phenomenon", subtitle: "K-Pop 如何席捲全球", file: "English-Reading-49.html", icon: "🎤" },
-                    { id: "E50", title: "Meme Culture", subtitle: "迷因：網路的語言", file: "English-Reading-50.html", icon: "😹" }
-                ]
-            },
-            {
-                title: "6. Strange Nature",
-                theme: "theme-cat6",
-                textClass: "cat-title-6",
-                items: [
-                    { id: "E51", title: "Deadly Animals", subtitle: "幾秒鐘就能殺死你的動物", file: "English-Reading-51.html", icon: "🦂" },
-                    { id: "E52", title: "Immortal Jellyfish", subtitle: "永生不死的燈塔水母", file: "English-Reading-52.html", icon: "🪼" },
-                    { id: "E53", title: "Why Cats Purr", subtitle: "貓咪為什麼會呼嚕？", file: "English-Reading-53.html", icon: "🐱" },
-                    { id: "E54", title: "Meat-Eating Plants", subtitle: "食肉植物", file: "English-Reading-54.html", icon: "🪴" },
-                    { id: "E55", title: "The Bloop", subtitle: "來自深海的神秘怪聲", file: "English-Reading-55.html", icon: "🌊" },
-                    { id: "E56", title: "Cockroaches", subtitle: "蟑螂真的能挺過核爆嗎？", file: "English-Reading-56.html", icon: "🪳" },
-                    { id: "E57", title: "Megalodon", subtitle: "巨齒鯊：還活著嗎？", file: "English-Reading-57.html", icon: "🦈" },
-                    { id: "E58", title: "Nightmares", subtitle: "我們為什麼會做惡夢？", file: "English-Reading-58.html", icon: "💤" },
-                    { id: "E59", title: "Telepathy", subtitle: "心電感應是有可能的嗎？", file: "English-Reading-59.html", icon: "🔮" },
-                    { id: "E60", title: "True But Fake", subtitle: "10 個聽起來像假的但卻是真的", file: "English-Reading-60.html", icon: "🤥" }
-                ]
-            },
-            {
-                title: "7. History & Weapons",
-                theme: "theme-cat7",
-                textClass: "cat-title-7",
-                items: [
-                    { id: "E61", title: "Samurai vs. Knights", subtitle: "武士 vs 騎士：誰會贏？", file: "English-Reading-61.html", icon: "⚔️" },
-                    { id: "E62", title: "Ninjas", subtitle: "忍者的秘密生活", file: "English-Reading-62.html", icon: "🥷" },
-                    { id: "E63", title: "Snipers", subtitle: "狙擊手：隱形士兵", file: "English-Reading-63.html", icon: "🎯" },
-                    { id: "E64", title: "Trojan Horse", subtitle: "特洛伊木馬：天才的詭計", file: "English-Reading-64.html", icon: "🐴" },
-                    { id: "E65", title: "Tanks", subtitle: "坦克：戰場巨獸", file: "English-Reading-65.html", icon: "🛡️" },
-                    { id: "E66", title: "Genghis Khan", subtitle: "成吉思汗：蒙古帝國", file: "English-Reading-66.html", icon: "🏰" },
-                    { id: "E67", title: "Real Pirates", subtitle: "真實的神鬼奇航海盜", file: "English-Reading-67.html", icon: "🏴‍☠️" },
-                    { id: "E68", title: "Vikings", subtitle: "維京人：掠奪者還是貿易商？", file: "English-Reading-68.html", icon: "⛵" },
-                    { id: "E69", title: "WWII Spies", subtitle: "二戰中的密碼與間諜", file: "English-Reading-69.html", icon: "📻" },
-                    { id: "E70", title: "Ancient Weapons", subtitle: "超越時代的古代兵器", file: "English-Reading-70.html", icon: "🗡️" }
-                ]
-            },
-            {
-                title: "8. Survival & Adventure",
-                theme: "theme-cat8",
-                textClass: "cat-title-8",
-                items: [
-                    { id: "E71", title: "Shark Attack", subtitle: "遭遇鯊魚攻擊該怎麼辦？", file: "English-Reading-71.html", icon: "🦈" },
-                    { id: "E72", title: "Amazon Jungle", subtitle: "迷失在亞馬遜叢林", file: "English-Reading-72.html", icon: "🌳" },
-                    { id: "E73", title: "Mount Everest", subtitle: "攀登聖母峰：死亡地帶", file: "English-Reading-73.html", icon: "🏔️" },
-                    { id: "E74", title: "Bear Grylls", subtitle: "貝爾：什麼都吃的男人", file: "English-Reading-74.html", icon: "🐛" },
-                    { id: "E75", title: "Desert Island", subtitle: "荒島求生指南", file: "English-Reading-75.html", icon: "🏝️" },
-                    { id: "E76", title: "Deep Sea", subtitle: "深海探險：最後的邊疆", file: "English-Reading-76.html", icon: "⚓" },
-                    { id: "E77", title: "Bear Encounter", subtitle: "遇到熊該怎麼辦？", file: "English-Reading-77.html", icon: "🐻" },
-                    { id: "E78", title: "Urban Exploration", subtitle: "城市廢墟探險：風險與回報", file: "English-Reading-78.html", icon: "🏭" },
-                    { id: "E79", title: "Solo Travel at 16", subtitle: "16 歲獨自環遊世界", file: "English-Reading-79.html", icon: "🎒" },
-                    { id: "E80", title: "Van Life", subtitle: "車宿生活：住在路上", file: "English-Reading-80.html", icon: "🚐" }
-                ]
-            },
-            {
-                title: "9. Teen Life & School",
-                theme: "theme-cat9",
-                textClass: "cat-title-9",
-                items: [
-                    { id: "E81", title: "Dealing with Bullies", subtitle: "如何應對霸凌", file: "English-Reading-81.html", icon: "🛑" },
-                    { id: "E82", title: "Procrastination", subtitle: "拖延症的科學", file: "English-Reading-82.html", icon: "🐌" },
-                    { id: "E83", title: "Talk to Anyone", subtitle: "如何跟任何人聊天", file: "English-Reading-83.html", icon: "🗣️" },
-                    { id: "E84", title: "Understanding Parents", subtitle: "為什麼父母都不懂我們？", file: "English-Reading-84.html", icon: "👨‍👩‍👦" },
-                    { id: "E85", title: "Exam Stress", subtitle: "考試壓力：如何擊敗它", file: "English-Reading-85.html", icon: "📝" },
-                    { id: "E86", title: "Introverts vs Extroverts", subtitle: "內向者 vs 外向者", file: "English-Reading-86.html", icon: "🔋" },
-                    { id: "E87", title: "Saying No", subtitle: "拒絕的藝術", file: "English-Reading-87.html", icon: "🙅" },
-                    { id: "E88", title: "Music & Study", subtitle: "聽音樂真的有助於讀書嗎？", file: "English-Reading-88.html", icon: "🎧" },
-                    { id: "E89", title: "First Dates", subtitle: "初次約會：Do's and Don'ts", file: "English-Reading-89.html", icon: "💘" },
-                    { id: "E90", title: "Building Confidence", subtitle: "建立自信：假裝久了就是真的", file: "English-Reading-90.html", icon: "🦁" }
-                ]
-            },
-            {
-                title: "10. Just for Laughs",
-                theme: "theme-cat10",
-                textClass: "cat-title-10",
-                items: [
-                    { id: "E91", title: "Dumbest Criminals", subtitle: "世界上最笨的罪犯", file: "English-Reading-91.html", icon: "🚓" },
-                    { id: "E92", title: "Open Bottle Trick", subtitle: "沒有開瓶器怎麼開瓶子", file: "English-Reading-92.html", icon: "🍾" },
-                    { id: "E93", title: "Lazy Hacks", subtitle: "懶惰學生的生活駭客技巧", file: "English-Reading-93.html", icon: "🛌" },
-                    { id: "E94", title: "History of Pizza", subtitle: "披薩的歷史", file: "English-Reading-94.html", icon: "🍕" },
-                    { id: "E95", title: "Weird Laws", subtitle: "世界各地的怪異法律", file: "English-Reading-95.html", icon: "⚖️" },
-                    { id: "E96", title: "Tie a Tie", subtitle: "如何打領帶 (Step by Step)", file: "English-Reading-96.html", icon: "👔" },
-                    { id: "E97", title: "Why We Yawn", subtitle: "我們為什麼會打哈欠？", file: "English-Reading-97.html", icon: "🥱" },
-                    { id: "E98", title: "Optical Illusions", subtitle: "欺騙大腦的視錯覺", file: "English-Reading-98.html", icon: "🌀" },
-                    { id: "E99", title: "Most Boring Job", subtitle: "世界上最無聊的工作", file: "English-Reading-99.html", icon: "😐" },
-                    { id: "E100", title: "To My 13-Year-Old Self", subtitle: "給 13 歲自己的建議", file: "English-Reading-100.html", icon: "💌" }
-                ]
-            },
-            {
-                title: "11. Money & Hustle",
-                theme: "theme-cat11",
-                textClass: "cat-title-11",
-                items: [
-                    { id: "E101", title: "YouTuber Earnings", subtitle: "YouTuber 怎麼賺錢的？", file: "English-Reading-101.html", icon: "💸" },
-                    { id: "E102", title: "Cryptocurrency", subtitle: "簡單搞懂比特幣", file: "English-Reading-102.html", icon: "🪙" },
-                    { id: "E103", title: "Story of Nike", subtitle: "Nike 的品牌傳奇", file: "English-Reading-103.html", icon: "✔️" },
-                    { id: "E104", title: "Saving Money", subtitle: "青少年存錢攻略", file: "English-Reading-104.html", icon: "🐖" },
-                    { id: "E105", title: "Expensive NFT", subtitle: "史上最貴的 NFT", file: "English-Reading-105.html", icon: "🖼️" },
-                    { id: "E106", title: "Elon Musk", subtitle: "伊隆·馬斯克的商業帝國", file: "English-Reading-106.html", icon: "🚀" },
-                    { id: "E107", title: "Stock Market", subtitle: "股市是什麼？", file: "English-Reading-107.html", icon: "📈" },
-                    { id: "E108", title: "Side Hustles", subtitle: "學生可以做的副業", file: "English-Reading-108.html", icon: "💼" },
-                    { id: "E109", title: "iPhone Price", subtitle: "為什麼 iPhone 這麼貴？", file: "English-Reading-109.html", icon: "📱" },
-                    { id: "E110", title: "Rich Dad Poor Dad", subtitle: "核心觀念", file: "English-Reading-110.html", icon: "📘" }
-                ]
-            },
-            {
-                title: "12. Extreme Geography",
-                theme: "theme-cat12",
-                textClass: "cat-title-12",
-                items: [
-                    { id: "E111", title: "Dangerous Road", subtitle: "最危險的公路：北永加斯路", file: "English-Reading-111.html", icon: "🛣️" },
-                    { id: "E112", title: "Snake Island", subtitle: "蛇島：人類禁地", file: "English-Reading-112.html", icon: "🐍" },
-                    { id: "E113", title: "Door to Hell", subtitle: "地獄之門：燃燒的大坑", file: "English-Reading-113.html", icon: "🔥" },
-                    { id: "E114", title: "Point Nemo", subtitle: "地球上最孤獨的地方", file: "English-Reading-114.html", icon: "🌊" },
-                    { id: "E115", title: "Antarctica Desert", subtitle: "為什麼南極其實是沙漠？", file: "English-Reading-115.html", icon: "❄️" },
-                    { id: "E116", title: "Mariana Trench", subtitle: "馬里亞納海溝：世界的底端", file: "English-Reading-116.html", icon: "⚓" },
-                    { id: "E117", title: "Dead Sea", subtitle: "死海正在死去？", file: "English-Reading-117.html", icon: "🏊" },
-                    { id: "E118", title: "Mount Thor", subtitle: "地球上最大的垂直落差", file: "English-Reading-118.html", icon: "⛰️" },
-                    { id: "E119", title: "Blood Falls", subtitle: "南極的神秘紅流", file: "English-Reading-119.html", icon: "🩸" },
-                    { id: "E120", title: "Atlantis", subtitle: "尋找失落之城", file: "English-Reading-120.html", icon: "🏛️" }
-                ]
-            },
-            {
-                title: "13. Vehicles & Speed",
-                theme: "theme-cat13",
-                textClass: "cat-title-13",
-                items: [
-                    { id: "E121", title: "Bugatti Chiron", subtitle: "工程奇蹟", file: "English-Reading-121.html", icon: "🏎️" },
-                    { id: "E122", title: "Jet Engines", subtitle: "噴射引擎是如何運作的？", file: "English-Reading-122.html", icon: "✈️" },
-                    { id: "E123", title: "Ferrari vs Lambo", subtitle: "宿敵的故事", file: "English-Reading-123.html", icon: "🏁" },
-                    { id: "E124", title: "Self-Driving Cars", subtitle: "安全還是恐怖？", file: "English-Reading-124.html", icon: "🚘" },
-                    { id: "E125", title: "Drifting", subtitle: "甩尾：滑行的藝術", file: "English-Reading-125.html", icon: "💨" },
-                    { id: "E126", title: "Superyachts", subtitle: "海上的移動皇宮", file: "English-Reading-126.html", icon: "🛥️" },
-                    { id: "E127", title: "The Concorde", subtitle: "超音速客機的傳奇", file: "English-Reading-127.html", icon: "🛫" },
-                    { id: "E128", title: "Monster Trucks", subtitle: "大輪子的破壞力", file: "English-Reading-128.html", icon: "🛞" },
-                    { id: "E129", title: "Maglev Trains", subtitle: "磁浮列車為什麼會漂浮？", file: "English-Reading-129.html", icon: "🚅" },
-                    { id: "E130", title: "Top Gun Jets", subtitle: "真實的戰鬥機", file: "English-Reading-130.html", icon: "🛩️" }
-                ]
-            },
-            {
-                title: "14. Food Science",
-                theme: "theme-cat14",
-                textClass: "cat-title-14",
-                items: [
-                    { id: "E131", title: "Hottest Pepper", subtitle: "世界上最辣的辣椒", file: "English-Reading-131.html", icon: "🌶️" },
-                    { id: "E132", title: "Durian Smell", subtitle: "榴槤聞起來這麼臭？", file: "English-Reading-132.html", icon: "🤢" },
-                    { id: "E133", title: "Space Food", subtitle: "太空人到底吃什麼？", file: "English-Reading-133.html", icon: "👨‍🚀" },
-                    { id: "E134", title: "Fast Food Secrets", subtitle: "速食店不告訴你的秘密", file: "English-Reading-134.html", icon: "🍔" },
-                    { id: "E135", title: "Eating Insects", subtitle: "人類未來的食物來源？", file: "English-Reading-135.html", icon: "🦗" },
-                    { id: "E136", title: "Brain Freeze", subtitle: "吃冰為什麼會頭痛？", file: "English-Reading-136.html", icon: "🍧" },
-                    { id: "E137", title: "Expensive Pizza", subtitle: "世界上最貴的披薩", file: "English-Reading-137.html", icon: "🍕" },
-                    { id: "E138", title: "Coffee Fuel", subtitle: "咖啡：現代世界的燃料", file: "English-Reading-138.html", icon: "☕" },
-                    { id: "E139", title: "Cola Wars", subtitle: "可口可樂 vs 百事可樂", file: "English-Reading-139.html", icon: "🥤" },
-                    { id: "E140", title: "Onion Tears", subtitle: "為什麼切洋蔥會流淚？", file: "English-Reading-140.html", icon: "🧅" }
-                ]
-            },
-            {
-                title: "15. Savage Wildlife",
-                theme: "theme-cat15",
-                textClass: "cat-title-15",
-                items: [
-                    { id: "E141", title: "Titanoboa", subtitle: "史上最大的蛇", file: "English-Reading-141.html", icon: "🐍" },
-                    { id: "E142", title: "Deadly Hippos", subtitle: "河馬：可愛但致命", file: "English-Reading-142.html", icon: "🦛" },
-                    { id: "E143", title: "Mantis Shrimp", subtitle: "雀尾螳螂蝦：超強拳擊", file: "English-Reading-143.html", icon: "🦐" },
-                    { id: "E144", title: "Orcas", subtitle: "虎鯨：海中的狼群", file: "English-Reading-144.html", icon: "🐋" },
-                    { id: "E145", title: "Pistol Shrimp", subtitle: "比槍聲還大聲的攻擊", file: "English-Reading-145.html", icon: "🔫" },
-                    { id: "E146", title: "Wolves & Rivers", subtitle: "狼群如何改變河流", file: "English-Reading-146.html", icon: "🐺" },
-                    { id: "E147", title: "Mimic Octopus", subtitle: "擬態章魚：偽裝大師", file: "English-Reading-147.html", icon: "🐙" },
-                    { id: "E148", title: "Pufferfish", subtitle: "河豚：致命的美味", file: "English-Reading-148.html", icon: "🐡" },
-                    { id: "E149", title: "Electric Eels", subtitle: "電鰻：活生生的電池", file: "English-Reading-149.html", icon: "⚡" },
-                    { id: "E150", title: "The Platypus", subtitle: "鴨嘴獸：最怪異的創造", file: "English-Reading-150.html", icon: "🦆" }
-                ]
-            }
-        ];
-
-        /* ================= Firebase 初始化 ================= */
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-          apiKey: "AIzaSyAxQFt76ZPXE7d0i1XeNZ1yiiD2WYNIfHs",
-          authDomain: "chinese-learning-47f4d.firebaseapp.com",
-          projectId: "chinese-learning-47f4d",
-          storageBucket: "chinese-learning-47f4d.firebasestorage.app",
-          messagingSenderId: "76289812052",
-          appId: "1:76289812052:web:898384a916f9f341f62fc1"
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxQFt76ZPXE7d0i1XeNZ1yiiD2WYNIfHs",
+            authDomain: "chinese-learning-47f4d.firebaseapp.com",
+            projectId: "chinese-learning-47f4d",
+            storageBucket: "chinese-learning-47f4d.firebasestorage.app",
+            messagingSenderId: "76289812052",
+            appId: "1:76289812052:web:898384a916f9f341f62fc1"
         };
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        // 設定專屬的 App ID 以區隔中文版資料
-        const appId = 'English-Reading'; 
 
-        const getPublicRef = (col) => collection(db, 'artifacts', appId, 'public', 'data', col);
-        const getUserRef = (uid, col) => collection(db, 'artifacts', appId, 'users', uid, col);
+        const COLLECTION_NAME = 'English-Reading'; // Changed as requested
+        const DOC_GLOBAL = 'global';
 
-        /* ================= Components ================= */
+        let app, db, auth;
 
-        // 狀態燈號
+        try {
+            if (firebaseConfig.apiKey) {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+            }
+        } catch (e) {
+            console.error("Firebase init failed:", e);
+        }
+
+        // ==========================================
+        // 2. Data Structure (15 Categories)
+        // ==========================================
+        const generateRawData = () => {
+            const sections = [
+                { 
+                    name: "Category 1: Gaming & Esports", 
+                    color: "#6200ea", // Deep Purple
+                    lightColor: "#ede7f6", 
+                    icon: "🎮", 
+                    titles: [
+                        "The History of Mario (瑪利歐的進化史)", "How to Go Pro: Life of an Esports Player (如何成為職業電競選手？)", "Minecraft: Building a Virtual World (麥塊：打造虛擬世界)", "The Most Expensive Virtual Items Ever Sold (史上賣最貴的虛擬寶物)", "Why Do We Rage Quit? (為什麼玩遊戲會爆氣？心理學分析)", "Top 5 Cheat Codes in Gaming History (遊戲史上最強的 5 個作弊碼)", "VR Gaming: The Future or a Fad? (VR 遊戲：未來趨勢還是曇花一現？)", "The Story Behind League of Legends (英雄聯盟背後的故事)", "Game Glitches That Became Features (變成遊戲特色的 Bug)", "How Game Developers Make You Addicted (遊戲開發者如何讓你上癮)"
+                    ] 
+                },
+                { 
+                    name: "Category 2: Sci-Fi, Tech & AI", 
+                    color: "#00b0ff", // Light Blue
+                    lightColor: "#e1f5fe", 
+                    icon: "🤖", 
+                    titles: [
+                        "Will AI Take Your Future Job? (AI 會搶走你未來的工作嗎？)", "Living on Mars: Elon Musk's Dream (火星移民：馬斯克的夢想)", "The Dark Web: What is it? (暗網是什麼？)", "Flying Cars: Are We There Yet? (飛天車離我們還有多遠？)", "How Hackers Steal Your Passwords (駭客如何偷走你的密碼)", "Is Time Travel Possible? (時光旅行真的可行嗎？)", "The Science of Black Holes (黑洞的科學)", "Robots That Can Feel Pain (會有痛覺的機器人)", "5 Gadgets You Wish You Had (5 個你超想擁有的黑科技小物)", "ChatGPT: Friend or Enemy? (ChatGPT：是朋友還是敵人？)"
+                    ] 
+                },
+                { 
+                    name: "Category 3: Mystery, Horror & Urban Legends", 
+                    color: "#d50000", // Red
+                    lightColor: "#ffebee", 
+                    icon: "👻", 
+                    titles: [
+                        "The Mystery of the Bermuda Triangle (百慕達三角洲之謎)", "Real-Life Zombies in Nature (自然界真實存在的殭屍生物)", "The Legend of the Kraken (北歐海怪克拉肯：深海巨獸)", "5 Creepiest Urban Legends from Japan (5 個最毛的日本都市傳說)", "The Dyatlov Pass Incident (迪亞特洛夫事件：雪山離奇死亡之謎)", "Do Aliens Exist? The Area 51 Secrets (外星人存在嗎？51 區的秘密)", "The Curse of the Pharaohs (法老的詛咒)", "Sleep Paralysis: A Demon in Your Room? (鬼壓床：房間裡的惡魔？)", "The Mystery of the Nazca Lines (納斯卡線之謎：給外星人看的畫？)", "The Curse of the Hope Diamond (希望鑽石的詛咒)"
+                    ] 
+                },
+                { 
+                    name: "Category 4: Sports, Sneakers & Extreme", 
+                    color: "#ff6d00", // Orange
+                    lightColor: "#fff3e0", 
+                    icon: "🏀", 
+                    titles: [
+                        "The Mamba Mentality: Kobe Bryant (曼巴精神：Kobe Bryant)", "Why Are Air Jordans So Expensive? (為什麼 AJ 鞋這麼貴？)", "Parkour: The Art of Movement (跑酷：移動的藝術)", "The Fastest Man Alive: Usain Bolt (地表最速男：Usain Bolt)", "The Rise of UFC: MMA Fighting (UFC 的崛起：綜合格鬥)", "F1 Racing: Speed and Science (F1 賽車：速度與科學)", "How Athletes Train Their Brains (頂尖運動員如何訓練大腦)", "The Most Dangerous Sports in the World (世界上最危險的運動)", "Sneaker Culture: Collecting for Cash (球鞋文化：炒鞋賺錢？)", "Messi vs. Ronaldo: The GOAT Debate (梅西 vs C羅：誰是史上最佳？)"
+                    ] 
+                },
+                { 
+                    name: "Category 5: Movies, Anime & Pop Culture", 
+                    color: "#c51162", // Pink
+                    lightColor: "#fce4ec", 
+                    icon: "🎬", 
+                    titles: [
+                        "Why Do Superheroes Wear Capes? (為什麼超級英雄要穿披風？)", "The Philosophy of Naruto (火影忍者的哲學)", "Godzilla: Monster or Hero? (哥吉拉：怪獸還是英雄？)", "How Special Effects Are Made (CGI) (電影特效是怎麼做出來的？)", "Marvel vs. DC: The Ultimate Battle (漫威 vs DC：終極對決)", "Studio Ghibli: Magic in Animation (吉卜力工作室：動畫的魔法)", "Why One Piece is the #1 Anime (為什麼航海王是第一名動漫？)", "YouTubers Who Became Millionaires (變成百萬富翁的 YouTuber 們)", "K-Pop: Why It Took Over the World (K-Pop 如何席捲全球)", "Meme Culture: The Language of the Internet (迷因文化：網路的語言)"
+                    ] 
+                },
+                { 
+                    name: "Category 6: Strange Nature & Weird Facts", 
+                    color: "#2e7d32", // Green
+                    lightColor: "#e8f5e9", 
+                    icon: "🦎", 
+                    titles: [
+                        "Animals That Can Kill You in Seconds (幾秒鐘就能殺死你的動物)", "The Immortal Jellyfish (永生不死的燈塔水母)", "Why Do Cats Purr? (貓咪為什麼會呼嚕？)", "Plants That Eat Meat (食肉植物)", "The Bloop: A Sound from the Deep Ocean (Bloop：來自深海的神秘怪聲)", "Can Cockroaches Survive a Nuke? (蟑螂真的能挺過核爆嗎？)", "The Megalodon: Is It Still Alive? (巨齒鯊：還活著嗎？)", "Why Do We Have Nightmares? (我們為什麼會做惡夢？)", "Is Telepathy Possible? (心電感應是有可能的嗎？)", "10 Facts That Sound Fake But Are True (10 個聽起來像假的但卻是真的事實)"
+                    ] 
+                },
+                { 
+                    name: "Category 7: History, War & Weapons", 
+                    color: "#4e342e", // Brown
+                    lightColor: "#efebe9", 
+                    icon: "⚔️", 
+                    titles: [
+                        "Samurai vs. Knights: Who Would Win? (武士 vs 騎士：誰會贏？)", "The Secret Life of Ninjas (忍者的秘密生活)", "Snipers: The Invisible Soldiers (狙擊手：隱形士兵)", "The Trojan Horse: A Genius Trick (特洛伊木馬：天才的詭計)", "Tanks: Monsters of the Battlefield (坦克：戰場巨獸)", "Genghis Khan: The Mongol Empire (成吉思汗：蒙古帝國)", "The Real Pirates of the Caribbean (真實的神鬼奇航海盜)", "Vikings: Raiders or Traders? (維京人：掠奪者還是貿易商？)", "Codes and Spies in World War II (二戰中的密碼與間諜)", "Ancient Weapons That Were Ahead of Their Time (超越時代的古代兵器)"
+                    ] 
+                },
+                { 
+                    name: "Category 8: Survival & Adventure", 
+                    color: "#558b2f", // Light Green
+                    lightColor: "#f1f8e9", 
+                    icon: "🏕️", 
+                    titles: [
+                        "Surviving a Shark Attack (遭遇鯊魚攻擊該怎麼辦？)", "Lost in the Amazon Jungle (迷失在亞馬遜叢林)", "Climbing Mount Everest: The Death Zone (攀登聖母峰：死亡地帶)", "Bear Grylls: The Man Who Eats Anything (貝爾：什麼都吃的男人)", "Surviving on a Desert Island (荒島求生指南)", "Deep Sea Exploration: The Last Frontier (深海探險：最後的邊疆)", "What to Do If You Encounter a Bear (遇到熊該怎麼辦？)", "Urban Exploration (Urbex): Risk and Reward (城市廢墟探險：風險與回報)", "Solo Travel Around the World at 16 (16 歲獨自環遊世界)", "Van Life: Living on the Road (車宿生活：住在路上)"
+                    ] 
+                },
+                { 
+                    name: "Category 9: Teen Life, School & Psychology", 
+                    color: "#0091ea", // Blue
+                    lightColor: "#e1f5fe", 
+                    icon: "🧠", 
+                    titles: [
+                        "How to Deal with Bullies (如何應對霸凌)", "The Science of Procrastination (拖延症的科學)", "How to Talk to Anyone (如何跟任何人聊天 - 社交技巧)", "Why Do Parents Not Understand Us? (為什麼父母都不懂我們？)", "Exam Stress: How to Beat It (考試壓力：如何擊敗它)", "Introverts vs. Extroverts (內向者 vs 外向者)", "The Art of Saying \"No\" (拒絕的藝術)", "Does Music Help You Study? (聽音樂真的有助於讀書嗎？)", "First Dates: Dos and Don'ts (初次約會：該做與不該做的事)", "Building Confidence: Fake It Till You Make It (建立自信：假裝久了就是真的)"
+                    ] 
+                },
+                { 
+                    name: "Category 10: Just for Laughs & Daily Hacks", 
+                    color: "#fbc02d", // Yellow
+                    lightColor: "#fffde7", 
+                    icon: "😂", 
+                    titles: [
+                        "World's Dumbest Criminals (世界上最笨的罪犯)", "How to Open a Bottle Without an Opener (沒有開瓶器怎麼開瓶子)", "Life Hacks for Lazy Students (懶惰學生的生活駭客技巧)", "The History of Pizza (披薩的歷史)", "Weird Laws Around the World (世界各地的怪異法律)", "How to Tie a Tie (Step by Step) (如何打領帶)", "Why Do We Yawn? (我們為什麼會打哈欠？)", "Optical Illusions That Will Trick Your Brain (欺騙大腦的視錯覺)", "The Most Boring Job in the World (世界上最無聊的工作)", "Advice to My 13-Year-Old Self (給 13 歲自己的建議)"
+                    ] 
+                },
+                { 
+                    name: "Category 11: Money, Hustle & Future Careers", 
+                    color: "#00c853", // Green Accent
+                    lightColor: "#e8f5e9", 
+                    icon: "💰", 
+                    titles: [
+                        "How YouTubers Make Money (YouTuber 到底是怎麼賺錢的？)", "What is Cryptocurrency? (什麼是加密貨幣？簡單搞懂比特幣)", "The Story of Nike (Nike 的品牌傳奇：Just Do It)", "How to Save Money as a Teen (青少年存錢攻略)", "The Most Expensive NFT Ever Sold (史上最貴的 NFT 是一張圖？)", "Elon Musk’s Business Empire (伊隆·馬斯克的商業帝國)", "What is the Stock Market? (股市是什麼？像遊戲一樣的交易市場)", "Side Hustles for Students (學生可以做的副業)", "Why is iPhone So Expensive? (為什麼 iPhone 賣這麼貴？)", "Rich Dad Poor Dad: Key Lessons (《富爸爸，窮爸爸》的核心觀念)"
+                    ] 
+                },
+                { 
+                    name: "Category 12: Extreme Geography & Earth Mysteries", 
+                    color: "#00838f", // Cyan/Teal
+                    lightColor: "#e0f7fa", 
+                    icon: "🌍", 
+                    titles: [
+                        "The Most Dangerous Road in the World (世界上最危險的公路：北永加斯路)", "Snake Island: Humans Forbidden (蛇島：人類禁地)", "The Door to Hell: Burning for Decades (地獄之門：燃燒數十年的大坑)", "Point Nemo: The Loneliest Place on Earth (尼莫點：地球上最孤獨的地方)", "Why Antarctica is Actually a Desert (為什麼南極其實是沙漠？)", "The Mariana Trench: Bottom of the World (馬里亞納海溝：世界的底端)", "The Dead Sea is Dying (死海正在死去？)", "Mount Thor: The Greatest Drop on Earth (索爾山：地球上最大的垂直落差)", "Blood Falls: A Mystery in Antarctica (血瀑布：南極的神秘紅流)", "Is Atlantis Real? Searching for the Lost City (亞特蘭提斯是真的嗎？尋找失落之城)"
+                    ] 
+                },
+                { 
+                    name: "Category 13: Vehicles, Machines & Speed", 
+                    color: "#304ffe", // Indigo Accent
+                    lightColor: "#e8eaf6", 
+                    icon: "🏎️", 
+                    titles: [
+                        "Bugatti Chiron: Engineering Marvel (布加迪 Chiron：工程奇蹟)", "How Jet Engines Work (噴射引擎是如何運作的？)", "Ferrari vs. Lamborghini: The Rivalry (法拉利 vs 藍寶堅尼：宿敵的故事)", "Self-Driving Cars: Safe or Scary? (自動駕駛汽車：安全還是恐怖？)", "Drifting: The Art of Sliding (甩尾：滑行的藝術)", "Superyachts: Floating Palaces (超級遊艇：海上的移動皇宮)", "The Concorde: Supersonic Travel (協和號：超音速客機的傳奇)", "Monster Trucks: Big Wheels, Big Power (怪獸卡車：大輪子的破壞力)", "How Maglev Trains Float (磁浮列車為什麼會漂浮？)", "Top Gun: Real Fighter Jets (捍衛戰士：真實的戰鬥機)"
+                    ] 
+                },
+                { 
+                    name: "Category 14: Food Science & Weird Cuisine", 
+                    color: "#e64a19", // Deep Orange
+                    lightColor: "#fbe9e7", 
+                    icon: "🍔", 
+                    titles: [
+                        "The World’s Hottest Pepper (世界上最辣的辣椒：卡羅萊納死神)", "Why Does Durian Smell Bad? (為什麼榴槤聞起來這麼臭？)", "Space Food: What Astronauts Eat (太空食物：太空人到底吃什麼？)", "Fast Food Secrets They Don't Tell You (速食店不告訴你的秘密)", "Insects: The Future of Food? (吃蟲：人類未來的食物來源？)", "Why Do We Get Brain Freeze? (吃冰為什麼會頭痛？)", "The Most Expensive Pizza in the World (世界上最貴的披薩)", "Coffee: The Fuel of the Modern World (咖啡：現代世界的燃料)", "Coca-Cola vs. Pepsi: The Cola Wars (可口可樂 vs 百事可樂：可樂大戰)", "Why Do Onions Make You Cry? (為什麼切洋蔥會流淚？)"
+                    ] 
+                },
+                { 
+                    name: "Category 15: Savage Wildlife & Animal Superpowers", 
+                    color: "#827717", // Lime
+                    lightColor: "#f9fbe7", 
+                    icon: "🦁", 
+                    titles: [
+                        "The Titanoboa: Largest Snake Ever (泰坦巨蟒：史上最大的蛇)", "Hippos: Cute but Deadly (河馬：可愛但致命的殺手)", "The Mantis Shrimp: Super Punch (雀尾螳螂蝦：擁有超強拳擊力)", "Orcas: The Wolves of the Sea (虎鯨：海中的狼群戰術)", "The Pistol Shrimp: Louder Than a Gun (槍蝦：比槍聲還大聲的攻擊)", "How Wolves Changed Rivers (Yellowstone) (狼群如何改變河流：黃石公園的奇蹟)", "The Mimic Octopus: Master of Disguise (擬態章魚：偽裝大師)", "The Pufferfish: Deadly Delicacy (河豚：致命的美味)", "Electric Eels: Living Batteries (電鰻：活生生的電池)", "The Platypus: Nature’s Weirdest Creation (鴨嘴獸：大自然最怪異的創造)"
+                    ] 
+                }
+            ];
+
+            const result = [];
+            let currentId = 1;
+
+            sections.forEach(sec => {
+                const sectionItems = [];
+                
+                sec.titles.forEach((title, index) => {
+                    sectionItems.push({
+                        id: currentId,
+                        code: `English-Reading-${currentId}`,
+                        title: title,
+                        href: `English-Reading-${currentId}.html`
+                    });
+                    currentId++;
+                });
+
+                result.push({
+                    title: sec.name,
+                    color: sec.color,
+                    lightColor: sec.lightColor,
+                    icon: sec.icon,
+                    items: sectionItems
+                });
+            });
+
+            return result;
+        };
+
+        const RAW_DATA = generateRawData();
+        const TOTAL_ITEMS = 150; 
+
+        // ==========================================
+        // 3. React Components
+        // ==========================================
+
+        const { useState, useEffect, useMemo } = React;
+
         const StatusLight = ({ status }) => {
             let dotClass = 'status-loading';
             let text = 'Connecting...';
@@ -515,319 +472,311 @@
                 text = 'Synced';
             } else if (status === 'error') {
                 dotClass = 'status-error';
-                text = 'Error';
+                text = 'Sync Failed';
             } else if (status === 'loading') {
                 dotClass = 'status-loading';
                 text = 'Loading...';
             } else {
-                dotClass = 'status-offline'; 
-                text = 'Offline';
+                dotClass = ''; 
+                text = 'Offline Mode';
             }
 
             return (
-                <div className="flex items-center text-xs text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100 backdrop-blur-sm bg-opacity-90">
+                <div className="flex items-center text-xs text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-100">
                     <span className={`status-dot ${dotClass}`}></span>
                     {text}
                 </div>
             );
         };
 
-        // 登入組件
-        const UserLoginWidget = ({ onLogin, usersList }) => {
-            const [newUsername, setNewUsername] = useState("");
-            const [isCreating, setIsCreating] = useState(false);
-
-            const handleCreate = async () => {
-                if (!newUsername.trim()) return;
-                setIsCreating(true);
-                await onLogin(newUsername.trim(), true);
-                setIsCreating(false);
-            };
-
-            return (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-lg w-full mx-auto text-left relative z-10">
-                    <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-                        <span className="text-2xl">👋</span> Ready to start?
-                    </h2>
-                    
-                    <div className="space-y-2 mb-6 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                        {usersList.length === 0 ? (
-                            <p className="text-center text-gray-400 py-4 text-sm bg-gray-50 rounded-lg">
-                                Be the first challenger!
-                            </p>
-                        ) : (
-                            usersList.map((user) => (
-                                <button
-                                    key={user.uid}
-                                    onClick={() => onLogin(user, false)}
-                                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-indigo-50 border border-transparent hover:border-indigo-200 transition-all text-left group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
-                                            {user.name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <span className="font-bold text-gray-700">{user.name}</span>
-                                    </div>
-                                    <span className="text-xs text-gray-400 group-hover:text-indigo-600">Enter &rarr;</span>
-                                </button>
-                            ))
-                        )}
-                    </div>
-
-                    <div className="pt-4 border-t border-gray-100">
-                        <label className="text-xs text-gray-400 mb-2 block">Or create new profile</label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={newUsername}
-                                onChange={(e) => setNewUsername(e.target.value)}
-                                placeholder="Your Name"
-                                className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                                onKeyPress={(e) => e.key === 'Enter' && handleCreate()}
-                            />
-                            <button
-                                onClick={handleCreate}
-                                disabled={!newUsername.trim() || isCreating}
-                                className="px-4 py-2 bg-indigo-700 text-white text-sm rounded-lg font-bold hover:bg-indigo-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                            >
-                                {isCreating ? 'Creating...' : 'Start'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // 課程卡片組件
-        const LessonCard = ({ item, theme, isCompleted, onToggle }) => {
-            return (
-                <div 
-                    onClick={onToggle}
-                    className={`app-card ${theme} theme-item ${isCompleted ? 'completed' : ''} group select-none`}
-                >
-                    <div className="absolute top-3 right-3 z-20">
-                        <div className="check-circle">
-                            {isCompleted && <span className="text-sm font-bold">✓</span>}
-                        </div>
-                    </div>
-
-                    <div className="card-icon group-hover:scale-110 transition-transform duration-300">
-                        {item.icon}
-                    </div>
-                    
-                    <div className="card-title text-center text-lg font-bold mb-1 leading-tight">
-                        {item.title}
-                    </div>
-                    <div className="text-center text-sm text-gray-500 mb-3 px-1">
-                        {item.subtitle}
-                    </div>
-                    
-                    <div className="card-desc text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded mb-4 font-mono truncate max-w-full">
-                        {item.file}
-                    </div>
-
-                    <div className={`card-badge rounded-full px-4 py-1 text-xs font-bold tracking-wider text-white mt-auto uppercase ${isCompleted ? '' : 'bg-gray-400'}`}>
-                        {isCompleted ? 'Completed' : 'Start Reading'}
-                    </div>
-                </div>
-            );
-        };
-
-        // 主程式
         const App = () => {
-            const [user, setUser] = useState(null);
-            const [currentProfile, setCurrentProfile] = useState(null);
-            const [usersList, setUsersList] = useState([]);
-            const [progress, setProgress] = useState({});
-            const [status, setStatus] = useState('loading');
+            // UI States
+            const [currentUser, setCurrentUser] = useState(null); 
+            const [allUsers, setAllUsers] = useState([]);
+            const [localProgress, setLocalProgress] = useState({}); 
+            const [loginName, setLoginName] = useState("");
+            const [showLogin, setShowLogin] = useState(false);
+            
+            // System States
+            const [isAuthReady, setIsAuthReady] = useState(false);
+            const [syncStatus, setSyncStatus] = useState("loading"); 
 
+            const completedCount = useMemo(() => {
+                return Object.values(localProgress).filter(v => v === true).length;
+            }, [localProgress]);
+
+            // 1. Init Auth
             useEffect(() => {
-                const initAuth = async () => {
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (err) {
-                        console.error("Auth Error:", err);
-                        setStatus('error');
-                    }
-                };
-                initAuth();
+                if (!firebaseConfig.apiKey) {
+                    setSyncStatus("offline");
+                    const saved = localStorage.getItem('er_local_progress'); // changed key
+                    if (saved) setLocalProgress(JSON.parse(saved));
+                    return;
+                }
 
-                const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        setUser(u);
-                        const listRef = doc(getPublicRef('user_directory'), 'all_users');
-                        const unsubList = onSnapshot(listRef, (docSnap) => {
-                            if (docSnap.exists()) {
-                                setUsersList(docSnap.data().list || []);
-                            } else {
-                                setUsersList([]);
-                            }
-                            setStatus('success');
-                        }, (err) => {
-                            console.error("List Fetch Error:", err);
-                            setStatus('error');
-                        });
-                        return () => unsubList();
+                const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("Firebase Auth Ready:", user.uid);
+                        setIsAuthReady(true);
+                    } else {
+                        console.log("Signing in anonymously...");
+                        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                        if (initialAuthToken) {
+                            signInWithCustomToken(auth, initialAuthToken).catch(e => console.error("Token login failed", e));
+                        } else {
+                            signInAnonymously(auth).catch(e => console.error("Anon login failed", e));
+                        }
                     }
                 });
 
                 return () => unsubscribeAuth();
             }, []);
 
+            // 2. Fetch Users
             useEffect(() => {
-                if (!user || !currentProfile) return;
+                if (!isAuthReady || !db) return;
 
-                setStatus('loading');
-                const progressRef = doc(getUserRef(currentProfile.uid, 'user_progress'), 'main');
-                
-                const unsubProgress = onSnapshot(progressRef, (docSnap) => {
+                setSyncStatus("loading");
+                const unsubGlobal = onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
                     if (docSnap.exists()) {
-                        setProgress(docSnap.data().completed || {});
+                        setAllUsers(docSnap.data().users || []);
                     } else {
-                        setProgress({});
+                        setDoc(doc(db, COLLECTION_NAME, DOC_GLOBAL), { users: [] }, { merge: true });
+                        setAllUsers([]);
                     }
-                    setStatus('success');
-                }, (err) => {
-                    console.error("Progress Sync Error:", err);
-                    setStatus('error');
+                    if (!currentUser) setSyncStatus("success");
+                }, (error) => {
+                    console.error("Fetch users error:", error);
+                    setSyncStatus("error");
                 });
 
-                return () => unsubProgress();
-            }, [user, currentProfile]);
+                return () => unsubGlobal();
+            }, [isAuthReady, currentUser]);
 
-            const handleLogin = async (userDataOrName, isNew) => {
-                if (!user) return;
+            // 3. Fetch User Progress
+            useEffect(() => {
+                if (!currentUser || !isAuthReady || !db) return;
 
-                if (isNew) {
-                    const newProfile = {
-                        name: userDataOrName,
-                        uid: crypto.randomUUID(),
-                        createdAt: new Date().toISOString()
-                    };
-                    const listRef = doc(getPublicRef('user_directory'), 'all_users');
-                    try {
-                        const docSnap = await getDoc(listRef);
-                        if (!docSnap.exists()) {
-                            await setDoc(listRef, { list: [newProfile] });
-                        } else {
-                            await updateDoc(listRef, {
-                                list: arrayUnion(newProfile)
+                setSyncStatus('loading');
+                const unsubUser = onSnapshot(doc(db, COLLECTION_NAME, currentUser), (docSnap) => {
+                    if (docSnap.exists()) {
+                        setLocalProgress(docSnap.data().progress || {});
+                    } else {
+                        setLocalProgress({});
+                    }
+                    setSyncStatus('success');
+                }, (err) => {
+                    console.error("Sync progress error:", err);
+                    setSyncStatus('error');
+                });
+
+                return () => unsubUser();
+            }, [currentUser, isAuthReady]);
+
+            const handleLogin = async (name) => {
+                if (!name.trim()) return;
+                const uname = name.trim();
+                
+                if (isAuthReady && db) {
+                    if (!allUsers.includes(uname)) {
+                        try {
+                            await updateDoc(doc(db, COLLECTION_NAME, DOC_GLOBAL), {
+                                users: arrayUnion(uname)
                             });
+                        } catch (e) {
+                            await setDoc(doc(db, COLLECTION_NAME, DOC_GLOBAL), {
+                                users: arrayUnion(uname)
+                            }, { merge: true });
                         }
-                        setCurrentProfile(newProfile);
-                    } catch (e) {
-                        console.error("Create User Error:", e);
-                        alert("Login Failed, please try again.");
                     }
                 } else {
-                    setCurrentProfile(userDataOrName);
+                    console.log("Offline login, local only.");
                 }
-            };
-
-            const handleLogout = () => {
-                setCurrentProfile(null);
-                setProgress({});
-            };
-
-            const toggleProgress = async (lessonId) => {
-                if (!currentProfile) return;
                 
-                const newStatus = !progress[lessonId];
-                const newProgress = { ...progress, [lessonId]: newStatus };
-                setProgress(newProgress);
-
-                try {
-                    const progressRef = doc(getUserRef(currentProfile.uid, 'user_progress'), 'main');
-                    await setDoc(progressRef, { completed: newProgress }, { merge: true });
-                } catch (e) {
-                    console.error("Save Progress Error:", e);
-                    setStatus('error');
-                    setProgress({ ...progress, [lessonId]: !newStatus });
-                }
+                setCurrentUser(uname);
+                setShowLogin(false);
+                setLoginName("");
             };
 
-            const totalLessons = ALL_CATEGORIES.reduce((acc, cat) => acc + cat.items.length, 0);
-            const completedCount = Object.values(progress).filter(Boolean).length;
-            const progressPercentage = Math.round((completedCount / totalLessons) * 100);
+            const toggleProgress = async (code) => {
+                const newVal = !localProgress[code];
+                const newProgress = { ...localProgress, [code]: newVal };
+                
+                setLocalProgress(newProgress);
+
+                if (currentUser && isAuthReady && db) {
+                    try {
+                        setSyncStatus('loading');
+                        await setDoc(doc(db, COLLECTION_NAME, currentUser), {
+                            progress: newProgress,
+                            lastUpdated: new Date()
+                        }, { merge: true });
+                        setSyncStatus('success');
+                    } catch (e) {
+                        console.error("Save failed:", e);
+                        setSyncStatus('error');
+                    }
+                } else {
+                    localStorage.setItem('er_local_progress', JSON.stringify(newProgress)); // changed key
+                }
+            };
 
             return (
-                <div className="flex flex-col items-center min-h-screen pb-20">
-                    <header className="w-full max-w-5xl px-6 pt-12 pb-6 text-center relative">
-                        <div className="absolute top-4 right-4 flex gap-2">
-                            <StatusLight status={status} />
-                            {currentProfile && (
-                                <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-red-500 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm transition-colors">
-                                    Logout
-                                </button>
-                            )}
-                        </div>
-
-                        <h1 className="text-4xl md:text-6xl font-black text-gray-800 mb-2 tracking-tight" style={{ fontFamily: 'Poppins' }}>
-                            <span className="text-indigo-600">English</span> Learning HQ
-                        </h1>
-                        <p className="text-gray-500 font-medium uppercase tracking-widest text-sm mb-8">Ultimate Reading Challenge</p>
-
-                        {!currentProfile ? (
-                            <div className="mt-8 mb-8">
-                                <p className="text-gray-600 text-lg mb-6">Choose your topic, read the story, level up your English.</p>
-                                <UserLoginWidget onLogin={handleLogin} usersList={usersList} />
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-gray-600 text-lg font-medium mb-8">
-                                    Welcome back, <span className="font-bold text-indigo-700">{currentProfile.name}</span>!
-                                </p>
-
-                                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-10 max-w-xl mx-auto">
-                                    <div className="flex justify-between items-end mb-2">
-                                        <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Total Progress</span>
-                                        <span className="text-3xl font-black text-indigo-600 font-mono">
-                                            {completedCount} <span className="text-sm text-gray-300 font-normal">/ {totalLessons}</span>
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
-                                        <div 
-                                            className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 h-full rounded-full transition-all duration-1000 ease-out shadow-lg"
-                                            style={{ width: `${progressPercentage}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                        
-                        <a href="https://nicktsai88.github.io/List/" className="inline-flex items-center gap-2 bg-black text-white px-6 py-2 rounded-full font-bold text-sm hover:scale-105 transition-transform">
-                            🎁 Back to Treasure Box
-                        </a>
-                    </header>
-
-                    {currentProfile && (
-                        <main className="w-full max-w-[1400px] px-4 md:px-8">
-                            {ALL_CATEGORIES.map((category, idx) => (
-                                <div key={idx} className="mb-12">
-                                    <div className={`divider ${category.textClass}`}>{category.title}</div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                        {category.items.map((item) => (
-                                            <LessonCard 
-                                                key={item.id}
-                                                item={item}
-                                                theme={category.theme}
-                                                isCompleted={!!progress[item.id]}
-                                                onToggle={() => toggleProgress(item.id)}
-                                            />
+                <div className="max-w-[1300px] mx-auto relative">
+                    
+                    {/* Header */}
+                    <div className="header mx-auto">
+                        <h1>English Learning HQ</h1>
+                        <div className="flex flex-col items-center gap-4">
+                            <p className="mb-0 text-xl font-medium">Ultimate English Reading Collection</p>
+                            
+                            {!currentUser && allUsers.length > 0 && (
+                                <div className="w-full max-w-3xl my-2 p-4 bg-white/50 rounded-2xl border border-indigo-100">
+                                    <p className="text-center text-indigo-800 mb-3 font-bold text-sm opacity-80">
+                                        ▼ Click name to quick login ▼
+                                    </p>
+                                    <div className="flex flex-wrap justify-center gap-3">
+                                        {allUsers.map(u => (
+                                            <button 
+                                                key={u} 
+                                                onClick={() => handleLogin(u)} 
+                                                className="quick-user-btn"
+                                            >
+                                                👤 {u}
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
-                            ))}
-                        </main>
+                            )}
+
+                            <div className="flex items-center gap-4 mt-2">
+                                <div className="text-lg font-bold text-indigo-900 bg-white px-4 py-1 rounded-full shadow-sm border border-indigo-100">
+                                    Progress: {completedCount} / {TOTAL_ITEMS}
+                                </div>
+                                <StatusLight status={syncStatus} />
+                            </div>
+
+                            <div className="mt-2 flex items-center gap-3">
+                                {currentUser ? (
+                                    <div className="flex items-center gap-2 animate-fade-in">
+                                        <span className="text-base text-gray-600 font-medium">Challenger:</span>
+                                        <span className="font-bold text-lg text-indigo-700 bg-indigo-50 px-4 py-1 rounded-full shadow-sm">{currentUser}</span>
+                                        <button 
+                                            onClick={() => { setCurrentUser(null); setLocalProgress({}); }}
+                                            className="text-sm text-gray-400 hover:text-gray-600 underline ml-2 font-medium"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button 
+                                        onClick={() => setShowLogin(true)}
+                                        className="text-lg bg-white border-2 border-indigo-300 text-indigo-600 px-6 py-2 rounded-full hover:bg-indigo-50 transition shadow-sm font-bold flex items-center gap-2"
+                                    >
+                                        <span>👤</span> Login to Save
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <div className="mt-8">
+                            <a href="https://nicktsai88.github.io/List/" className="home-btn">
+                                🎁 Back to Learning Toolbox
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Login Modal */}
+                    {showLogin && (
+                        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm" onClick={() => setShowLogin(false)}>
+                            <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm mx-4 animate-fade-in" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-xl font-bold text-center mb-4 text-indigo-900 font-serif">Login / Create User</h3>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        value={loginName}
+                                        onChange={(e) => setLoginName(e.target.value)}
+                                        placeholder="Enter new name..." 
+                                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleLogin(loginName)}
+                                    />
+                                    <button 
+                                        onClick={() => handleLogin(loginName)}
+                                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition"
+                                    >
+                                        Join
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
-                    <footer className="text-center text-gray-300 text-sm mt-12 mb-8">
-                        English Learning HQ &copy; {new Date().getFullYear()}
-                    </footer>
+                    {/* Content Grid */}
+                    <div className="pb-20">
+                        {RAW_DATA.map((section, idx) => (
+                            <div key={idx} className="mb-12">
+                                <div className="section-divider">{section.title}</div>
+                                <div className="app-grid">
+                                    {section.items.map((item) => {
+                                        const isDone = !!localProgress[item.code];
+                                        return (
+                                            <a 
+                                                key={item.code}
+                                                href={item.href}
+                                                target="_blank"
+                                                className={`app-card ${isDone ? 'completed' : ''} group`}
+                                                style={{
+                                                    // Dynamic Style Logic
+                                                    borderTopColor: section.color, // Always colored top
+                                                    border: isDone ? `4px solid ${section.color}` : `1px solid rgba(0,0,0,0.05)`, // Fluorescent border when done
+                                                    borderTop: isDone ? `4px solid ${section.color}` : `6px solid ${section.color}`,
+                                                    // Stronger Glow effect (Double layer shadow for neon look)
+                                                    boxShadow: isDone ? `0 0 20px ${section.color}, 0 0 45px ${section.color}99` : undefined,
+                                                    zIndex: isDone ? 10 : 1 // Ensure glowing card stays on top
+                                                }}
+                                            >
+                                                <div 
+                                                    className={`card-checkbox ${isDone ? 'checked' : ''}`} 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        toggleProgress(item.code);
+                                                    }}
+                                                    title={isDone ? "Mark as Incomplete" : "Mark as Complete"}
+                                                    style={{
+                                                        // Checkbox also follows theme color when checked
+                                                        backgroundColor: isDone ? section.color : 'white',
+                                                        borderColor: isDone ? section.color : '#ddd'
+                                                    }}
+                                                >
+                                                    {isDone && <span>✓</span>}
+                                                </div>
+
+                                                <div 
+                                                    className="card-icon-wrapper"
+                                                    style={{ 
+                                                        color: section.color, 
+                                                        backgroundColor: section.lightColor 
+                                                    }}
+                                                >
+                                                    {section.icon}
+                                                </div>
+                                                
+                                                <div className="card-title" style={{ color: section.color }}>
+                                                    {item.title}
+                                                </div>
+                                                
+                                                <div className="card-desc">
+                                                    {item.code}
+                                                </div>
+                                            </a>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
                 </div>
             );
         };
