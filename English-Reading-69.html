@@ -54,15 +54,16 @@
 
         .explanation-box {
             display: none; /* Hidden by default */
-            margin-top: 10px;
-            font-size: 0.95em;
+            margin-top: 15px;
+            font-size: 1.1em; /* Increased from 0.95em for better readability */
             color: #4b5563;
             background: #fff;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             border-left: 4px solid #6366f1;
             background-color: #f8fafc;
             animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
         }
 
         @keyframes slideDown {
@@ -1105,7 +1106,7 @@
                 const div = document.createElement('div');
                 div.className = 'bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-800 mb-4 text-lg">${item.q}</p>
+                    <p class="font-bold text-gray-800 mb-4 text-xl">${item.q}</p>
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
                             <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-200" id="${item.id}-label-${key}">
@@ -1113,7 +1114,7 @@
                                 <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-3 font-bold text-gray-500 transition-colors" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-700 font-medium">${item.options[key]}</span>
+                                <span class="text-gray-700 font-medium text-lg">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
