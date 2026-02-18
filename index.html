@@ -136,6 +136,7 @@
             align-items: center;
             justify-content: center;
             background: #f5f5f5;
+            overflow: hidden; /* Ensure image stays within circle */
         }
 
         .card-title {
@@ -476,6 +477,76 @@
 
         const { useState, useEffect, useMemo } = React;
 
+        // New Component: AppCard (Handles Individual Image Loading)
+        const AppCard = ({ item, section, isDone, isUnlocked, toggleProgress }) => {
+            const [imageError, setImageError] = useState(false);
+
+            // Construct image path: images/p{id}.jpg
+            // Example: images/p73.jpg for ID 73
+            const imgSrc = `images/p${item.id}.jpg`;
+
+            return (
+                <a 
+                    href={isUnlocked ? item.href : '#'}
+                    target={isUnlocked ? "_blank" : "_self"}
+                    className={`app-card ${isDone ? 'completed' : ''} ${!isUnlocked ? 'card-locked' : ''} group`}
+                    style={{
+                        // Dynamic Style Logic
+                        borderTopColor: section.color,
+                        border: isDone ? `4px solid ${section.color}` : `1px solid rgba(0,0,0,0.05)`,
+                        borderTop: isDone ? `4px solid ${section.color}` : `6px solid ${section.color}`,
+                        boxShadow: isDone ? `0 0 20px ${section.color}, 0 0 45px ${section.color}99` : undefined,
+                        zIndex: isDone ? 10 : 1
+                    }}
+                >
+                    <div 
+                        className={`card-checkbox ${isDone ? 'checked' : ''}`} 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if(isUnlocked) toggleProgress(item.code);
+                        }}
+                        title={isDone ? "Mark as Incomplete" : "Mark as Complete"}
+                        style={{
+                            backgroundColor: isDone ? section.color : 'white',
+                            borderColor: isDone ? section.color : '#ddd'
+                        }}
+                    >
+                        {isDone && <span>✓</span>}
+                    </div>
+
+                    <div 
+                        className="card-icon-wrapper"
+                        style={{ 
+                            color: section.color, 
+                            backgroundColor: section.lightColor 
+                        }}
+                    >
+                        {/* Image Logic: Try loading image, fallback to icon on error */}
+                        {!imageError ? (
+                            <img 
+                                src={imgSrc}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            // Fallback Icon (Original Emoji)
+                            <>{section.icon}</>
+                        )}
+                    </div>
+                    
+                    <div className="card-title" style={{ color: section.color }}>
+                        {item.title}
+                    </div>
+                    
+                    <div className="card-desc">
+                        {item.code} {isUnlocked ? "" : "(Coming Soon)"}
+                    </div>
+                </a>
+            );
+        };
+
         const StatusLight = ({ status }) => {
             let dotClass = 'status-loading';
             let text = 'Connecting...';
@@ -522,7 +593,7 @@
             useEffect(() => {
                 if (!firebaseConfig.apiKey) {
                     setSyncStatus("offline");
-                    const saved = localStorage.getItem('er_local_progress'); // changed key
+                    const saved = localStorage.getItem('er_local_progress'); 
                     if (saved) setLocalProgress(JSON.parse(saved));
                     return;
                 }
@@ -630,7 +701,7 @@
                         setSyncStatus('error');
                     }
                 } else {
-                    localStorage.setItem('er_local_progress', JSON.stringify(newProgress)); // changed key
+                    localStorage.setItem('er_local_progress', JSON.stringify(newProgress)); 
                 }
             };
 
@@ -730,66 +801,16 @@
                             <div key={idx} className="mb-12">
                                 <div className="section-divider">{section.title}</div>
                                 <div className="app-grid">
-                                    {section.items.map((item) => {
-                                        const isDone = !!localProgress[item.code];
-                                        // 檢查此文章是否在解鎖清單中
-                                        const isUnlocked = UNLOCKED_IDS.includes(item.id);
-
-                                        return (
-                                            <a 
-                                                key={item.code}
-                                                href={isUnlocked ? item.href : '#'}
-                                                target={isUnlocked ? "_blank" : "_self"}
-                                                // 如果未解鎖，加入 card-locked 樣式
-                                                className={`app-card ${isDone ? 'completed' : ''} ${!isUnlocked ? 'card-locked' : ''} group`}
-                                                style={{
-                                                    // Dynamic Style Logic
-                                                    borderTopColor: section.color, // Always colored top
-                                                    border: isDone ? `4px solid ${section.color}` : `1px solid rgba(0,0,0,0.05)`, // Fluorescent border when done
-                                                    borderTop: isDone ? `4px solid ${section.color}` : `6px solid ${section.color}`,
-                                                    // Stronger Glow effect (Double layer shadow for neon look)
-                                                    boxShadow: isDone ? `0 0 20px ${section.color}, 0 0 45px ${section.color}99` : undefined,
-                                                    zIndex: isDone ? 10 : 1 // Ensure glowing card stays on top
-                                                }}
-                                            >
-                                                <div 
-                                                    className={`card-checkbox ${isDone ? 'checked' : ''}`} 
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        // 只有解鎖的文章才能標記進度 (可選，如果不希望鎖定的文章被標記)
-                                                        if(isUnlocked) toggleProgress(item.code);
-                                                    }}
-                                                    title={isDone ? "Mark as Incomplete" : "Mark as Complete"}
-                                                    style={{
-                                                        // Checkbox also follows theme color when checked
-                                                        backgroundColor: isDone ? section.color : 'white',
-                                                        borderColor: isDone ? section.color : '#ddd'
-                                                    }}
-                                                >
-                                                    {isDone && <span>✓</span>}
-                                                </div>
-
-                                                <div 
-                                                    className="card-icon-wrapper"
-                                                    style={{ 
-                                                        color: section.color, 
-                                                        backgroundColor: section.lightColor 
-                                                    }}
-                                                >
-                                                    {section.icon}
-                                                </div>
-                                                
-                                                <div className="card-title" style={{ color: section.color }}>
-                                                    {item.title}
-                                                </div>
-                                                
-                                                <div className="card-desc">
-                                                    {item.code} {isUnlocked ? "" : "(Coming Soon)"}
-                                                </div>
-                                            </a>
-                                        );
-                                    })}
+                                    {section.items.map((item) => (
+                                        <AppCard 
+                                            key={item.code}
+                                            item={item}
+                                            section={section}
+                                            isDone={!!localProgress[item.code]}
+                                            isUnlocked={UNLOCKED_IDS.includes(item.id)}
+                                            toggleProgress={toggleProgress}
+                                        />
+                                    ))}
                                 </div>
                             </div>
                         ))}
