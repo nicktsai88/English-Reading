@@ -233,22 +233,22 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 4px 10px;
+            padding: 6px 12px;
             background: rgba(17, 24, 39, 0.8);
             border-radius: 20px;
             border: 1px solid #374151;
-            margin-left: 0;
+            margin-left: 10px;
         }
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
         }
         .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
         .status-dot.success { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
         .status-dot.error { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
-        .status-text { font-size: 0.75rem; color: #d1d5db; font-weight: 500; }
+        .status-text { font-size: 0.85rem; color: #d1d5db; font-weight: 500; }
 
         @keyframes pulse {
             0% { opacity: 0.5; }
@@ -314,22 +314,18 @@
         <div class="max-w-6xl mx-auto px-4 py-3">
             <div class="flex flex-col md:flex-row items-center justify-between gap-3">
                 
-                <!-- Left: Title, User, Badges -->
+                <!-- Left: Title & Status -->
                 <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-                    <!-- Icon -->
                     <div class="flex items-center gap-2">
-                        <div class="w-10 h-10 rounded-full bg-violet-900/50 flex items-center justify-center text-violet-300 border border-violet-700 shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-violet-900/50 flex items-center justify-center text-violet-300 border border-violet-700">
                             <i class="fas fa-ghost text-lg"></i>
                         </div>
-                        
-                        <!-- Info Column -->
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col">
+                            <h1 class="text-sm font-bold text-gray-100 uppercase tracking-wide">Listening Quiz</h1>
                             
-                            <!-- Top Row: User Name & Status -->
-                            <div class="flex items-center gap-3">
-                                <!-- Neon User Name -->
-                                <div id="header-username" class="text-sm font-bold text-pink-400 drop-shadow-[0_0_3px_rgba(244,114,182,0.8)] flex items-center gap-2">
-                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                            <div class="flex items-center gap-2">
+                                <div class="text-xs text-gray-400 flex items-center gap-1" id="voice-indicator">
+                                    <i class="fas fa-robot"></i> Init Voice...
                                 </div>
                                 <!-- Firebase Status Indicator -->
                                 <div class="status-container" id="cloud-status">
@@ -337,38 +333,23 @@
                                     <span class="status-text">連線中...</span>
                                 </div>
                             </div>
-
-                            <!-- Bottom Row: Neon Badges (Replaces old Title & Voice) -->
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <!-- Level Badge (Neon Yellow) -->
-                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500 text-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.4)] text-[10px] md:text-xs font-bold bg-yellow-900/20 whitespace-nowrap">
-                                    <i class="fas fa-layer-group"></i>
-                                    <span>Level: CEFR B1-B2 (Intermediate / Upper-Intermediate)</span>
-                                </div>
-                                <!-- Word Count Badge (Neon Cyan) -->
-                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500 text-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.4)] text-[10px] md:text-xs font-bold bg-cyan-900/20 whitespace-nowrap">
-                                    <i class="fas fa-file-word"></i>
-                                    <span>Word Count: Approx. 700 words</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
-
-                    <!-- Mobile Play Button (Right aligned on mobile) -->
-                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition shrink-0 ml-auto">
+                    <!-- Mobile Play Button -->
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition">
                         <i class="fas fa-play" id="mobile-play-icon"></i>
                     </button>
                 </div>
 
                 <!-- Center: Controls -->
-                <div class="flex items-center gap-4 hidden md:flex">
+                <div class="flex items-center gap-4">
                     <!-- Rewind -->
                     <button onclick="window.restartAudio()" class="text-gray-400 hover:text-white transition" title="Restart">
                         <i class="fas fa-step-backward"></i>
                     </button>
                     
                     <!-- Main Play Button (Desktop) -->
-                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition hover:shadow-violet-500/50">
+                    <button onclick="window.togglePlay()" class="hidden md:flex w-12 h-12 bg-violet-600 text-white rounded-full shadow-lg items-center justify-center hover:scale-105 transition hover:shadow-violet-500/50">
                         <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
                     </button>
 
@@ -672,9 +653,6 @@
             currentUser = { name: cleanName };
             document.getElementById('login-modal').style.display = 'none';
             
-            // Update Header Name (Neon Style)
-            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
-
             // Register user in Global List (if new)
             try {
                 const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
@@ -1030,6 +1008,7 @@
         };
 
         function initVoice() {
+            const voiceStatus = document.getElementById('voice-indicator');
             const loadVoices = () => {
                 const voices = synth.getVoices();
                 if (voices.length > 0) {
@@ -1038,6 +1017,13 @@
                                     voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
                                     voices.find(v => v.name === 'Samantha') || 
                                     voices.find(v => v.lang === 'en-US');
+                    
+                    if (selectedVoice) {
+                        let displayName = selectedVoice.name.replace('Microsoft', '').replace('Google', '').replace('English', '').replace(' United States', '').replace('(Natural) - Online', 'Natural').trim();
+                        voiceStatus.innerHTML = `<i class="fas fa-check-circle text-green-300"></i> Voice: ${displayName.substring(0, 20)}`;
+                    } else {
+                        voiceStatus.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-300"></i> Standard Voice`;
+                    }
                 }
             };
             loadVoices();
