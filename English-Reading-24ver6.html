@@ -316,9 +316,9 @@
                 
                 <!-- Left: Title, User, Badges -->
                 <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-                    <!-- Icon (Purple Neon) -->
+                    <!-- Icon -->
                     <div class="flex items-center gap-2">
-                        <div class="w-10 h-10 rounded-full bg-violet-900/50 flex items-center justify-center text-violet-300 border border-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.6)] shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-violet-900/50 flex items-center justify-center text-violet-300 border border-violet-700 shrink-0">
                             <i class="fas fa-ghost text-lg"></i>
                         </div>
                         
@@ -355,20 +355,20 @@
                     </div>
 
                     <!-- Mobile Play Button (Right aligned on mobile) -->
-                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition shrink-0 ml-auto border border-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)]">
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition shrink-0 ml-auto">
                         <i class="fas fa-play" id="mobile-play-icon"></i>
                     </button>
                 </div>
 
                 <!-- Center: Controls -->
                 <div class="flex items-center gap-4 hidden md:flex">
-                    <!-- Rewind (Blue Neon) -->
-                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-sky-500 text-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.5)] flex items-center justify-center hover:bg-sky-900/30 transition hover:scale-105" title="Restart">
+                    <!-- Rewind -->
+                    <button onclick="window.restartAudio()" class="text-gray-400 hover:text-white transition" title="Restart">
                         <i class="fas fa-step-backward"></i>
                     </button>
                     
-                    <!-- Main Play Button (Purple/Pink Neon) -->
-                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-violet-600 text-white rounded-full shadow-[0_0_15px_rgba(217,70,239,0.6)] flex items-center justify-center hover:scale-105 transition border-2 border-fuchsia-500">
+                    <!-- Main Play Button (Desktop) -->
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition hover:shadow-violet-500/50">
                         <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
                     </button>
 
@@ -379,28 +379,28 @@
                 </div>
 
                 <!-- Right: Settings -->
-                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t md:border-gray-700 border-t-0 md:pt-0 mt-2 md:mt-0">
+                <div class="flex items-center gap-2 text-sm w-full md:w-auto justify-center md:justify-end border-t md:border-gray-700 border-t-0 md:pt-0 mt-2 md:mt-0">
                     
-                    <!-- Translation Toggle (Green Neon) -->
-                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-green-900/20 text-green-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(74,222,128,0.4)] border border-green-500">
+                    <!-- Translation Toggle -->
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg font-bold transition shadow border border-gray-600">
                         <i class="fas fa-language"></i> <span>翻譯</span>
                     </button>
 
-                    <!-- Toggle Text (Amber Neon) -->
-                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-amber-900/20 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(251,191,36,0.4)] border border-amber-500">
+                    <!-- Toggle Text -->
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold transition shadow">
                         <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
                     </button>
                     
-                    <!-- Logout (Red Neon - Enlarged) -->
-                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)] flex items-center justify-center hover:bg-red-900/30 transition hover:scale-105 ml-1">
-                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    <!-- Logout (Optional but good for testing) -->
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="text-gray-400 hover:text-white px-2">
+                        <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </div>
         </div>
         <!-- Progress Bar -->
         <div class="w-full bg-gray-900 h-1.5 no-print">
-            <div id="progress-bar" class="h-full bg-violet-500 w-0 transition-all duration-300 shadow-[0_0_10px_#8b5cf6]"></div>
+            <div id="progress-bar" class="h-full bg-violet-500 w-0 transition-all duration-300"></div>
         </div>
     </div>
 
@@ -923,6 +923,66 @@
             "tragic": { pos: "adj.", trans: "悲劇的", example: "It was a tragic accident." },
             "fiery": { pos: "adj.", trans: "火熱的；激烈的", example: "She has a fiery temper." }
         };
+
+        const articleData = [
+            { en: "Japan is a country famous for its rich history and polite society, but beneath the surface lies a world of terrifying folklore.", zh: "日本是一個以豐富歷史和禮貌社會聞名的國家，但在表面之下，隱藏著一個可怕的民間傳說世界。" },
+            { en: "One of the most famous and unsettling figures is Kuchisake-onna, or the \"Slit-Mouthed Woman.\"", zh: "最著名且令人不安的人物之一是「裂嘴女」(Kuchisake-onna)。" },
+            { en: "According to the legend, she appears as a beautiful woman wearing a surgical mask and a trench coat.", zh: "根據傳說，她以一名戴著外科口罩和風衣的美麗女子形象出現。" },
+            { en: "She often approaches people walking alone at night and asks a simple question: \"Am I beautiful?\"", zh: "她經常接近在夜間獨自行走的人，並問一個簡單的問題：「我漂亮嗎？」" },
+            { en: "If you say \"no,\" she kills you immediately with a pair of large scissors.", zh: "如果你說「不」，她會用一把大剪刀立刻殺死你。" },
+            { en: "If you say \"yes,\" she removes her mask to reveal a mouth slit from ear to ear, screaming, \"How about now?\"", zh: "如果你說「是」，她會摘下口罩，露出從耳朵裂到耳朵的嘴巴，尖叫著：「現在呢？」" },
+            { en: "A terrified \"no\" results in death, while a \"yes\" leads to a gruesome fate where she cuts your mouth to look like hers.", zh: "恐懼地回答「不」會導致死亡，而回答「是」則會導致悲慘的命運——她會把你的嘴巴剪得跟她一樣。" },
+            { en: "This legend became so widespread in the 1970s that children were afraid to walk home from school alone, and police even increased patrols in some areas.", zh: "這個傳說在 1970 年代流傳甚廣，以至於孩子們不敢獨自放學回家，警方甚至在某些地區增加了巡邏。" },
+            { en: "While Kuchisake-onna terrifies pedestrians, another spirit haunts the areas near train stations.", zh: "當裂嘴女讓行人感到恐懼時，另一個靈魂則在火車站附近出沒。" },
+            { en: "Her name is Teke Teke, named after the chilling sound she makes when she moves.", zh: "她的名字叫 Teke Teke，是以她移動時發出的令人毛骨悚然的聲音命名的。" },
+            { en: "The legend tells the tragic story of a young schoolgirl who fell onto a railway line and was cut in half by an oncoming train.", zh: "這個傳說講述了一個年輕女學生跌落鐵軌並被火車輾成兩半的悲劇故事。" },
+            { en: "Now, she is a vengeful spirit (Onryō) who crawls around on her hands and elbows, dragging her upper torso along the ground.", zh: "現在，她是一個復仇的怨靈 (Onryō)，用雙手和手肘在地上爬行，拖著她的上半身。" },
+            { en: "Despite having no legs, she moves at an incredibly fast speed, making a \"teke-teke-teke\" sound as her elbows hit the pavement.", zh: "儘管沒有腿，她的移動速度卻快得驚人，當手肘撞擊路面時會發出「teke-teke-teke」的聲音。" },
+            { en: "It is said that if you hear this sound at night, you must not look back.", zh: "據說如果你在晚上聽到這個聲音，絕對不能回頭。" },
+            { en: "If she catches you, she will slice you in half at the waist with a scythe, making you just like her.", zh: "如果她抓住了你，她會用鐮刀將你從腰部切成兩半，讓你變得跟她一樣。" },
+            { en: "This story serves as a dark warning to be careful around trains and late-night streets.", zh: "這個故事是對人們在火車和深夜街道旁要小心的黑暗警告。" },
+            { en: "Schools are common settings for Japanese ghost stories, and the restroom is often the scariest place of all.", zh: "學校是日本鬼故事常見的背景，而廁所往往是最可怕的地方。" },
+            { en: "Aka Manto, or \"Red Cape,\" is a male spirit who haunts the last stall of public or school bathrooms.", zh: "「赤マント」(Aka Manto)，即「紅披風」，是一個出沒在公共廁所或學校廁所最後一間隔間的男性靈魂。" },
+            { en: "Legend says that once you are seated, a mysterious voice will ask you a strange question: \"Do you want red paper or blue paper?\"", zh: "傳說一旦你坐下，一個神秘的聲音會問你一個奇怪的問題：「你要紅紙還是藍紙？」" },
+            { en: "This is a trick question with no happy ending.", zh: "這是一個沒有快樂結局的陷阱題。" },
+            { en: "If you choose red paper, you will be sliced apart until your clothes are stained red with blood.", zh: "如果你選擇紅紙，你會被切碎，直到你的衣服被鮮血染紅。" },
+            { en: "If you choose blue paper, you will be strangled until your face turns blue.", zh: "如果你選擇藍紙，你會被勒死，直到你的臉色發青。" },
+            { en: "Some versions suggest that choosing \"yellow paper\" will result in your head being forced into the toilet.", zh: "有些版本說選擇「黃紙」會導致你的頭被強行塞進馬桶裡。" },
+            { en: "The only way to survive is to ignore the voice completely or run away immediately, proving that sometimes, silence is the best answer.", zh: "唯一生存的方法是完全無視那個聲音或立即逃跑，這證明了有時候，沉默是最好的回答。" },
+            { en: "Another bathroom legend, perhaps even more famous than Aka Manto, is Toire no Hanako-san (Hanako of the Toilet).", zh: "另一個廁所傳說，也許比「紅披風」更有名，那就是「廁所裡的花子」(Toire no Hanako-san)。" },
+            { en: "Unlike the violent spirits, Hanako is often described as a mischievous young girl with bobbed hair and a red skirt.", zh: "與那些暴力的靈魂不同，花子通常被描述為一個留著鮑伯頭、穿著紅裙子的惡作劇小女孩。" },
+            { en: "She is said to haunt the third stall of the girls' bathroom on the third floor.", zh: "據說她出沒在三樓女廁的第三間隔間。" },
+            { en: "To summon her, a brave (or foolish) student must knock on the door three times and ask, \"Hanako-san, are you there?\"", zh: "要召喚她，勇敢（或愚蠢）的學生必須敲門三次並問：「花子小姐，妳在嗎？」" },
+            { en: "If she is present, a faint voice may reply, \"Yes, I am here.\"", zh: "如果她在，一個微弱的聲音可能會回答：「是的，我在這裡。」" },
+            { en: "While some versions of the story say a ghostly hand will reach out or the door will open to reveal a monster, others suggest she is simply a lonely spirit.", zh: "雖然有些版本說會有一隻鬼手伸出來，或者門會打開露出怪物，但其他版本則認為她只是一個孤獨的靈魂。" },
+            { en: "Hanako is often compared to the Western legend of \"Bloody Mary,\" serving as a rite of passage for students trying to prove their courage.", zh: "花子常被拿來與西方的「血腥瑪麗」傳說相提並論，作為學生證明膽量的儀式。" },
+            { en: "Finally, there is a legend that proves words can be dangerous.", zh: "最後，有一個傳說證明了文字可能是危險的。" },
+            { en: "Tomino's Hell is a poem written by Yomota Inuhiko in a 1919 book.", zh: "《多美子的地獄》(Tomino's Hell) 是由四方田犬彥寫於 1919 年一本書中的詩。" },
+            { en: "The urban legend claims that you must never read this poem out loud.", zh: "都市傳說聲稱你絕對不能大聲朗讀這首詩。" },
+            { en: "Reading it silently in your mind is safe, but speaking the words is said to invite tragedy.", zh: "在心中默讀是安全的，但說出這些字句據說會招致悲劇。" },
+            { en: "The consequences range from falling ill or getting injured to sudden death.", zh: "後果從生病、受傷到突然死亡不等。" },
+            { en: "The poem itself describes a descent into a dark and fiery hell, filled with disturbing imagery.", zh: "這首詩本身描述了墮入充滿不安意象的黑暗火焰地獄的過程。" },
+            { en: "While many people have read it aloud on the internet to test the curse without dying, the psychological fear remains potent.", zh: "雖然許多人在網路上大聲朗讀它來測試詛咒且並未身亡，但心理上的恐懼依然強烈。" },
+            { en: "These five legends—from slit-mouthed women to cursed poems—reveal a fascinating aspect of Japanese culture: the belief that the supernatural is always watching, waiting in the shadows of everyday life.", zh: "這五個傳說——從裂嘴女到被詛咒的詩——揭示了日本文化中迷人的一面：相信超自然力量總是在注視著，在日常生活的陰影中等待著。" }
+        ];
+
+        const quizData = [
+            { id: 'q1', q: "1. What is the main theme of this article?", options: {A: "The history of Japanese train stations.", B: "Five famous scary stories from Japanese folklore.", C: "How to write a horror poem.", D: "A travel guide to Japan's haunted places."}, ans: 'B', expl: "The article introduces and details five specific urban legends from Japan." },
+            { id: 'q2', q: "2. In Paragraph 1, what item does Kuchisake-onna use as a weapon?", options: {A: "A kitchen knife", B: "A samurai sword", C: "A pair of large scissors", D: "A heavy hammer"}, ans: 'C', expl: "The text states she kills or attacks with \"a pair of large scissors.\"" },
+            { id: 'q3', q: "3. Why did police increase patrols in the 1970s according to Paragraph 1?", options: {A: "Due to a rise in robberies.", B: "Because children were afraid of the Kuchisake-onna legend.", C: "Because of a real serial killer.", D: "To stop students from skipping school."}, ans: 'B', expl: "The text mentions the legend became so widespread that children were afraid, leading to increased patrols." },
+            { id: 'q4', q: "4. How did Teke Teke get her name?", options: {A: "It was her name when she was alive.", B: "It comes from the sound she makes when moving.", C: "It means \"half-body\" in Japanese.", D: "It is the name of the train station."}, ans: 'B', expl: "Paragraph 2 says she is \"named after the chilling sound she makes when she moves.\"" },
+            { id: 'q5', q: "5. What is the defining physical characteristic of Teke Teke?", options: {A: "She has no face.", B: "She wears a red cape.", C: "She is missing her lower body (legs).", D: "She has three arms."}, ans: 'C', expl: "The text describes her as having been \"cut in half\" and dragging her \"upper torso.\"" },
+            { id: 'q6', q: "6. In the legend of Aka Manto (Paragraph 3), what happens if you choose \"blue paper\"?", options: {A: "You are drowned in water.", B: "You are strangled until your face turns blue.", C: "You are set free.", D: "You are given a blue cape."}, ans: 'B', expl: "The text explicitly states: \"If you choose blue paper, you will be strangled until your face turns blue.\"" },
+            { id: 'q7', q: "7. What is the only way to survive Aka Manto?", options: {A: "Choose yellow paper.", B: "Fight the spirit.", C: "Ignore the voice or run away.", D: "Carry a lucky charm."}, ans: 'C', expl: "Paragraph 3 says: \"The only way to survive is to ignore the voice completely or run away immediately.\"" },
+            { id: 'q8', q: "8. Where does Toire no Hanako-san usually haunt?", options: {A: "The library.", B: "The boys' locker room.", C: "The third stall of the girls' bathroom on the third floor.", D: "The rooftop of the school."}, ans: 'C', expl: "Paragraph 4 specifies: \"haunt the third stall of the girls' bathroom on the third floor.\"" },
+            { id: 'q9', q: "9. How is Hanako-san different from Aka Manto?", options: {A: "She is always violent.", B: "She is often described as mischievous rather than purely violent.", C: "She appears in the library.", D: "She is an old woman."}, ans: 'B', expl: "The text contrasts her with \"violent spirits,\" describing her as a \"mischievous young girl\" or even a \"lonely spirit.\"" },
+            { id: 'q10', q: "10. Hanako-san is compared to which Western urban legend?", options: {A: "The Boogeyman", B: "Slender Man", C: "Bloody Mary", D: "Dracula"}, ans: 'C', expl: "Paragraph 4 mentions she is \"often compared to the Western legend of 'Bloody Mary'.\"" },
+            { id: 'q11', q: "11. What is the specific warning regarding the poem Tomino's Hell?", options: {A: "Never read it silently.", B: "Never read it out loud.", C: "Never write it down.", D: "Never listen to it."}, ans: 'B', expl: "Paragraph 5 states: \"you must never read this poem out loud.\"" },
+            { id: 'q12', q: "12. The word \"mischievous\" in Paragraph 4 is closest in meaning to:", options: {A: "Very dangerous and evil", B: "Playful and causing minor trouble", C: "Silent and invisible", D: "Sad and depressed"}, ans: 'B', expl: "In this context, \"mischievous\" refers to a spirit that plays tricks or is slightly naughty, but not necessarily deadly." },
+            { id: 'q13', q: "13. What does the author imply about these legends in the conclusion?", options: {A: "They are scientifically true.", B: "They are silly and should be ignored.", C: "They reveal a cultural belief that the supernatural is always watching.", D: "They are only for children."}, ans: 'C', expl: "The last sentence mentions they reveal \"the belief that the supernatural is always watching, waiting in the shadows.\"" },
+            { id: 'q14', q: "14. Which legend serves as a warning about safety near trains?", options: {A: "Kuchisake-onna", B: "Teke Teke", C: "Aka Manto", D: "Tomino's Hell"}, ans: 'B', expl: "Teke Teke involves a girl falling onto railway lines, serving as a \"dark warning to be careful around trains.\"" },
+            { id: 'q15', q: "15. Which of the following is true about Kuchisake-onna’s victims?", options: {A: "They can survive if they answer \"yes\" twice.", B: "They are safe if they wear a mask.", C: "Answering \"yes\" results in a cut mouth; \"no\" results in death.", D: "She only attacks adults."}, ans: 'C', expl: "Paragraph 1 explains: \"A terrified 'no' results in death, while a 'yes' leads to... she cuts your mouth.\"" }
+        ];
 
         window.initAudioContext = function() {
             if (!audioCtx) {
