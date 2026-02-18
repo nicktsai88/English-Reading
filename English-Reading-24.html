@@ -3,21 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>擬真語音互動測驗：Whispers in the Dark: 5 Creepiest Urban Legends from Japan</title>
+    <title>擬真語音互動測驗：Whispers in the Dark (Cloud Sync)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Confetti Library for Celebration -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase Import Map -->
-    <script type="importmap">
-        {
-          "imports": {
-            "firebase/app": "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js",
-            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"
-          }
+    <!-- Firebase Module Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-24';
+        const DOC_GLOBAL = 'global';
+
+        // TODO: Replace with your actual Firebase config
+        const firebaseConfig = {
+             apiKey: "", // 請在此填入您的 API Key
+             authDomain: "chinese-learning-47f4d.firebaseapp.com",
+             projectId: "chinese-learning-47f4d",
+             storageBucket: "chinese-learning-47f4d.firebasestorage.app",
+             messagingSenderId: "76289812052",
+             appId: "1:76289812052:web:898384a916f9f341f62fc1"
+        };
+
+        // Expose Firebase variables to global scope for the main app logic
+        window.db = null;
+        window.auth = null;
+        window.userDocRef = null;
+        window.globalDocRef = null;
+        window.currentUserId = null;
+        window.userName = null;
+        let unsubscribeUser = null;
+
+        // Init Function
+        async function initFirebase() {
+            try {
+                if(firebaseConfig.apiKey) {
+                    const app = initializeApp(firebaseConfig);
+                    window.db = getFirestore(app);
+                    window.auth = getAuth(app);
+                    
+                    // Connection Status: Loading
+                    window.updateConnectionStatus('loading', '讀取資料中...');
+
+                    // Anonymous Login
+                    await signInAnonymously(window.auth);
+                    console.log("Firebase Auth Success");
+
+                    // Setup Global Listener for Quick Login
+                    setupGlobalListener();
+
+                } else {
+                    console.warn("Firebase Config missing.");
+                    window.updateConnectionStatus('error', '未設定 API Key');
+                }
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                window.updateConnectionStatus('error', '連線錯誤');
+            }
         }
+
+        function setupGlobalListener() {
+            window.globalDocRef = doc(window.db, COLLECTION_NAME, DOC_GLOBAL);
+            onSnapshot(window.globalDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    window.renderQuickLogin(data.users || []);
+                } else {
+                    // Create global doc if not exists
+                    setDoc(window.globalDocRef, { users: [] }, { merge: true });
+                    window.renderQuickLogin([]);
+                }
+                if(!window.currentUserId) {
+                     window.updateConnectionStatus('success', '請先登入');
+                }
+            }, (error) => {
+                console.error("Global listener error:", error);
+                window.updateConnectionStatus('error', '讀取列表失敗');
+            });
+        }
+
+        // Handle User Login (Create or Select)
+        window.handleLogin = async function(name) {
+            if (!name) return alert("請輸入名字");
+            
+            window.updateConnectionStatus('loading', '登入中...');
+            window.userName = name;
+            // Simple ID generation based on name for this demo (in production use Auth UID)
+            window.currentUserId = name.trim(); 
+
+            // Add to global list if not exists
+            updateDoc(window.globalDocRef, {
+                users: arrayUnion({ name: window.userName, id: window.currentUserId })
+            }).catch(e => console.log("Global update skipped or error", e));
+
+            // Start listening to user data
+            setupUserListener();
+            
+            // Hide Modal
+            document.getElementById('login-overlay').style.display = 'none';
+        }
+
+        function setupUserListener() {
+            window.userDocRef = doc(window.db, COLLECTION_NAME, window.currentUserId);
+            
+            unsubscribeUser = onSnapshot(window.userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Sync Cloud Data to Local State
+                    // 1. Favorites
+                    if (data.favorites) {
+                        window.favoriteWords = new Set(data.favorites);
+                        window.updateStudyListUI(); // Helper to update UI
+                    }
+                    
+                    // 2. Mistakes
+                    if (data.mistakes) {
+                        window.wrongAnswers = data.mistakes;
+                    }
+
+                    // 3. Score
+                    if (data.score !== undefined) {
+                        window.userScore = data.score;
+                    }
+
+                    // 4. Progress (Reading)
+                    if (data.progressIndex !== undefined) {
+                        // Only update if we are not currently playing to avoid jumps
+                        if (!window.isPlaying) {
+                            window.updateProgressUI(data.progressIndex);
+                        }
+                    }
+
+                    window.updateConnectionStatus('success', '已同步');
+                } else {
+                    // New User - Set defaults
+                    window.updateCloudData();
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                window.updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        // Function to push local state to cloud
+        window.updateCloudData = async function() {
+            if (!window.userDocRef) return;
+
+            window.updateConnectionStatus('loading', '儲存中...');
+            
+            try {
+                const payload = {
+                    name: window.userName,
+                    favorites: Array.from(window.favoriteWords), // Convert Set to Array
+                    mistakes: window.wrongAnswers,
+                    score: window.userScore,
+                    progressIndex: window.currentSentenceIndex || 0,
+                    lastUpdated: new Date()
+                };
+
+                await setDoc(window.userDocRef, payload, { merge: true });
+                // Short delay to show "Saved" then back to "Synced"
+                setTimeout(() => {
+                    window.updateConnectionStatus('success', '已同步');
+                }, 500);
+            } catch (e) {
+                console.error("Save error:", e);
+                window.updateConnectionStatus('error', '存檔失敗');
+            }
+        }
+
+        // Start
+        initFirebase();
     </script>
 
     <style>
@@ -28,6 +189,77 @@
             background-color: #111827; /* Darker background for horror theme */
             color: #e5e7eb;
         }
+
+        /* --- New Styles for Login & Status --- */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 24, 39, 0.95);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .login-card {
+            background: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #4c1d95;
+            box-shadow: 0 0 20px rgba(76, 29, 149, 0.3);
+            text-align: center;
+        }
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .user-chip {
+            background: #374151;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #4b5563;
+        }
+        .user-chip:hover {
+            background: #5b21b6;
+            border-color: #8b5cf6;
+        }
+        
+        /* Status Dot */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid #374151;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; animation: pulse 1s infinite; }
+        .status-dot.success { background-color: #10b981; }
+        .status-dot.error { background-color: #ef4444; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* --- Original Styles --- */
         
         /* Smooth Highlighting for Karaoke Mode */
         .highlight-text {
@@ -229,46 +461,6 @@
             border: 1px solid #374151;
         }
 
-        /* Login Overlay Styles */
-        #login-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 2000;
-            background: linear-gradient(rgba(0,0,0,0.9), rgba(17, 24, 39, 0.95));
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Status Dot Styles */
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .status-dot.loading {
-            background-color: #fbbf24; /* Yellow */
-            box-shadow: 0 0 8px #fbbf24;
-            animation: pulse 1s infinite;
-        }
-        .status-dot.success {
-            background-color: #34d399; /* Green */
-            box-shadow: 0 0 8px #34d399;
-        }
-        .status-dot.error {
-            background-color: #f87171; /* Red */
-            box-shadow: 0 0 8px #f87171;
-        }
-        @keyframes pulse {
-            0% { opacity: 0.5; transform: scale(0.9); }
-            50% { opacity: 1; transform: scale(1.1); }
-            100% { opacity: 0.5; transform: scale(0.9); }
-        }
-
         /* Print Styles */
         @media print {
             body * {
@@ -301,35 +493,29 @@
 <body class="bg-gray-900 min-h-screen pb-12 text-gray-100">
 
     <!-- Login Overlay -->
-    <div id="login-overlay">
-        <div class="max-w-md w-full bg-gray-800 p-8 rounded-2xl shadow-2xl border border-violet-900 text-center relative overflow-hidden">
-            <!-- Spooky deco -->
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-violet-600/20 rounded-full blur-2xl"></div>
-            
-            <i class="fas fa-book-skull text-5xl text-violet-500 mb-6"></i>
-            <h2 class="text-3xl font-bold text-gray-100 mb-2">Who Dares to Enter?</h2>
-            <p class="text-gray-400 mb-8">Please identify yourself to save your soul... and progress.</p>
-            
-            <div id="quick-login-area" class="mb-6 grid grid-cols-2 gap-3 max-h-40 overflow-y-auto p-2">
-                <!-- User buttons injected here -->
-                <p class="col-span-2 text-gray-500 text-sm italic py-2">Loading spirits...</p>
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="mb-6">
+                <i class="fas fa-ghost text-5xl text-violet-500 mb-2"></i>
+                <h2 class="text-2xl font-bold text-white">歡迎來到 Whispers in the Dark</h2>
+                <p class="text-gray-400 text-sm mt-1">請輸入您的名字以儲存閱讀進度與錯題紀錄</p>
             </div>
-
-            <div class="relative">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-700"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-gray-800 text-gray-400">Or New Challenger</span>
-                </div>
-            </div>
-
-            <form id="login-form" class="mt-6 flex flex-col gap-3" onsubmit="handleNewUserLogin(event)">
-                <input type="text" id="username-input" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500 transition" placeholder="Enter your name..." required>
-                <button type="submit" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition transform hover:-translate-y-1">
-                    Begin Nightmare
+            
+            <form onsubmit="event.preventDefault(); window.handleLogin(document.getElementById('login-name').value);" class="mb-6">
+                <input type="text" id="login-name" placeholder="輸入您的名字 (Enter Name)" 
+                       class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500 mb-3 text-center">
+                <button type="submit" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-lg">
+                    開始挑戰 (Start)
                 </button>
             </form>
+
+            <div class="border-t border-gray-700 pt-4">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-2">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="user-grid">
+                    <!-- Users injected here -->
+                    <div class="col-span-full text-gray-500 text-sm py-2">讀取紀錄中...</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -347,15 +533,15 @@
                         <div class="flex flex-col">
                             <h1 class="text-sm font-bold text-gray-100 uppercase tracking-wide">Listening Quiz</h1>
                             
-                            <!-- Cloud Status Indicator (NEW) -->
                             <div class="flex items-center gap-2 mt-1">
-                                <div id="cloud-status-dot" class="status-dot loading"></div>
-                                <span id="cloud-status-text" class="text-[10px] text-gray-400 font-mono tracking-wider">讀取資料中...</span>
-                                <span id="current-user-display" class="text-[10px] text-violet-400 ml-2 font-bold hidden"></span>
-                            </div>
-
-                            <div class="text-xs text-gray-400 flex items-center gap-1 mt-1" id="voice-indicator">
-                                <i class="fas fa-robot"></i> Initializing Voice...
+                                <!-- Cloud Status Indicator -->
+                                <div class="status-container" id="connection-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                                <div class="text-[10px] text-gray-400" id="voice-indicator">
+                                    <i class="fas fa-robot"></i> Voice Init...
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -576,221 +762,6 @@
     <!-- Hidden Print Area -->
     <div id="print-area"></div>
 
-    <script type="module">
-        import { initializeApp } from 'firebase/app';
-        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, getDoc, collection } from 'firebase/firestore';
-        import { getAuth, signInAnonymously } from 'firebase/auth';
-
-        // --- Firebase Configuration ---
-        const firebaseConfig = {
-            // TODO: 使用者請在此處填入 API Key
-          apiKey: "AIzaSyAxQFt76ZPXE7d0i1XeNZ1yiiD2WYNIfHs",
-          authDomain: "chinese-learning-47f4d.firebaseapp.com",
-          projectId: "chinese-learning-47f4d",
-          storageBucket: "chinese-learning-47f4d.firebasestorage.app",
-          messagingSenderId: "76289812052",
-          appId: "1:76289812052:web:898384a916f9f341f62fc1"
-        };
-        
-        // --- Constants ---
-        const COLLECTION_NAME = 'English-Reading-24';
-        const APP_ID = 'english-reading-quiz'; // Unique ID for this specific app instance/deployment
-        
-        let db, auth;
-        let currentUser = null;
-        let unsubscribeUser = null;
-        let globalUsers = [];
-
-        // --- App State (Existing + New) ---
-        window.userProgress = 0; // Current sentence index
-        
-        // --- Firebase Logic ---
-        async function initFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                updateConnectionStatus('loading');
-                
-                await signInAnonymously(auth);
-                
-                initGlobalListener();
-
-            } catch (error) {
-                console.error("Firebase Init Error:", error);
-                updateConnectionStatus('error');
-            }
-        }
-
-        function updateConnectionStatus(status) {
-            const dot = document.getElementById('cloud-status-dot');
-            const text = document.getElementById('cloud-status-text');
-            
-            dot.className = 'status-dot'; // Reset
-            
-            if (status === 'loading') {
-                dot.classList.add('loading');
-                text.innerText = '讀取資料中...';
-            } else if (status === 'success') {
-                dot.classList.add('success');
-                text.innerText = '已同步';
-            } else if (status === 'error') {
-                dot.classList.add('error');
-                text.innerText = '雲端同步失敗';
-            }
-        }
-
-        // Listen to the global user list to render quick login buttons
-        function initGlobalListener() {
-            const globalDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME, 'DOC_GLOBAL');
-            
-            onSnapshot(globalDocRef, (docSnap) => {
-                const container = document.getElementById('quick-login-area');
-                container.innerHTML = '';
-
-                if (docSnap.exists() && docSnap.data().users && docSnap.data().users.length > 0) {
-                    globalUsers = docSnap.data().users;
-                    globalUsers.forEach(u => {
-                        const btn = document.createElement('button');
-                        btn.className = 'bg-gray-700 hover:bg-violet-600 text-gray-200 hover:text-white py-2 px-3 rounded text-sm transition text-left flex items-center gap-2';
-                        btn.innerHTML = `<i class="fas fa-user-circle"></i> ${u.name}`;
-                        btn.onclick = () => handleLogin(u.name, u.id);
-                        container.appendChild(btn);
-                    });
-                } else {
-                    container.innerHTML = `<p class="col-span-2 text-gray-400 text-sm text-center py-2">尚無挑戰者紀錄，歡迎加入！</p>`;
-                }
-                updateConnectionStatus('success');
-            }, (error) => {
-                console.error("Global Listener Error:", error);
-                updateConnectionStatus('error');
-            });
-        }
-
-        // Handle New User Form Submit
-        window.handleNewUserLogin = async function(e) {
-            e.preventDefault();
-            const nameInput = document.getElementById('username-input');
-            const name = nameInput.value.trim();
-            if(!name) return;
-            
-            const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            
-            // Add to global list first
-            const globalDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME, 'DOC_GLOBAL');
-            try {
-                 // Check if doc exists first, if not set, else update
-                 const docSnap = await getDoc(globalDocRef);
-                 if (!docSnap.exists()) {
-                     await setDoc(globalDocRef, { users: [{ name, id: userId }] });
-                 } else {
-                     await updateDoc(globalDocRef, {
-                        users: arrayUnion({ name, id: userId })
-                     });
-                 }
-                 handleLogin(name, userId);
-            } catch (err) {
-                console.error("Error creating user:", err);
-                updateConnectionStatus('error');
-            }
-        };
-
-        // Common Login Logic
-        function handleLogin(name, userId) {
-            currentUser = { name, id: userId };
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('current-user-display').classList.remove('hidden');
-            document.getElementById('current-user-display').innerText = `| ${name}`;
-            
-            initUserListener(userId);
-        }
-
-        // Listen to specific user data (Favorites, Mistakes, Progress)
-        function initUserListener(userId) {
-            const userDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME, userId);
-            
-            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    
-                    // Sync Favorites
-                    if (data.favorites) {
-                        window.favoriteWords = new Set(data.favorites);
-                        document.getElementById('study-list-count').innerText = `目前收藏: ${window.favoriteWords.size} 個單字`;
-                        // Update UI icons (re-render necessary parts if open)
-                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
-                        // Refrest heart icons in text
-                        document.querySelectorAll('.vocab-word').forEach(el => {
-                            // This is a bit heavy, strictly we should update specific ones, but for simplicity:
-                            // We rely on the toggle function to update individual icons visually, 
-                            // this listener mainly handles initial load or remote changes.
-                            // To properly update all heart icons on screen:
-                            const word = el.textContent.trim().toLowerCase().replace(/[.,!?;:()"]/g, "");
-                            window.updateHeartIcon(word, window.favoriteWords.has(word));
-                        });
-                    }
-
-                    // Sync Mistakes
-                    if (data.mistakes) {
-                        window.wrongAnswers = data.mistakes; // Assuming structure matches
-                    }
-
-                    // Sync Progress
-                    if (typeof data.progress !== 'undefined') {
-                        window.userProgress = data.progress;
-                        // Only jump if we are not currently playing to avoid disruption
-                        if (!window.isPlaying && window.currentSentenceIndex !== window.userProgress) {
-                             window.currentSentenceIndex = window.userProgress;
-                             window.updateProgressBar();
-                             window.highlightSentence(window.userProgress);
-                        }
-                    }
-                }
-                updateConnectionStatus('success');
-            }, (error) => {
-                console.error("User Listener Error:", error);
-                updateConnectionStatus('error');
-            });
-        }
-
-        // Save Data Helper
-        window.saveUserData = async function(type) {
-            if (!currentUser || !db) return;
-            
-            updateConnectionStatus('loading');
-            const userDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', COLLECTION_NAME, currentUser.id);
-            
-            let dataToUpdate = {};
-            
-            if (type === 'favorites') {
-                dataToUpdate.favorites = Array.from(window.favoriteWords);
-            } else if (type === 'mistakes') {
-                dataToUpdate.mistakes = window.wrongAnswers;
-            } else if (type === 'progress') {
-                dataToUpdate.progress = window.currentSentenceIndex;
-            }
-
-            try {
-                await setDoc(userDocRef, dataToUpdate, { merge: true });
-                // Timeout to show 'success' longer so user sees green light
-                setTimeout(() => updateConnectionStatus('success'), 500);
-            } catch (err) {
-                console.error("Save Error:", err);
-                updateConnectionStatus('error');
-            }
-        };
-
-        // Initialize App
-        window.onload = function() {
-            window.renderArticle();
-            window.renderQuiz();
-            window.initVoice();
-            initFirebase(); // Start Firebase Flow
-        };
-
-    </script>
-
     <script>
         // --- Data & State ---
         
@@ -911,14 +882,14 @@
 
         let synth = window.speechSynthesis;
         let sentences = [];
-        window.currentSentenceIndex = 0; // Expose to window for Firebase access
-        window.isPlaying = false;
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
         let textHidden = false;
         let showTranslation = false;
         let selectedVoice = null;
         let userScore = 0;
-        window.favoriteWords = new Set();
-        window.wrongAnswers = []; 
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
         
         let audioCtx;
 
@@ -961,9 +932,61 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // Removed window.onload here, moved to module script
+        window.onload = function() {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        };
 
-        window.initVoice = function() {
+        // --- Cloud Status UI Functions ---
+        window.updateConnectionStatus = function(type, msg) {
+            const container = document.getElementById('connection-status');
+            const dot = container.querySelector('.status-dot');
+            const text = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; // reset
+            dot.classList.add(type);
+            text.innerText = msg;
+        };
+
+        // --- Quick Login UI ---
+        window.renderQuickLogin = function(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-gray-500 text-sm py-2">尚無挑戰者紀錄，歡迎加入！</div>';
+                return;
+            }
+
+            users.forEach(user => {
+                const chip = document.createElement('div');
+                chip.className = 'user-chip';
+                chip.innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${user.name}`;
+                chip.onclick = () => window.handleLogin(user.name);
+                container.appendChild(chip);
+            });
+        };
+
+        // --- Sync Helper Functions ---
+        window.updateStudyListUI = function() {
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            // Update heart icons in table if open
+            if(document.getElementById('vocab-modal').style.display === 'flex') {
+                const container = document.getElementById('vocab-table-container');
+                // Re-render essentially
+                 container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            }
+        };
+
+        window.updateProgressUI = function(index) {
+             currentSentenceIndex = index;
+             updateProgressBar();
+             highlightSentence(index); // Just highlight, don't scroll if not playing
+        }
+
+
+        function initVoice() {
             const voiceStatus = document.getElementById('voice-indicator');
             const loadVoices = () => {
                 const voices = synth.getVoices();
@@ -988,14 +1011,12 @@
             }
         }
 
-        window.renderArticle = function() {
+        function renderArticle() {
             const displayArea = document.getElementById('article-display');
             displayArea.innerHTML = '';
             
             let p;
             sentences = []; 
-            
-            // Render logic with correct indices for paragraph breaks
             
             articleData.forEach((item, index) => {
                 if (index === 0) { // Paragraph 1
@@ -1091,7 +1112,7 @@
                 const originalWord = word;
                 if (vocabulary[cleanWord]) {
                     const data = vocabulary[cleanWord];
-                    const isFav = window.favoriteWords.has(cleanWord);
+                    const isFav = favoriteWords.has(cleanWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
                     return `<span class="vocab-word" onclick="speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
@@ -1110,7 +1131,7 @@
             }).join(' ');
         }
         
-        window.speakAndShowDef = function(e, word) {
+        function speakAndShowDef(e, word) {
             e.stopPropagation(); 
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
@@ -1119,8 +1140,7 @@
             synth.speak(utterance);
         }
 
-        // New function specifically for table clicks (no event needed)
-        window.speakWord = function(word) {
+        function speakWord(word) {
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
@@ -1128,14 +1148,14 @@
             synth.speak(utterance);
         }
 
-        window.toggleFavorite = function(e, word) {
+        function toggleFavorite(e, word) {
             if(e) e.stopPropagation();
-            if (window.favoriteWords.has(word)) {
-                window.favoriteWords.delete(word);
-                window.updateHeartIcon(word, false);
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
             } else {
-                window.favoriteWords.add(word);
-                window.updateHeartIcon(word, true);
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
                 confetti({
                     particleCount: 30,
                     spread: 40,
@@ -1143,43 +1163,40 @@
                     colors: ['#f472b6']
                 });
             }
-            document.getElementById('study-list-count').innerText = `目前收藏: ${window.favoriteWords.size} 個單字`;
-            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
-            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
-            
-            // Firebase Save
-            if (window.saveUserData) window.saveUserData('favorites');
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') openVocabModal();
+
+            // CLOUD SYNC TRIGGER
+            if(window.updateCloudData) window.updateCloudData();
         }
 
-        window.updateHeartIcon = function(word, isFav) {
+        function updateHeartIcon(word, isFav) {
             const icons = document.querySelectorAll(`#heart-${word}`);
-            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
-            
-            const className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
-            
-            icons.forEach(icon => icon.className = className);
-            tableIcons.forEach(icon => icon.className = className);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
         }
 
-        window.openVocabModal = function() {
+        function openVocabModal() {
             const container = document.getElementById('vocab-table-container');
             container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
             document.getElementById('vocab-modal').style.display = 'flex';
         }
 
-        window.openStudyModal = function() {
+        function openStudyModal() {
             const container = document.getElementById('study-table-container');
-            if (window.favoriteWords.size === 0) {
+            if (favoriteWords.size === 0) {
                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-600"></i><p>您的學習清單是空的。</p><p class="text-sm">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
             } else {
-                container.innerHTML = generateTableHTML(Array.from(window.favoriteWords), 'study');
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
             }
             document.getElementById('study-modal').style.display = 'flex';
         }
 
-        window.openMistakeModal = function() {
+        function openMistakeModal() {
             const container = document.getElementById('mistake-table-container');
-            if (window.wrongAnswers.length === 0) {
+            if (wrongAnswers.length === 0) {
                  container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-700"></i><p>太棒了！您沒有答錯任何題目。</p></div>`;
             } else {
                  let html = `
@@ -1194,7 +1211,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-700">
                 `;
-                window.wrongAnswers.forEach(item => {
+                wrongAnswers.forEach(item => {
                     html += `
                         <tr class="hover:bg-gray-700/50">
                             <td class="p-3 font-medium text-gray-300">${item.q.q}</td>
@@ -1210,7 +1227,7 @@
             document.getElementById('mistake-modal').style.display = 'flex';
         }
 
-        window.closeModal = function(id) {
+        function closeModal(id) {
             document.getElementById(id).style.display = 'none';
         }
 
@@ -1233,7 +1250,7 @@
             wordList.forEach(word => {
                 const data = vocabulary[word];
                 if(!data) return;
-                const isFav = window.favoriteWords.has(word);
+                const isFav = favoriteWords.has(word);
                 const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
                 html += `
                     <tr class="hover:bg-gray-700/50 transition duration-150">
@@ -1253,7 +1270,7 @@
             return html;
         }
 
-        window.printList = function(type) {
+        function printList(type) {
             const printArea = document.getElementById('print-area');
             let content = '';
             
@@ -1274,10 +1291,10 @@
                             </thead>
                             <tbody>
                 `;
-                if (window.wrongAnswers.length === 0) {
+                if (wrongAnswers.length === 0) {
                      content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
                 } else {
-                    window.wrongAnswers.forEach(item => {
+                    wrongAnswers.forEach(item => {
                         content += `
                             <tr>
                                 <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
@@ -1291,7 +1308,7 @@
                 content += `</tbody></table></div>`;
             } else {
                 let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
-                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(window.favoriteWords);
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
                 wordList.sort();
 
                 content = `
@@ -1333,7 +1350,7 @@
             window.print();
         }
 
-        window.toggleTranslation = function() {
+        function toggleTranslation() {
             showTranslation = !showTranslation;
             const transElements = document.querySelectorAll('.translation-text');
             const btn = document.getElementById('toggle-trans-btn');
@@ -1352,44 +1369,39 @@
             }
         }
 
-        window.togglePlay = function() {
-            if (window.isPlaying) {
+        function togglePlay() {
+            if (isPlaying) {
                 pauseAudio();
             } else {
                 playAudio();
             }
         }
 
-        window.playAudio = function() {
-            window.isPlaying = true;
+        function playAudio() {
+            isPlaying = true;
             updatePlayBtn(true);
             document.getElementById('visualizer').classList.add('playing');
-            if (window.currentSentenceIndex >= sentences.length) {
-                window.currentSentenceIndex = 0;
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
             }
-            speakSentence(window.currentSentenceIndex);
+            speakSentence(currentSentenceIndex);
         }
 
         function speakSentence(index) {
-            if (!window.isPlaying || index >= sentences.length) {
+            if (!isPlaying || index >= sentences.length) {
                 if (index >= sentences.length) {
-                    window.isPlaying = false;
+                    isPlaying = false;
                     updatePlayBtn(false);
                     document.getElementById('visualizer').classList.remove('playing');
-                    window.currentSentenceIndex = 0;
-                    window.highlightSentence(-1);
-                    // Reset progress at end
-                    if(window.saveUserData) window.saveUserData('progress');
+                    currentSentenceIndex = 0;
+                    highlightSentence(-1);
                 }
                 return;
             }
 
-            window.currentSentenceIndex = index;
-            window.highlightSentence(index);
-            window.updateProgressBar();
-
-            // Firebase Save Progress (Throttle this if needed, but per sentence is okay)
-            if(window.saveUserData) window.saveUserData('progress');
+            currentSentenceIndex = index;
+            highlightSentence(index);
+            updateProgressBar();
 
             synth.cancel();
 
@@ -1401,7 +1413,7 @@
             utterance.pitch = 1.0; 
             
             utterance.onend = function() {
-                if (window.isPlaying) {
+                if (isPlaying) {
                     setTimeout(() => {
                         speakSentence(index + 1);
                     }, 400); 
@@ -1410,34 +1422,33 @@
             
             utterance.onerror = function(e) {
                 console.error("Speech error", e);
-                window.isPlaying = false;
+                isPlaying = false;
                 updatePlayBtn(false);
             };
 
             synth.speak(utterance);
         }
 
-        window.pauseAudio = function() {
-            window.isPlaying = false;
+        function pauseAudio() {
+            isPlaying = false;
             synth.cancel();
             updatePlayBtn(false);
             document.getElementById('visualizer').classList.remove('playing');
         }
 
-        window.restartAudio = function() {
+        function restartAudio() {
             synth.cancel();
-            window.currentSentenceIndex = 0;
-            window.updateProgressBar();
-            window.highlightSentence(-1);
-            if(window.saveUserData) window.saveUserData('progress');
-            if (window.isPlaying) {
+            currentSentenceIndex = 0;
+            updateProgressBar();
+            highlightSentence(-1);
+            if (isPlaying) {
                 setTimeout(() => speakSentence(0), 100);
             }
         }
         
-        window.playFromSentence = function(index) {
-            window.currentSentenceIndex = index;
-            window.isPlaying = true;
+        function playFromSentence(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
             updatePlayBtn(true);
             document.getElementById('visualizer').classList.add('playing');
             speakSentence(index);
@@ -1456,7 +1467,7 @@
             });
         }
 
-        window.highlightSentence = function(index) {
+        function highlightSentence(index) {
             document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
             
             if (index >= 0 && index < sentences.length) {
@@ -1468,12 +1479,17 @@
             }
         }
         
-        window.updateProgressBar = function() {
-             const progress = ((window.currentSentenceIndex + 1) / sentences.length) * 100;
+        function updateProgressBar() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
              document.getElementById('progress-bar').style.width = `${progress}%`;
+             
+             // CLOUD SYNC TRIGGER (Save progress when sentence changes)
+             if(window.updateCloudData && currentSentenceIndex % 2 === 0) { // Save every 2 sentences to reduce writes
+                 window.updateCloudData();
+             }
         }
 
-        window.toggleText = function() {
+        function toggleText() {
             textHidden = !textHidden;
             const overlay = document.getElementById('hidden-overlay');
             const btn = document.getElementById('toggle-text-btn');
@@ -1490,7 +1506,7 @@
             }
         }
 
-        window.renderQuiz = function() {
+        function renderQuiz() {
             const form = document.getElementById('quizForm');
             form.innerHTML = '';
             
@@ -1519,7 +1535,7 @@
             });
         }
 
-        window.checkAnswer = function(questionId, selectedKey) {
+        function checkAnswer(questionId, selectedKey) {
             const questionObj = quizData.find(q => q.id === questionId);
             if (!questionObj) return;
 
@@ -1546,9 +1562,7 @@
                 correctIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
                 correctIcon.innerHTML = '<i class="fas fa-check"></i>';
 
-                window.wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
-                // Firebase Save Mistakes
-                if (window.saveUserData) window.saveUserData('mistakes');
+                wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
             }
 
             const optionsDiv = document.getElementById(`${questionId}-options`);
@@ -1571,9 +1585,12 @@
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
                 statusText.className = "font-bold mb-1 text-red-400";
             }
+
+            // CLOUD SYNC TRIGGER
+            if(window.updateCloudData) window.updateCloudData();
         }
 
-        window.showFinalScore = function() {
+        function showFinalScore() {
             const scoreDisplay = document.getElementById('final-score');
             const feedback = document.getElementById('feedback-msg');
             const resultCard = document.getElementById('score-card');
@@ -1583,7 +1600,7 @@
             let finalScore = Math.round(userScore);
             scoreDisplay.innerText = `${finalScore} / 100`;
             
-            if (window.wrongAnswers.length > 0) {
+            if (wrongAnswers.length > 0) {
                 mistakeBtn.classList.remove('hidden');
                 mistakeBtn.classList.add('flex');
             }
