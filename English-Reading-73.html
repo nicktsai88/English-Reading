@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：Climbing Mount Everest: The Death Zone (Firebase Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #111827; /* Darker background for horror theme */
+            color: #e5e7eb;
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #4c1d95; /* violet-900 */
+            color: #c4b5fd; /* violet-300 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            background-color: #1f2937; /* Dark gray */
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #374151;
+            border-color: #6b7280;
+        }
+        .quiz-option.correct {
+            background-color: #064e3b !important;
+            border-color: #10b981 !important;
+            color: #a7f3d0;
+        }
+        .quiz-option.wrong {
+            background-color: #7f1d1d !important;
+            border-color: #ef4444 !important;
+            color: #fca5a5;
+            opacity: 0.9;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: #d1d5db;
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #8b5cf6; /* Violet border */
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #a78bfa;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #4c1d95;
+            color: #fff;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            min-width: 240px; 
+            max-width: 320px;
+            background-color: #0f172a; /* Darker blue/black */
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 15px rgba(139, 92, 246, 0.3); /* Glowing shadow */
+            line-height: 1.5;
+            border: 1px solid #4c1d95;
+        }
+        
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #0f172a transparent transparent transparent;
+        }
+        
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #5b21b6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #ddd6fe;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block;
+            font-size: 0.95em;
+            color: #9ca3af;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            padding-left: 10px;
+            border-left: 3px solid #6b7280;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #a78bfa;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(12px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1f2937;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            position: relative;
+            color: #f3f4f6;
+            border: 1px solid #374151;
+        }
+
+        /* Login Modal Specific */
+        #login-modal {
+            display: flex; /* Initially visible */
+            z-index: 2000;
+        }
+        #login-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Status Dot Styles */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 20px;
+            border: 1px solid #374151; /* Default border */
+            margin-left: 0;
+            transition: all 0.3s ease; /* Smooth transition for color changes */
+        }
+        /* Dynamic Border Colors for Container */
+        .status-container.loading {
+            border-color: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+        }
+        .status-container.success {
+            border-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+        .status-container.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+        .status-dot.error { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .status-text { font-size: 0.75rem; color: #d1d5db; font-weight: 500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Neon Restart Button */
+        .neon-btn {
+            background-color: transparent;
+            color: #00ff00; /* Neon Green Text */
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 5px #00ff00, inset 0 0 5px #00ff00;
+            text-shadow: 0 0 3px #00ff00;
+            transition: all 0.3s ease-in-out;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .neon-btn:hover {
+            background-color: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00, inset 0 0 10px #00ff00;
+            transform: scale(1.02);
+        }
+        .neon-btn:active {
+            box-shadow: 0 0 5px #00ff00;
+            transform: scale(0.98);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                color: black;
+                background: white;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+                color: black;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen pb-12 text-gray-100">
+
+    <!-- Navbar / Audio Player Sticky Header -->
+    <div class="sticky top-0 z-50 bg-gray-800 text-white shadow-xl border-b border-gray-700 transition-all duration-300 no-print" id="audio-player-bar">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title, User, Badges -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <!-- Icon (Purple Neon) -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-violet-900/50 flex items-center justify-center text-violet-300 border border-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.6)] shrink-0">
+                            <i class="fas fa-mountain text-lg"></i>
+                        </div>
+                        
+                        <!-- Info Column -->
+                        <div class="flex flex-col gap-1">
+                            
+                            <!-- Top Row: User Name & Status -->
+                            <div class="flex items-center gap-3">
+                                <!-- Neon User Name -->
+                                <div id="header-username" class="text-sm font-bold text-pink-400 drop-shadow-[0_0_3px_rgba(244,114,182,0.8)] flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                                </div>
+                                <!-- Firebase Status Indicator (Dynamic Border) -->
+                                <div class="status-container" id="cloud-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Row: Neon Badges (Replaces old Title & Voice) -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Level Badge (Neon Yellow) -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500 text-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.4)] text-[10px] md:text-xs font-bold bg-yellow-900/20 whitespace-nowrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Level: B1-B2 (Intermediate)</span>
+                                </div>
+                                <!-- Word Count Badge (Neon Cyan) -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500 text-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.4)] text-[10px] md:text-xs font-bold bg-cyan-900/20 whitespace-nowrap">
+                                    <i class="fas fa-file-word"></i>
+                                    <span>Words: ~700</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Play Button (Right aligned on mobile) -->
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition shrink-0 ml-auto border border-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)]">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4 hidden md:flex">
+                    <!-- Rewind (Blue Neon) -->
+                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-sky-500 text-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.5)] flex items-center justify-center hover:bg-sky-900/30 transition hover:scale-105" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <!-- Main Play Button (Purple/Pink Neon) -->
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-violet-600 text-white rounded-full shadow-[0_0_15px_rgba(217,70,239,0.6)] flex items-center justify-center hover:scale-105 transition border-2 border-fuchsia-500">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <!-- Visualizer -->
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t md:border-gray-700 border-t-0 md:pt-0 mt-2 md:mt-0">
+                    
+                    <!-- Translation Toggle (Green Neon) -->
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-green-900/20 text-green-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(74,222,128,0.4)] border border-green-500">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <!-- Toggle Text (Amber Neon) -->
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-amber-900/20 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(251,191,36,0.4)] border border-amber-500">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                    
+                    <!-- Logout (Red Neon - Enlarged) -->
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)] flex items-center justify-center hover:bg-red-900/30 transition hover:scale-105 ml-1">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-900 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-violet-500 w-0 transition-all duration-300 shadow-[0_0_10px_#8b5cf6]"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700">
+             <!-- Image with fallback -->
+             <div class="w-full h-64 md:h-80 bg-gray-900 relative overflow-hidden group">
+                <img 
+                    src="English-Reading-73-images/p0.jpg" 
+                    alt="Climbing Mount Everest: The Death Zone" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1516616370751-86d6bd8b0651?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <!-- Dark Gradient Overlay for better text readability -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-4 left-4 right-4 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium opacity-90 backdrop-blur-sm bg-black/60 w-fit px-3 py-1 rounded-full border border-gray-600">
+                        <i class="fas fa-search-location"></i> Listening Focus: Adventure, Nature & Extreme Sports
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="window.openVocabModal()" class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:border-violet-500 transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-violet-900/30 text-violet-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-200">完整單字表 (Vocabulary)</h3>
+                        <p class="text-sm text-gray-400">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 group-hover:text-violet-400"></i>
+            </button>
+
+            <button onclick="window.openStudyModal()" class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:border-pink-500 transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-900/30 text-pink-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-200">我的學習清單 (Favorites)</h3>
+                        <p class="text-sm text-gray-400" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 group-hover:text-pink-400"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700 relative">
+            <h2 class="text-2xl font-bold text-gray-100 mb-6 pb-4 border-b border-gray-700">Climbing Mount Everest: The Death Zone</h2>
+            
+            <div class="bg-gray-900/50 border-l-4 border-violet-500 p-4 mb-6 text-sm text-gray-300 rounded-r-lg">
+                <i class="fas fa-mouse-pointer mr-1 text-violet-400"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-gray-900/95 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-gray-800 p-6 rounded-full mb-4 border border-gray-700 shadow-lg shadow-violet-900/20">
+                    <i class="fas fa-ear-listen text-4xl text-violet-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-200 mb-2">Listen Carefully</h3>
+                <p class="text-gray-400 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="window.toggleText()" class="bg-violet-600 text-white px-6 py-2 rounded-full hover:bg-violet-700 transition shadow-lg border border-violet-500">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <div id="article-display" class="prose max-w-none text-gray-300 text-lg md:text-xl leading-loose tracking-wide space-y-6">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700 relative">
+            
+            <!-- Quiz Header with Restart Button -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
+                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                    <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
+                        <i class="fas fa-pen"></i>
+                    </span>
+                    Reading Comprehension Quiz (15 Questions)
+                </h3>
+                
+                <!-- Restart Button (Fluorescent Style) -->
+                <button onclick="window.resetQuiz()" class="neon-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
+                </button>
+            </div>
+            
+            <form id="quizForm" class="space-y-8">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-700 flex flex-col items-center gap-4">
+                <button type="button" onclick="window.showFinalScore()" class="w-full md:w-auto bg-violet-600 hover:bg-violet-700 text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95 border border-violet-500">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-gray-900 p-6 rounded-xl border border-gray-700 animate-fade-in relative">
+                    <p class="text-gray-400 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-5xl font-extrabold text-violet-400 my-2" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-300 font-medium mb-4"></p>
+                    
+                    <button id="mistake-review-btn" onclick="window.openMistakeModal()" class="hidden w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold shadow transition flex items-center justify-center gap-2 mx-auto border border-red-500">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (New) -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col items-center justify-center gap-6">
+            <div class="w-16 h-16 rounded-full bg-violet-900 flex items-center justify-center text-violet-300 mb-2 border border-violet-500 shadow-lg shadow-violet-500/30">
+                <i class="fas fa-user-astronaut text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white">歡迎來到英語閱讀挑戰</h2>
+            <p class="text-gray-400 text-sm mb-4">請輸入名字以儲存您的學習進度</p>
+            
+            <div class="w-full space-y-3">
+                <input type="text" id="username-input" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500 text-center text-lg" placeholder="輸入您的名字 (Enter Name)">
+                <button id="login-btn" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
+                    開始閱讀 (Start)
+                </button>
+            </div>
+
+            <div class="w-full border-t border-gray-700 pt-4 mt-2">
+                <p class="text-xs text-gray-500 uppercase font-bold mb-3 tracking-wider">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-600">載入挑戰者名單中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b border-gray-700 flex justify-between items-center bg-gray-800 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-100"><i class="fas fa-book-open text-violet-400 mr-2"></i> 完整單字表</h3>
+                <button onclick="window.closeModal('vocab-modal')" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="vocab-table-container"></div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('vocab')" class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="window.closeModal('vocab-modal')" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b border-gray-700 flex justify-between items-center bg-gray-800 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-100"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="window.closeModal('study-modal')" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="study-table-container"></div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('study')" class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="window.closeModal('study-modal')" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b border-gray-700 flex justify-between items-center bg-red-900/30 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-red-400"><i class="fas fa-times-circle text-red-500 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="window.closeModal('mistake-modal')" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="mistake-table-container"></div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('mistakes')" class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="window.closeModal('mistake-modal')" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <!-- Firebase & App Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-73';
+        const DOC_GLOBAL = 'global';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCan2_Rc26HsLkOPr0i5QrgdjAYyqcigJ0",
+            authDomain: "english-reading-6b506.firebaseapp.com",
+            projectId: "english-reading-6b506",
+            storageBucket: "english-reading-6b506.firebasestorage.app",
+            messagingSenderId: "494747176273",
+            appId: "1:494747176273:web:585487fadb29b2e5e2d770",
+            measurementId: "G-4JD6R9MRPQ"
+        };
+
+        let app, db, auth;
+        let isFirebaseReady = false;
+        let currentUser = null; // Store current user info {name: string}
+        let unsubscribeUser = null; // Listener for specific user data
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                updateConnectionStatus('loading', '讀取資料中...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                
+                isFirebaseReady = true;
+                console.log("Firebase Connected");
+                
+                // Listen to Global Users List for Quick Login
+                onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { users: [] };
+                    renderQuickLogin(data.users || []);
+                }, (error) => {
+                    console.error("Global listener error:", error);
+                    updateConnectionStatus('error', '雲端同步失敗');
+                });
+
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                updateConnectionStatus('error', '連線錯誤');
+            }
+        }
+
+        // --- User Logic ---
+        window.startLogin = async (name) => {
+            if (!name || !isFirebaseReady) return;
+            const cleanName = name.trim();
+            if (cleanName.length === 0) return;
+
+            currentUser = { name: cleanName };
+            document.getElementById('login-modal').style.display = 'none';
+            
+            // Update Header Name (Neon Style)
+            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
+
+            // Register user in Global List (if new)
+            try {
+                const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
+                await setDoc(globalRef, {
+                    users: arrayUnion({ name: cleanName })
+                }, { merge: true });
+
+                subscribeToUserData(cleanName);
+            } catch (e) {
+                console.error("Login save error:", e);
+            }
+        };
+
+        function subscribeToUserData(userName) {
+            if (unsubscribeUser) unsubscribeUser();
+            
+            const userDocRef = doc(db, COLLECTION_NAME, `user_${userName}`);
+            
+            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                updateConnectionStatus('success', '已同步');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // 1. Restore Favorites
+                    if (data.favorites) {
+                        favoriteWords = new Set(data.favorites);
+                        document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+                        // Re-render open modals if needed
+                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+                        if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+                    }
+
+                    // 2. Restore Progress
+                    if (data.progressIndex !== undefined && data.progressIndex > 0) {
+                        // Only update if playing is false to avoid jumping while listening
+                        if (!isPlaying && data.progressIndex > currentSentenceIndex) {
+                            currentSentenceIndex = data.progressIndex;
+                            window.updateProgressBar();
+                            window.highlightSentence(currentSentenceIndex);
+                        }
+                    }
+
+                    // 3. Restore Quiz Answers & State
+                    if (data.quizAnswers) {
+                         const serverAnswers = data.quizAnswers;
+                         
+                         // Reset local quiz state before rebuilding
+                         userScore = 0;
+                         wrongAnswers = [];
+                         userAnswers = serverAnswers;
+                         
+                         Object.keys(serverAnswers).forEach(qid => {
+                             const ans = serverAnswers[qid];
+                             const qObj = quizData.find(q => q.id === qid);
+                             
+                             if(qObj) {
+                                 if(ans === qObj.ans) userScore += (100/15);
+                                 else wrongAnswers.push({q: qObj, yourAns: ans});
+                             }
+
+                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
+                             if (!alreadyAnswered) {
+                                 window.checkAnswer(qid, ans, true); // true = isRestoring
+                             }
+                         });
+                    }
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        // Exposed function to save data
+        window.saveUserData = async () => {
+            if (!currentUser || !isFirebaseReady) return;
+            updateConnectionStatus('loading', '同步中...');
+            
+            try {
+                const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                await setDoc(userDocRef, {
+                    favorites: Array.from(favoriteWords),
+                    mistakes: wrongAnswers,
+                    progressIndex: currentSentenceIndex,
+                    quizAnswers: userAnswers, // Save the map of answers
+                    lastUpdated: new Date()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+                updateConnectionStatus('error', '存檔失敗');
+            }
+        };
+
+        // Reset Quiz Data
+        window.resetQuiz = async () => {
+            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
+            
+            userScore = 0;
+            wrongAnswers = [];
+            userAnswers = {};
+            
+            document.querySelectorAll('.quiz-option').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'disabled');
+            });
+            document.querySelectorAll('.quiz-option input').forEach(el => {
+                el.disabled = false;
+                el.checked = false;
+            });
+            document.querySelectorAll('.quiz-option div').forEach(el => {
+                const key = el.id.split('-').pop(); // get A, B, C...
+                el.className = "w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                el.innerHTML = key;
+            });
+            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('score-card').classList.add('hidden');
+
+            if (currentUser && isFirebaseReady) {
+                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                 await updateDoc(userDocRef, {
+                     quizAnswers: deleteField(),
+                     mistakes: deleteField()
+                 });
+            }
+            
+            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function renderQuickLogin(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-500 py-2">尚無挑戰者紀錄，歡迎加入！</span>';
+                return;
+            }
+
+            const recentUsers = users.slice().reverse().slice(0, 5); 
+            
+            recentUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = "bg-gray-800 hover:bg-gray-700 text-violet-300 border border-violet-900 px-4 py-2 rounded-full text-sm transition";
+                btn.innerText = u.name;
+                btn.onclick = () => {
+                    document.getElementById('username-input').value = u.name;
+                    window.startLogin(u.name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateConnectionStatus(status, text) {
+            const container = document.getElementById('cloud-status');
+            const dot = container.querySelector('.status-dot');
+            const label = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; // reset
+            dot.classList.add(status); // loading, success, error
+            label.innerText = text;
+
+            container.className = 'status-container'; // reset
+            container.classList.add(status);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            const name = document.getElementById('username-input').value;
+            window.startLogin(name);
+        };
+        
+        initFirebase();
+
+
+        // ---------------------------------------------------------
+        // --- Existing App Logic (Attached to Window) ---
+        // ---------------------------------------------------------
+        
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
+        let userAnswers = {}; // Store { qID: "Answer" }
+        let audioCtx;
+
+        const vocabulary = {
+            "summit": { pos: "n.", trans: "頂峰；山頂", example: "Reaching the summit took ten hours of climbing." },
+            "majestic": { pos: "adj.", trans: "雄偉的；莊嚴的", example: "The castle looked majestic on top of the hill." },
+            "merciless": { pos: "adj.", trans: "無情的；殘忍的", example: "The merciless sun beat down on the desert travelers." },
+            "expedition": { pos: "n.", trans: "探險隊；遠征", example: "The scientists organized an expedition to the Antarctica." },
+            "acclimatization": { pos: "n.", trans: "高度適應；水土不服適應", example: "Proper acclimatization is key to avoiding altitude sickness." },
+            "temporary": { pos: "adj.", trans: "暫時的", example: "We set up a temporary camp for the night." },
+            "glacier": { pos: "n.", trans: "冰川", example: "The glacier moves slowly down the mountain valley." },
+            "exhaust": { pos: "v.", trans: "使精疲力盡", example: "The long run will exhaust you if you don't pace yourself." },
+            "ominously": { pos: "adv.", trans: "不祥地", example: "The dark clouds gathered ominously over the city." },
+            "atmospheric": { pos: "adj.", trans: "大氣的", example: "Atmospheric pressure decreases as you go higher." },
+            "supplemental": { pos: "adj.", trans: "補充的；額外的", example: "He takes supplemental vitamins to stay healthy." },
+            "fatal": { pos: "adj.", trans: "致命的", example: "The car accident was fatal for the driver." },
+            "frostbite": { pos: "n.", trans: "凍傷", example: "He lost two toes to frostbite during the winter hike." },
+            "hallucination": { pos: "n.", trans: "幻覺", example: "Lack of sleep can sometimes cause hallucinations." },
+            "coordination": { pos: "n.", trans: "協調性", example: "Dancing requires good physical coordination." },
+            "obsessed": { pos: "adj.", trans: "著迷的；無法自拔的", example: "She is obsessed with that new video game." },
+            "desperate": { pos: "adj.", trans: "絕望的；極度渴望的", example: "The hungry dog was desperate for food." },
+            "triumph": { pos: "n.", trans: "勝利；巨大成就", example: "Winning the championship was a great triumph." },
+            "tragedy": { pos: "n.", trans: "悲劇", example: "The sinking of the Titanic was a terrible tragedy." },
+            "allure": { pos: "n.", trans: "誘惑力；魅力", example: "The allure of the big city attracts many young people." },
+            "grim": { pos: "adj.", trans: "嚴酷的；陰森的", example: "The doctor gave us a grim report on his health." },
+            "confront": { pos: "v.", trans: "面對；對抗", example: "You must confront your fears to overcome them." },
+            "mortality": { pos: "n.", trans: "必死性；死亡數", example: "Humans are aware of their own mortality." },
+            "fragile": { pos: "adj.", trans: "脆弱的", example: "Handle the glass carefully; it is very fragile." },
+            "raw": { pos: "adj.", trans: "原始的；未加工的", example: "The raw power of the storm destroyed the house." },
+            "altitude": { pos: "n.", trans: "海拔；高度", example: "The plane is flying at an altitude of 30,000 feet." },
+            "achievement": { pos: "n.", trans: "成就", example: "Graduating from college is a major achievement." },
+            "accessible": { pos: "adj.", trans: "易接近的；可進入的", example: "The ramp makes the building accessible to wheelchairs." },
+            "adjust": { pos: "v.", trans: "調整；適應", example: "It took time to adjust to the new time zone." },
+            "patience": { pos: "n.", trans: "耐心", example: "Teaching children requires a lot of patience." },
+            "drain": { pos: "v.", trans: "耗盡；排出", example: "The hard work seemed to drain all his energy." },
+            "severe": { pos: "adj.", trans: "嚴重的", example: "He suffered a severe injury to his leg." },
+            "swell": { pos: "v.", trans: "腫脹", example: "Her ankle began to swell after she twisted it." },
+            "ignore": { pos: "v.", trans: "忽視；不理會", example: "Don't ignore the warning signs on the road." },
+            "flock": { pos: "v.", trans: "聚集；蜂擁", example: "Tourists flock to the beach in the summer." },
+            "littered": { pos: "adj.", trans: "遍布垃圾（或雜物）的", example: "The floor was littered with toys." },
+            "recover": { pos: "v.", trans: "尋回；恢復", example: "Police managed to recover the stolen painting." },
+            "awe": { pos: "n.", trans: "敬畏", example: "We watched in awe as the rocket launched." },
+            "humble": { pos: "adj.", trans: "謙卑的；渺小的", example: "He remained humble despite his success." },
+            "limit": { pos: "n.", trans: "極限；限制", example: "You need to know your physical limit when exercising." }
+        };
+
+        const articleData = [
+            // Paragraph 1
+            { en: "Standing at 8,848 meters (29,032 feet) above sea level, Mount Everest is the highest mountain on Earth.", zh: "聖母峰（珠穆朗瑪峰）海拔 8,848 公尺（29,032 英尺），是地球上最高的山峰。" },
+            { en: "Located in the Himalayas on the border between Nepal and Tibet, it is known to the local Tibetan people as Chomolungma, or \"Goddess Mother of the World.\"", zh: "它位於喜馬拉雅山脈，處於尼泊爾和西藏的邊界，當地的藏族人稱之為 Chomolungma，意為「大地之母神」。" },
+            { en: "For roughly a century, this majestic peak has represented the ultimate challenge for adventurers and mountaineers.", zh: "大約一個世紀以來，這座雄偉的山峰代表了冒險家和登山者的終極挑戰。" },
+            { en: "Reaching the summit is often considered the greatest achievement in a climber's life.", zh: "登頂通常被認為是登山者一生中最大的成就。" },
+            { en: "However, beneath its beautiful, snowy surface lies a deadly reality.", zh: "然而，在它美麗、覆蓋著白雪的表面之下，隱藏著致命的現實。" },
+            { en: "Hundreds of people have lost their lives trying to conquer the mountain, proving that nature is both magnificent and merciless.", zh: "數百人在試圖征服這座山時喪生，證明了大自然既壯麗又無情。" },
+            { en: "While modern technology and commercial expeditions have made the mountain more accessible than ever before, the risks remain incredibly high, and success is never guaranteed.", zh: "雖然現代科技和商業探險隊讓這座山比以往任何時候都更容易接近，但風險仍然極高，且成功從無保證。" },
+            
+            // Paragraph 2
+            { en: "Climbing Everest is not a sprint; it is a marathon that takes about two months to complete.", zh: "攀登聖母峰不是短跑；這是一場馬拉松，大約需要兩個月才能完成。" },
+            { en: "Climbers cannot simply walk from the bottom to the top in one go because the human body needs time to adjust to the thin air.", zh: "登山者不能簡單地一口氣從底部走到頂部，因為人體需要時間適應稀薄的空氣。" },
+            { en: "This process is called \"acclimatization.\"", zh: "這個過程稱為「高度適應」。" },
+            { en: "Most expeditions set up a temporary home at Base Camp, which sits at 5,364 meters.", zh: "大多數探險隊會在海拔 5,364 公尺的基地營建立臨時住所。" },
+            { en: "From there, climbers spend weeks moving up and down the mountain to higher camps (Camp 1, 2, and 3) to let their bodies produce more red blood cells, which carry oxygen.", zh: "從那裡開始，登山者花費數週時間在山上上下移動到更高的營地（1 號、2 號和 3 號營地），讓身體製造更多的紅血球來攜帶氧氣。" },
+            { en: "This waiting game requires immense patience and mental strength.", zh: "這場等待的遊戲需要巨大的耐心和精神力量。" },
+            { en: "Living on a glacier for weeks, dealing with freezing temperatures, and eating simple food can exhaust a climber long before they even attempt the final push to the summit.", zh: "在冰川上生活數週，應對冰凍的溫度，吃簡單的食物，這些早在登山者嘗試最後衝頂之前就會耗盡他們的體力。" },
+            
+            // Paragraph 3
+            { en: "The most dangerous part of the climb begins above 8,000 meters (26,247 feet), an area ominously known as the \"Death Zone.\"", zh: "攀登過程中最危險的部分始於海拔 8,000 公尺（26,247 英尺）以上，這個區域被不祥地稱為「死亡地帶」。" },
+            { en: "At this altitude, the atmospheric pressure is so low that there is only about one-third of the oxygen available at sea level.", zh: "在這個高度，大氣壓力非常低，氧氣含量僅為海平面大約三分之一。" },
+            { en: "In the Death Zone, the human body cannot survive for long; essentially, it begins to die slowly.", zh: "在死亡地帶，人體無法長期生存；本質上，它開始緩慢死亡。" },
+            { en: "Even with supplemental oxygen tanks, climbers struggle to breathe, and their physical strength drains away rapidly.", zh: "即使有輔助氧氣瓶，登山者也難以呼吸，體力迅速流失。" },
+            { en: "Digestive systems shut down, and the mind becomes confused.", zh: "消化系統停止運作，神智變得混亂。" },
+            { en: "Because survival is impossible for more than a few days at this height, climbers must push for the summit and return to a lower camp as quickly as possible.", zh: "由於在這個高度生存不可能超過幾天，登山者必須盡快衝頂並返回較低的營地。" },
+            { en: "Stopping for too long, whether due to exhaustion or bad weather, is often a fatal mistake.", zh: "停留太久，無論是因為筋疲力盡還是天氣惡劣，通常都是致命的錯誤。" },
+            
+            // Paragraph 4
+            { en: "Aside from the lack of oxygen, climbers face other invisible enemies in the Death Zone.", zh: "除了缺氧之外，登山者在死亡地帶還面臨其他看不見的敵人。" },
+            { en: "The extreme cold, which can drop to minus 60 degrees Celsius, can cause severe frostbite, leading to the loss of fingers, toes, or even noses.", zh: "極度的寒冷可能降至攝氏零下 60 度，導致嚴重的凍傷，造成手指、腳趾甚至鼻子的壞死脫落。" },
+            { en: "Furthermore, the low oxygen can cause terrifying medical conditions like HACE (High Altitude Cerebral Edema), where the brain swells with fluid, causing hallucinations and loss of coordination.", zh: "此外，低氧會引起可怕的醫療狀況，如 HACE（高山腦水腫），大腦因液體而腫脹，導致幻覺和失去協調能力。" },
+            { en: "Another major danger is \"summit fever,\" a psychological condition where climbers become so obsessed with reaching the top that they ignore safety rules and turnaround times.", zh: "另一個主要的危險是「登頂狂熱」，這是一種心理狀況，登山者過度執著於登頂，以至於忽視安全規則和折返時間。" },
+            { en: "In their desperate drive to succeed, they may push themselves past their limits, only to realize too late that they do not have enough energy to climb back down.", zh: "在他們渴望成功的絕望驅動力下，他們可能會超越極限，直到太遲才意識到自己沒有足夠的能量爬下山。" },
+            
+            // Paragraph 5
+            { en: "Despite the extreme dangers, hundreds of climbers flock to Everest every spring.", zh: "儘管有極端的危險，每年春天仍有數百名登山者湧向聖母峰。" },
+            { en: "The allure of standing on top of the world is a powerful force.", zh: "站在世界之巔的誘惑是一股強大的力量。" },
+            { en: "However, the mountain demands respect.", zh: "然而，這座山需要被尊重。" },
+            { en: "The path to the summit is littered with the frozen bodies of fallen climbers, serving as grim markers for the living.", zh: "通往頂峰的道路上散落著遇難登山者的冰凍屍體，作為生者的嚴酷標記。" },
+            { en: "These bodies are rarely recovered because bringing them down from the Death Zone is too dangerous for the rescuers.", zh: "這些屍體很少被尋回，因為將他們從死亡地帶運下來對救援人員來說太危險了。" },
+            { en: "Climbing Everest forces people to confront their own mortality.", zh: "攀登聖母峰迫使人們面對自己的死亡。" },
+            { en: "For those who succeed, the view from the top is a life-changing experience of awe and wonder.", zh: "對於那些成功的人來說，山頂的景色是一種令人敬畏和驚嘆的改變人生的體驗。" },
+            { en: "But for everyone who steps foot on the mountain, the journey is a humble reminder that humans are small and fragile in the face of nature’s raw power.", zh: "但對於每一個踏上這座山的人來說，這段旅程是一個謙卑的提醒：在大自然原始的力量面前，人類是渺小而脆弱的。" }
+        ];
+
+        const quizData = [
+            { 
+                id: 'q1', 
+                q: "1. What is the main idea of Paragraph 1?", 
+                options: {A: "To describe the local culture of Tibet.", B: "To explain the geological formation of the Alps.", C: "To introduce Everest as a beautiful but deadly challenge.", D: "To list the names of famous climbers who succeeded."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 1 introduces the mountain's height, location, and the contrast between its beauty and high risks.<br><br><strong>Chi:</strong> 第一段介紹了山的高度、位置，以及其美麗與高風險之間的對比。" 
+            },
+            { 
+                id: 'q2', 
+                q: "2. Why is climbing Mount Everest compared to a \"marathon\" in Paragraph 2?", 
+                options: {A: "Because climbers must run very fast to the top.", B: "Because it is a long process requiring patience and time.", C: "Because the distance is exactly 42 kilometers.", D: "Because there are many spectators watching the event."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The text states it takes \"about two months\" and requires \"patience,\" unlike a sprint.<br><br><strong>Chi:</strong> 文中指出這需要「大約兩個月」且需要「耐心」，不像短跑。" 
+            },
+            { 
+                id: 'q3', 
+                q: "3. What is the purpose of \"acclimatization\" mentioned in Paragraph 2?", 
+                options: {A: "To learn the local language of the Sherpas.", B: "To wait for the snow to melt completely.", C: "To allow the body to adapt to low oxygen levels.", D: "To test the quality of the climbing equipment."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> It allows the body to \"adjust to the thin air\" and \"produce more red blood cells.\"<br><br><strong>Chi:</strong> 它讓身體「適應稀薄的空氣」並「製造更多的紅血球」。" 
+            },
+            { 
+                id: 'q4', 
+                q: "4. What defines the \"Death Zone\" according to Paragraph 3?", 
+                options: {A: "It is an area with many hidden snow leopards.", B: "It is the region above 8,000 meters with very low oxygen.", C: "It is a specific cave near the bottom of the mountain.", D: "It is the border line between Nepal and Tibet."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The text defines it as the area \"above 8,000 meters\" where oxygen is one-third of sea level.<br><br><strong>Chi:</strong> 文中將其定義為「8,000 公尺以上」且氧氣僅為海平面三分之一的區域。" 
+            },
+            { 
+                id: 'q5', 
+                q: "5. Why must climbers leave the Death Zone quickly?", 
+                options: {A: "Because the view is not very good there.", B: "Because they will run out of food and water instantly.", C: "Because the human body begins to die slowly at that height.", D: "Because the local government charges a high hourly fee."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 3 states \"the human body cannot survive for long; essentially, it begins to die slowly.\"<br><br><strong>Chi:</strong> 第三段指出「人體無法長期生存；本質上，它開始緩慢死亡」。" 
+            },
+            { 
+                id: 'q6', 
+                q: "6. What is \"HACE\" as described in Paragraph 4?", 
+                options: {A: "A type of high-energy food for climbers.", B: "A dangerous brain condition caused by low oxygen.", C: "A special climbing tool used on ice.", D: "A sudden storm that hits the mountain."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> It stands for High Altitude Cerebral Edema, where the \"brain swells with fluid.\"<br><br><strong>Chi:</strong> 它代表高山腦水腫，即「大腦因液體而腫脹」。" 
+            },
+            { 
+                id: 'q7', 
+                q: "7. What characterizes \"summit fever\"?", 
+                options: {A: "A physical fever caused by a virus.", B: "An obsession with reaching the top that ignores safety.", C: "A fear of heights that stops climbers from moving.", D: "A hallucination of seeing a warm tropical beach."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 4 describes it as a psychological condition where climbers are \"obsessed with reaching the top\" and ignore rules.<br><br><strong>Chi:</strong> 第四段將其描述為一種心理狀況，登山者「過度執著於登頂」並忽視規則。" 
+            },
+            { 
+                id: 'q8', 
+                q: "8. Why are bodies rarely recovered from the Death Zone?", 
+                options: {A: "Because they decompose very quickly.", B: "Because it is considered disrespectful to move them.", C: "Because it is too dangerous for rescuers to bring them down.", D: "Because they are buried too deep in the rocks."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 5 states recovering them is \"too dangerous for the rescuers.\"<br><br><strong>Chi:</strong> 第五段指出對救援人員來說，找回屍體「太危險了」。" 
+            },
+            { 
+                id: 'q9', 
+                q: "9. What role do \"red blood cells\" play in climbing (Paragraph 2)?", 
+                options: {A: "They help keep the body warm in the cold.", B: "They carry oxygen throughout the body.", C: "They digest food more efficiently.", D: "They improve the climber's vision in snow."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 2 mentions the body produces them to \"carry oxygen.\"<br><br><strong>Chi:</strong> 第二段提到身體製造它們是為了「攜帶氧氣」。" 
+            },
+            { 
+                id: 'q10', 
+                q: "10. The word \"accessible\" in Paragraph 1 implies that:", 
+                options: {A: "The mountain has become shorter over time.", B: "It is easier for people to reach or enter the mountain.", C: "The mountain is closed to the public.", D: "The cost of climbing has become free."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> \"Accessible\" means easier to reach or approach, thanks to commercial expeditions.<br><br><strong>Chi:</strong> \"Accessible\" 意味著由於商業探險，更容易到達或接近。" 
+            },
+            { 
+                id: 'q11', 
+                q: "11. The word \"ominously\" in Paragraph 3 is closest in meaning to:", 
+                options: {A: "Happily and joyfully", B: "Threateningly or suggesting something bad", C: "Quietly and peacefully", D: "Brightly and colorfully."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> \"Ominously\" suggests something bad or unpleasant is about to happen (like death).<br><br><strong>Chi:</strong> \"Ominously\" 暗示壞事或不愉快的事情即將發生（如死亡）。" 
+            },
+            { 
+                id: 'q12', 
+                q: "12. According to the conclusion (Paragraph 5), what does Everest remind humans of?", 
+                options: {A: "That technology can solve every problem.", B: "That humans are small and fragile compared to nature.", C: "That money can buy safety anywhere.", D: "That sports are the most important thing in life."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The text concludes it is a reminder that \"humans are small and fragile in the face of nature’s raw power.\"<br><br><strong>Chi:</strong> 文章結論指出這提醒了「在大自然原始的力量面前，人類是渺小而脆弱的」。" 
+            },
+            { 
+                id: 'q13', 
+                q: "13. Which of the following is NOT mentioned as a danger in the Death Zone?", 
+                options: {A: "Frostbite causing loss of fingers.", B: "Digestive systems shutting down.", C: "Attacks by wild bears.", D: "Mental confusion and hallucinations."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> The text lists frostbite, digestive issues, and confusion, but no bears.<br><br><strong>Chi:</strong> 文中列出了凍傷、消化問題和混亂，但沒有提到熊。" 
+            },
+            { 
+                id: 'q14', 
+                q: "14. What is the tone of the author regarding climbing Everest?", 
+                options: {A: "Purely critical and negative.", B: "Respectful of the danger and the achievement.", C: "Casual and humorous.", D: "Encouraging everyone to try it immediately."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The author acknowledges the \"greatest achievement\" but also the \"deadly reality,\" showing respect.<br><br><strong>Chi:</strong> 作者承認這是「最大的成就」但也指出「致命的現實」，表現出尊重。" 
+            },
+            { 
+                id: 'q15', 
+                q: "15. Why is stopping for too long in the Death Zone a \"fatal mistake\"?", 
+                options: {A: "Because the climber will get bored.", B: "Because the oxygen tanks will leak.", C: "Because energy drains rapidly and survival time is short.", D: "Because other climbers will get angry."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 3 explains survival is impossible for long and strength \"drains away rapidly.\"<br><br><strong>Chi:</strong> 第三段解釋無法長期生存且體力「迅速流失」。" 
+            }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic
+                if (index === 0) insertImage(displayArea, 'p0.jpg', 'The Roof of the World');
+                else if (index === 7) insertImage(displayArea, 'p1.jpg', 'The Long Journey Up');
+                else if (index === 14) insertImage(displayArea, 'p2.jpg', 'Entering the Death Zone');
+                else if (index === 21) insertImage(displayArea, 'p3.jpg', 'The Invisible Enemies');
+                else if (index === 26) insertImage(displayArea, 'p4.jpg', 'Triumph and Tragedy');
+                
+                if (index === 0 || index === 7 || index === 14 || index === 21 || index === 26) {
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-gray-700 rounded transition leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                const divZh = document.createElement('div');
+                divZh.className = 'translation-text hidden';
+                divZh.innerText = item.zh;
+                p.appendChild(divZh);
+            });
+        }
+
+        function insertImage(container, filename, altText) {
+             const img = document.createElement('img');
+             img.src = `English-Reading-73-images/${filename}`; 
+             img.alt = altText;
+             img.width = 1300;
+             img.height = 576;
+             img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition border border-gray-700";
+             img.onerror = function() { this.style.display = 'none'; };
+             container.appendChild(img);
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                // Keep the original punctuation for display
+                const originalWord = word;
+                // Remove punctuation for lookup
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                const wordMapping = {
+                    "summits": "summit",
+                    "expeditions": "expedition",
+                    "glaciers": "glacier",
+                    "exhausted": "exhaust",
+                    "hallucinations": "hallucination",
+                    "triumphs": "triumph",
+                    "tragedies": "tragedy",
+                    "mortalities": "mortality",
+                    "altitudes": "altitude",
+                    "achievements": "achievement",
+                    "adjusts": "adjust",
+                    "drains": "drain",
+                    "swells": "swell",
+                    "ignores": "ignore",
+                    "flocks": "flock",
+                    "recovers": "recover",
+                    "recovered": "recover",
+                    "limits": "limit"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="mb-3 text-lg font-medium">${data.trans}</div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        window.speakAndShowDef = function(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.speakWord = function(word) {
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.toggleFavorite = function(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#f472b6']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+
+            window.saveUserData();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            tableIcons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
+            });
+        }
+
+        window.openVocabModal = function() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        window.openStudyModal = function() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-600"></i><p>您的學習清單是空的。</p><p class="text-sm">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        window.openMistakeModal = function() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-700"></i><p>太棒了！您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-900/40 border-b border-red-800">
+                                <th class="p-3 font-bold text-gray-300 w-4/12">題目 (Question)</th>
+                                <th class="p-3 font-bold text-gray-300 w-2/12">您的答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-2/12">正確答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-4/12">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-gray-700/50">
+                            <td class="p-3 font-medium text-gray-300">${item.q.q}</td>
+                            <td class="p-3 text-red-400 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-400 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-400 text-sm">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse text-gray-200">
+                    <thead>
+                        <tr class="bg-gray-700 border-b border-gray-600">
+                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
+                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
+                html += `
+                    <tr class="hover:bg-gray-700/50 transition duration-150">
+                        <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        </td>
+
+                        <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
+                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        window.printList = function(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: Everest Death Zone</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        window.toggleTranslation = function() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-violet-600', 'border-violet-500');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-violet-600', 'border-violet-500');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        window.togglePlay = function() {
+            if (isPlaying) {
+                window.pauseAudio();
+            } else {
+                window.playAudio();
+            }
+        }
+
+        window.playAudio = function() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            window.speakSentence(currentSentenceIndex);
+        }
+
+        window.speakSentence = function(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    window.highlightSentence(-1);
+                    currentSentenceIndex = 0;
+                    window.saveUserData();
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            window.highlightSentence(index);
+            window.updateProgressBar();
+            window.saveUserData();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        window.speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        window.pauseAudio = function() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        window.restartAudio = function() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            window.updateProgressBar();
+            window.highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => window.speakSentence(0), 100);
+            }
+        }
+        
+        window.playFromSentence = function(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            window.speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        window.highlightSentence = function(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        window.updateProgressBar = function() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        window.toggleText = function() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.replace('bg-amber-600', 'bg-violet-600');
+                btn.classList.replace('hover:bg-amber-500', 'hover:bg-violet-700');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.replace('bg-violet-600', 'bg-amber-600');
+                btn.classList.replace('hover:bg-violet-700', 'hover:bg-amber-500');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <div class="space-y-3" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box">
+                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p>${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            userAnswers[questionId] = selectedKey;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                if(!isRestoring) window.playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                if(!isRestoring) userScore += (100 / 15); 
+            } else {
+                if(!isRestoring) window.playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-300', 'bg-red-900');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#10b981';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-400";
+            } else {
+                explBox.style.borderLeftColor = '#ef4444';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-400";
+            }
+
+            if(!isRestoring) window.saveUserData();
+        }
+
+        window.showFinalScore = function() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Perfect! You survived the legends!";
+                } else {
+                    feedback.innerText = "Great job! You know your horror stories.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Be careful in the dark...";
+            } else {
+                feedback.innerText = "Don't look behind you! Try listening again.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                renderArticle();
+                renderQuiz();
+                initVoice();
+            });
+        } else {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        }
+    </script>
+</body>
+</html>
