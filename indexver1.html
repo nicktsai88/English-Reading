@@ -245,14 +245,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
-        /* 新增：鎖定狀態的樣式 */
-        .card-locked {
-            filter: grayscale(100%); /* 變成黑白 */
-            opacity: 0.6;           /* 變半透明 */
-            pointer-events: none;   /* 禁止點擊 */
-            cursor: default;
-        }
-
     </style>
 </head>
 <body>
@@ -464,11 +456,6 @@
 
         const RAW_DATA = generateRawData();
         const TOTAL_ITEMS = 150; 
-
-        // ==========================================
-        // 設定已完成可閱讀的文章編號 (在此處新增號碼以解鎖文章)
-        // ==========================================
-        const UNLOCKED_IDS = [1, 3, 24, 57, 69];
 
         // ==========================================
         // 3. React Components
@@ -732,16 +719,12 @@
                                 <div className="app-grid">
                                     {section.items.map((item) => {
                                         const isDone = !!localProgress[item.code];
-                                        // 檢查此文章是否在解鎖清單中
-                                        const isUnlocked = UNLOCKED_IDS.includes(item.id);
-
                                         return (
                                             <a 
                                                 key={item.code}
-                                                href={isUnlocked ? item.href : '#'}
-                                                target={isUnlocked ? "_blank" : "_self"}
-                                                // 如果未解鎖，加入 card-locked 樣式
-                                                className={`app-card ${isDone ? 'completed' : ''} ${!isUnlocked ? 'card-locked' : ''} group`}
+                                                href={item.href}
+                                                target="_blank"
+                                                className={`app-card ${isDone ? 'completed' : ''} group`}
                                                 style={{
                                                     // Dynamic Style Logic
                                                     borderTopColor: section.color, // Always colored top
@@ -757,8 +740,7 @@
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        // 只有解鎖的文章才能標記進度 (可選，如果不希望鎖定的文章被標記)
-                                                        if(isUnlocked) toggleProgress(item.code);
+                                                        toggleProgress(item.code);
                                                     }}
                                                     title={isDone ? "Mark as Incomplete" : "Mark as Complete"}
                                                     style={{
@@ -785,7 +767,7 @@
                                                 </div>
                                                 
                                                 <div className="card-desc">
-                                                    {item.code} {isUnlocked ? "" : "(Coming Soon)"}
+                                                    {item.code}
                                                 </div>
                                             </a>
                                         );
