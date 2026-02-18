@@ -256,28 +256,6 @@
             100% { opacity: 0.5; }
         }
 
-        /* Neon Restart Button */
-        .neon-btn {
-            background-color: transparent;
-            color: #00ff00; /* Neon Green Text */
-            border: 2px solid #00ff00;
-            box-shadow: 0 0 5px #00ff00, inset 0 0 5px #00ff00;
-            text-shadow: 0 0 3px #00ff00;
-            transition: all 0.3s ease-in-out;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        .neon-btn:hover {
-            background-color: #00ff00;
-            color: #000;
-            box-shadow: 0 0 15px #00ff00, inset 0 0 10px #00ff00;
-            transform: scale(1.02);
-        }
-        .neon-btn:active {
-            box-shadow: 0 0 5px #00ff00;
-            transform: scale(0.98);
-        }
-
         /* Print Styles */
         @media print {
             body * {
@@ -466,22 +444,13 @@
         </div>
 
         <!-- Quiz Area -->
-        <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700 relative">
-            
-            <!-- Quiz Header with Restart Button -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
-                    <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
-                        <i class="fas fa-pen"></i>
-                    </span>
-                    Reading Comprehension Quiz (15 Questions)
-                </h3>
-                
-                <!-- Restart Button (Fluorescent Style) -->
-                <button onclick="window.resetQuiz()" class="neon-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
-                </button>
-            </div>
+        <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700">
+            <h3 class="text-xl font-bold text-gray-100 mb-6 flex items-center">
+                <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
+                    <i class="fas fa-pen"></i>
+                </span>
+                Reading Comprehension Quiz (15 Questions)
+            </h3>
             
             <form id="quizForm" class="space-y-8">
                 <!-- Questions will be generated here -->
@@ -593,7 +562,7 @@
     <!-- Firebase & App Logic Module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 
         // --- Configuration ---
@@ -688,7 +657,16 @@
                         if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
                     }
 
-                    // 2. Restore Progress
+                    // 2. Restore Mistakes
+                    if (data.mistakes) {
+                        // Data from firestore is plain object. We need to link 'q' back to quizData for full display if needed
+                        // But here we saved the full structure, so we just load it.
+                        // However, 'q' in quizData has functions? No, it's data. So direct restore is fine.
+                        // Ideally we should match IDs, but for this simple app, direct load is OK.
+                         wrongAnswers = data.mistakes || [];
+                    }
+
+                    // 3. Restore Progress
                     if (data.progressIndex !== undefined && data.progressIndex > 0) {
                         // Only update if playing is false to avoid jumping while listening
                         if (!isPlaying && data.progressIndex > currentSentenceIndex) {
@@ -696,36 +674,6 @@
                             window.updateProgressBar();
                             window.highlightSentence(currentSentenceIndex);
                         }
-                    }
-
-                    // 3. Restore Quiz Answers & State
-                    // We prioritize data.quizAnswers to reconstruct the state (mistakes/score)
-                    if (data.quizAnswers) {
-                         const serverAnswers = data.quizAnswers;
-                         
-                         // Reset local quiz state before rebuilding from server data to ensure sync
-                         userScore = 0;
-                         wrongAnswers = [];
-                         userAnswers = serverAnswers;
-                         
-                         // Re-calculate everything based on server data
-                         Object.keys(serverAnswers).forEach(qid => {
-                             const ans = serverAnswers[qid];
-                             const qObj = quizData.find(q => q.id === qid);
-                             
-                             // Calculate score & mistakes locally
-                             if(qObj) {
-                                 if(ans === qObj.ans) userScore += (100/15);
-                                 else wrongAnswers.push({q: qObj, yourAns: ans});
-                             }
-
-                             // Update UI if not already updated (avoid disrupting active user if possible, 
-                             // but we need to ensure UI matches server on reload)
-                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
-                             if (!alreadyAnswered) {
-                                 window.checkAnswer(qid, ans, true); // true = isRestoring (no sound, no save)
-                             }
-                         });
                     }
                 }
             }, (error) => {
@@ -745,7 +693,6 @@
                     favorites: Array.from(favoriteWords),
                     mistakes: wrongAnswers,
                     progressIndex: currentSentenceIndex,
-                    quizAnswers: userAnswers, // Save the map of answers
                     lastUpdated: new Date()
                 }, { merge: true });
                 // Status will flip back to 'success' via onSnapshot listener shortly
@@ -754,47 +701,6 @@
                 updateConnectionStatus('error', '存檔失敗');
             }
         };
-
-        // Reset Quiz Data
-        window.resetQuiz = async () => {
-            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
-            
-            // 1. Reset Local State
-            userScore = 0;
-            wrongAnswers = [];
-            userAnswers = {};
-            
-            // 2. Reset UI
-            document.querySelectorAll('.quiz-option').forEach(el => {
-                el.classList.remove('correct', 'wrong', 'disabled');
-            });
-            document.querySelectorAll('.quiz-option input').forEach(el => {
-                el.disabled = false;
-                el.checked = false;
-            });
-            document.querySelectorAll('.quiz-option div').forEach(el => {
-                // Reset icons
-                const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
-                el.innerHTML = key;
-            });
-            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
-            document.getElementById('final-score').innerText = "0";
-            document.getElementById('score-card').classList.add('hidden');
-
-            // 3. Clear Firebase Data
-            if (currentUser && isFirebaseReady) {
-                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
-                 // We want to delete quizAnswers and mistakes, reset score implicitly by their absence
-                 await updateDoc(userDocRef, {
-                     quizAnswers: deleteField(),
-                     mistakes: deleteField()
-                 });
-                 // saveUserData will eventually run on other actions, but updateDoc ensures deletion now.
-            }
-            
-            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
-        }
 
         function renderQuickLogin(users) {
             const container = document.getElementById('quick-login-area');
@@ -805,7 +711,7 @@
                 return;
             }
 
-            // Show latest users first
+            // Show latest users first (if we had timestamps, here just reverse simple list)
             const recentUsers = users.slice().reverse().slice(0, 5); 
             
             recentUsers.forEach(u => {
@@ -855,7 +761,6 @@
         let userScore = 0;
         let favoriteWords = new Set();
         let wrongAnswers = []; 
-        let userAnswers = {}; // Store { qID: "Answer" }
         let audioCtx;
 
         // Data Definitions (Moved from inline script for module access)
@@ -1518,30 +1423,23 @@
             });
         }
 
-        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+        window.checkAnswer = function(questionId, selectedKey) {
             const questionObj = quizData.find(q => q.id === questionId);
             if (!questionObj) return;
-
-            // Save to local state
-            userAnswers[questionId] = selectedKey;
 
             const isCorrect = selectedKey === questionObj.ans;
             
             const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
             const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
             
-            // Only play sound if user clicked, not restoring
             if (isCorrect) {
-                if(!isRestoring) window.playCorrectSound(); 
+                window.playCorrectSound(); 
                 selectedLabel.classList.add('correct');
                 selectedIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
                 selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
-                // Score incremented by restoration logic or initial click? 
-                // Since this function is called once per answer click, we add score here for live interaction.
-                // For restoration, we handled score calculation separately in subscribeToUserData.
-                if(!isRestoring) userScore += (100 / 15); 
+                userScore += (100 / 15); 
             } else {
-                if(!isRestoring) window.playFailSound(); 
+                window.playFailSound(); 
                 selectedLabel.classList.add('wrong');
                 selectedIcon.classList.add('border-red-500', 'text-red-300', 'bg-red-900');
                 selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
@@ -1552,7 +1450,7 @@
                 correctIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
                 correctIcon.innerHTML = '<i class="fas fa-check"></i>';
 
-                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+                wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
             }
 
             const optionsDiv = document.getElementById(`${questionId}-options`);
@@ -1576,8 +1474,8 @@
                 statusText.className = "font-bold mb-1 text-red-400";
             }
 
-            // Auto Save to Firebase (Only if user clicked, preventing write loops during restore)
-            if(!isRestoring) window.saveUserData();
+            // Auto Save to Firebase
+            window.saveUserData();
         }
 
         window.showFinalScore = function() {
