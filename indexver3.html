@@ -126,7 +126,6 @@
             background-color: #ffffff; 
         }
 
-        /* 舊的圖示樣式 (Fallback use) */
         .card-icon-wrapper {
             font-size: 2.2em;
             margin-bottom: 12px;
@@ -137,7 +136,7 @@
             align-items: center;
             justify-content: center;
             background: #f5f5f5;
-            overflow: hidden;
+            overflow: hidden; /* Ensure image stays within circle */
         }
 
         .card-title {
@@ -177,7 +176,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
-            z-index: 20; /* Ensure it stays above images */
+            z-index: 10;
         }
         
         .card-checkbox:hover {
@@ -510,36 +509,32 @@
                         title={isDone ? "Mark as Incomplete" : "Mark as Complete"}
                         style={{
                             backgroundColor: isDone ? section.color : 'white',
-                            borderColor: isDone ? section.color : '#ddd',
-                            zIndex: 20
+                            borderColor: isDone ? section.color : '#ddd'
                         }}
                     >
                         {isDone && <span>✓</span>}
                     </div>
 
-                    {/* Image Logic: Try loading image as large rectangle, fallback to icon on error */}
-                    {!imageError ? (
-                        // Rectangle Image Mode (Max width within padding)
-                        <div className="w-full h-40 mb-4 rounded-lg overflow-hidden shadow-sm">
+                    <div 
+                        className="card-icon-wrapper"
+                        style={{ 
+                            color: section.color, 
+                            backgroundColor: section.lightColor 
+                        }}
+                    >
+                        {/* Image Logic: Try loading image, fallback to icon on error */}
+                        {!imageError ? (
                             <img 
                                 src={imgSrc}
                                 alt={item.title}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                className="w-full h-full object-cover"
                                 onError={() => setImageError(true)}
                             />
-                        </div>
-                    ) : (
-                        // Fallback Icon (Original Circle)
-                        <div 
-                            className="card-icon-wrapper"
-                            style={{ 
-                                color: section.color, 
-                                backgroundColor: section.lightColor 
-                            }}
-                        >
-                            {section.icon}
-                        </div>
-                    )}
+                        ) : (
+                            // Fallback Icon (Original Emoji)
+                            <>{section.icon}</>
+                        )}
+                    </div>
                     
                     <div className="card-title" style={{ color: section.color }}>
                         {item.title}
