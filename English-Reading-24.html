@@ -499,12 +499,11 @@
     <script>
         // --- Data & State ---
         
-        // Vocabulary Dictionary
+        // Vocabulary Dictionary (Expanded)
         const vocabulary = {
             "folklore": { pos: "n.", trans: "民間傳說", example: "Japanese folklore is full of spirits and monsters." },
             "unsettling": { pos: "adj.", trans: "令人不安的", example: "The movie had an unsettling ending that kept me awake." },
             "surgical": { pos: "adj.", trans: "外科的", example: "Doctors wear surgical masks during operations." },
-            "trench coat": { pos: "n.", trans: "風衣", example: "He wore a beige trench coat in the rain." },
             "gruesome": { pos: "adj.", trans: "可怕的；血腥的", example: "The details of the crime were too gruesome to report." },
             "patrols": { pos: "n.", trans: "巡邏", example: "Police increased patrols at night to keep the area safe." },
             "vengeful": { pos: "adj.", trans: "復仇心重的", example: "The vengeful spirit haunted the old house." },
@@ -520,7 +519,28 @@
             "consequences": { pos: "n.", trans: "後果", example: "You must be prepared to face the consequences of your actions." },
             "psychological": { pos: "adj.", trans: "心理的", example: "The trauma caused long-term psychological damage." },
             "supernatural": { pos: "adj.", trans: "超自然的", example: "Vampires and ghosts are supernatural creatures." },
-            "shadows": { pos: "n.", trans: "陰影", example: "Something was moving in the shadows of the alley." }
+            "shadows": { pos: "n.", trans: "陰影", example: "Something was moving in the shadows of the alley." },
+            "polite": { pos: "adj.", trans: "有禮貌的", example: "It is polite to bow when greeting someone in Japan." },
+            "surface": { pos: "n.", trans: "表面", example: "The surface of the lake was calm and still." },
+            "approach": { pos: "v.", trans: "接近", example: "Do not approach the wild animal." },
+            "reveal": { pos: "v.", trans: "揭露；顯示", example: "He laughed and revealed his secret plan." },
+            "widespread": { pos: "adj.", trans: "廣泛的；普遍的", example: "Flu is widespread in the winter months." },
+            "pedestrians": { pos: "n.", trans: "行人", example: "Cars must stop for pedestrians at the crosswalk." },
+            "haunts": { pos: "v.", trans: "出沒；鬧鬼", example: "Ghosts are said to haunt this old castle." },
+            "chilling": { pos: "adj.", trans: "令人恐懼的；寒冷的", example: "She told a chilling story about a murder." },
+            "crawls": { pos: "v.", trans: "爬行", example: "The baby learned to crawl before walking." },
+            "slice": { pos: "v.", trans: "切開；割", example: "He used a sharp knife to slice the bread." },
+            "stained": { pos: "adj.", trans: "沾汙的；染色的", example: "His shirt was stained with coffee." },
+            "survive": { pos: "v.", trans: "存活；倖存", example: "Only a few people survived the crash." },
+            "violent": { pos: "adj.", trans: "暴力的", example: "The movie was too violent for children." },
+            "courage": { pos: "n.", trans: "勇氣", example: "It takes courage to stand up to a bully." },
+            "descent": { pos: "n.", trans: "下降；墮落", example: "The plane began its descent into the airport." },
+            "imagery": { pos: "n.", trans: "意象；圖像", example: "The poem is full of dark nature imagery." },
+            "potent": { pos: "adj.", trans: "強效的；有力的", example: "The medicine is very potent." },
+            "aspect": { pos: "n.", trans: "方面", example: "Culture is an important aspect of society." },
+            "belief": { pos: "n.", trans: "信念；相信", example: "His belief in ghosts is very strong." },
+            "tragic": { pos: "adj.", trans: "悲劇的", example: "It was a tragic accident." },
+            "fiery": { pos: "adj.", trans: "火熱的；激烈的", example: "She has a fiery temper." }
         };
 
         // Article Data (5 Paragraphs)
@@ -899,11 +919,11 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12">收藏</th>
-                            <th class="p-3 font-bold w-2/12">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12">詞性</th>
-                            <th class="p-3 font-bold w-3/12">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12">例句 (Example)</th>
+                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
+                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -915,11 +935,11 @@
                 const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
                 html += `
                     <tr class="hover:bg-gray-700/50">
-                        <td class="p-3 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-lg focus:outline-none"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
-                        <td class="p-3 font-bold text-violet-400">${word}</td>
-                        <td class="p-3 text-sm"><span class="bg-violet-900 text-violet-200 px-2 py-0.5 rounded text-xs font-bold">${data.pos}</span></td>
-                        <td class="p-3 text-gray-300">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-sm italic">"${data.example}"</td>
+                        <td class="p-3 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl">${word}</td>
+                        <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
+                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
