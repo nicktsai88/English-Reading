@@ -968,21 +968,111 @@
         ];
 
         const quizData = [
-            { id: 'q1', q: "1. What is the main idea of this article?", options: {A: "How to find shark teeth on the beach.", B: "The diet of the modern Great White Shark.", C: "The history of Megalodon and why it is likely extinct.", D: "A review of the movie The Meg."}, ans: 'C', expl: "The article discusses the Megalodon's history, fossils, theories about its survival, and scientific proof of its extinction." },
-            { id: 'q2', q: "2. What does the name Otodus megalodon mean?", options: {A: "Big tooth", B: "Giant fish", C: "Ocean king", D: "Silent hunter"}, ans: 'A', expl: "Paragraph 1 states: \"Its scientific name is Otodus megalodon, which means 'big tooth'.\"" },
-            { id: 'q3', q: "3. Why are Megalodon skeletons rarely found?", options: {A: "They were eaten by other sharks.", B: "Their skeletons were made of cartilage, not hard bone.", C: "They lived in volcanoes.", D: "Humans destroyed them all."}, ans: 'B', expl: "Paragraph 2 explains that sharks have skeletons made of cartilage which does not fossilize easily." },
-            { id: 'q4', q: "4. How big could a Megalodon grow according to scientists?", options: {A: "10 meters (33 feet)", B: "18 meters (60 feet)", C: "5 meters (16 feet)", D: "30 meters (100 feet)"}, ans: 'B', expl: "Paragraph 1 mentions: \"Scientists estimate that it could grow up to 18 meters (60 feet).\"" },
-            { id: 'q5', q: "5. Why do some people believe the Megalodon might still be alive?", options: {A: "They saw one at the zoo.", B: "Because the ocean is largely unexplored.", C: "Scientists found a fresh skeleton recently.", D: "The government confirmed it."}, ans: 'B', expl: "Paragraph 3 states supporters argue that \"the ocean is vast and largely unexplored.\"" },
-            { id: 'q6', q: "6. What is the \"Coelacanth\" mentioned in Paragraph 3?", options: {A: "A type of dinosaur.", B: "A fish thought to be extinct but found alive in 1938.", C: "The favorite food of the Megalodon.", D: "A deep-sea submarine."}, ans: 'B', expl: "The text describes the Coelacanth as \"a prehistoric fish that scientists thought went extinct... but a living one was discovered in 1938.\"" },
-            { id: 'q7', q: "7. According to Paragraph 4, why is the deep ocean a bad home for a Megalodon?", options: {A: "It is too dark.", B: "It is too cold, and Megalodons liked warm water.", C: "There are too many boats.", D: "The pressure is too low."}, ans: 'B', expl: "Paragraph 4 argues that Megalodons were adapted to warm waters, not the freezing cold of the deep ocean." },
-            { id: 'q8', q: "8. What evidence would we expect to see if Megalodons were still eating whales?", options: {A: "Whales would fly.", B: "We would see bite marks on whales.", C: "Whales would become extinct.", D: "We would hear whales singing louder."}, ans: 'B', expl: "Paragraph 4 suggests we would \"see bite marks on whales today\" if Megalodons were still hunting them." },
-            { id: 'q9', q: "9. What technological tool makes it hard for a giant shark to hide?", options: {A: "GPS satellites", B: "Sonar equipment", C: "Space telescopes", D: "Mobile phones"}, ans: 'B', expl: "Paragraph 4 mentions: \"Our sonar equipment can hear the sounds of whales... a 60-foot shark would certainly be detected.\"" },
-            { id: 'q10', q: "10. What likely caused the Megalodon's extinction?", options: {A: "Cooling oceans and competition from Great White Sharks.", B: "Human pollution.", C: "A meteor strike.", D: "They ate all the food and starved."}, ans: 'A', expl: "Paragraph 5 lists \"cooling oceans... and competition from new predators like the Great White Shark.\"" },
-            { id: 'q11', q: "11. The word \"vanished\" in Paragraph 1 is closest in meaning to:", options: {A: "Appeared suddenly", B: "Disappeared completely", C: "Changed color", D: "Grew larger"}, ans: 'B', expl: "\"Vanished\" means to disappear. The context is removing from the fossil record." },
-            { id: 'q12', q: "12. In Paragraph 2, the word \"cartilage\" refers to:", options: {A: "A type of rock.", B: "A soft bone material found in sharks.", C: "A large tooth.", D: "A deep ocean trench."}, ans: 'B', expl: "It refers to the material of the skeleton, contrasting with \"hard bone.\"" },
-            { id: 'q13', q: "13. Why does the author mention The Meg movie in Paragraph 3?", options: {A: "To say it is a documentary.", B: "To explain why the idea of a living Megalodon is popular.", C: "To review the acting.", D: "To show scientific facts."}, ans: 'B', expl: "It is mentioned to show why \"many people love to believe that it might still be alive.\"" },
-            { id: 'q14', q: "14. What is the tone of Paragraph 5?", options: {A: "Angry and shouting.", B: "Fearful and warning.", C: "Scientific but reflective.", D: "Funny and joking."}, ans: 'C', expl: "The tone accepts the science (extinction) but reflects on the cultural impact (\"imagination,\" \"legend\")." },
-            { id: 'q15', q: "15. Which statement is TRUE based on the article?", options: {A: "Megalodon lived at the same time as humans.", B: "Megalodon teeth are very rare.", C: "We have explored 100% of the ocean.", D: "Megalodon had a stronger bite than a T-Rex."}, ans: 'D', expl: "Paragraph 2 states: \"Megalodon had a bite force stronger than a Tyrannosaurus rex.\"" }
+            { 
+                id: 'q1', 
+                q: "1. What is the main idea of this article?", 
+                options: {A: "How to find shark teeth on the beach.", B: "The diet of the modern Great White Shark.", C: "The history of Megalodon and why it is likely extinct.", D: "A review of the movie The Meg."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> The article discusses the Megalodon's history, fossils, theories about its survival, and scientific proof of its extinction.<br><br><strong>Chi:</strong> 這篇文章討論了巨齒鯊的歷史、化石、關於其存活的理論以及其滅絕的科學證據。" 
+            },
+            { 
+                id: 'q2', 
+                q: "2. What does the name Otodus megalodon mean?", 
+                options: {A: "Big tooth", B: "Giant fish", C: "Ocean king", D: "Silent hunter"}, 
+                ans: 'A', 
+                expl: "<strong>Eng:</strong> Paragraph 1 states: \"Its scientific name is Otodus megalodon, which means 'big tooth'.\"<br><br><strong>Chi:</strong> 第一段提到：「其學名是 Otodus megalodon，意為『巨大的牙齒』。」" 
+            },
+            { 
+                id: 'q3', 
+                q: "3. Why are Megalodon skeletons rarely found?", 
+                options: {A: "They were eaten by other sharks.", B: "Their skeletons were made of cartilage, not hard bone.", C: "They lived in volcanoes.", D: "Humans destroyed them all."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 2 explains that sharks have skeletons made of cartilage which does not fossilize easily.<br><br><strong>Chi:</strong> 第二段解釋說鯊魚的骨骼是由軟骨構成的，不容易變成化石。" 
+            },
+            { 
+                id: 'q4', 
+                q: "4. How big could a Megalodon grow according to scientists?", 
+                options: {A: "10 meters (33 feet)", B: "18 meters (60 feet)", C: "5 meters (16 feet)", D: "30 meters (100 feet)"}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 1 mentions: \"Scientists estimate that it could grow up to 18 meters (60 feet).\"<br><br><strong>Chi:</strong> 第一段提到：「科學家估計牠的長度可達 18 公尺（60 英尺）。」" 
+            },
+            { 
+                id: 'q5', 
+                q: "5. Why do some people believe the Megalodon might still be alive?", 
+                options: {A: "They saw one at the zoo.", B: "Because the ocean is largely unexplored.", C: "Scientists found a fresh skeleton recently.", D: "The government confirmed it."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 3 states supporters argue that \"the ocean is vast and largely unexplored.\"<br><br><strong>Chi:</strong> 第三段指出支持者認為「海洋廣闊且大部分未被探索」。" 
+            },
+            { 
+                id: 'q6', 
+                q: "6. What is the \"Coelacanth\" mentioned in Paragraph 3?", 
+                options: {A: "A type of dinosaur.", B: "A fish thought to be extinct but found alive in 1938.", C: "The favorite food of the Megalodon.", D: "A deep-sea submarine."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The text describes the Coelacanth as \"a prehistoric fish that scientists thought went extinct... but a living one was discovered in 1938.\"<br><br><strong>Chi:</strong> 文中描述腔棘魚為「科學家認為已滅絕...但在 1938 年發現了活體」的史前魚類。" 
+            },
+            { 
+                id: 'q7', 
+                q: "7. According to Paragraph 4, why is the deep ocean a bad home for a Megalodon?", 
+                options: {A: "It is too dark.", B: "It is too cold, and Megalodons liked warm water.", C: "There are too many boats.", D: "The pressure is too low."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 4 argues that Megalodons were adapted to warm waters, not the freezing cold of the deep ocean.<br><br><strong>Chi:</strong> 第四段指出巨齒鯊適應溫暖水域，而非深海的冰冷溫度。" 
+            },
+            { 
+                id: 'q8', 
+                q: "8. What evidence would we expect to see if Megalodons were still eating whales?", 
+                options: {A: "Whales would fly.", B: "We would see bite marks on whales.", C: "Whales would become extinct.", D: "We would hear whales singing louder."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 4 suggests we would \"see bite marks on whales today\" if Megalodons were still hunting them.<br><br><strong>Chi:</strong> 第四段建議如果巨齒鯊還在獵食，我們會在今天的鯨魚身上看到「咬痕」。" 
+            },
+            { 
+                id: 'q9', 
+                q: "9. What technological tool makes it hard for a giant shark to hide?", 
+                options: {A: "GPS satellites", B: "Sonar equipment", C: "Space telescopes", D: "Mobile phones"}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 4 mentions: \"Our sonar equipment can hear the sounds of whales... a 60-foot shark would certainly be detected.\"<br><br><strong>Chi:</strong> 第四段提到：「我們的聲納設備可以聽到鯨魚的聲音……一條 60 英尺長的鯊魚肯定會被偵測到。」" 
+            },
+            { 
+                id: 'q10', 
+                q: "10. What likely caused the Megalodon's extinction?", 
+                options: {A: "Cooling oceans and competition from Great White Sharks.", B: "Human pollution.", C: "A meteor strike.", D: "They ate all the food and starved."}, 
+                ans: 'A', 
+                expl: "<strong>Eng:</strong> Paragraph 5 lists \"cooling oceans... and competition from new predators like the Great White Shark.\"<br><br><strong>Chi:</strong> 第五段列出了「海洋變冷……以及來自大白鯊等新掠食者的競爭」。" 
+            },
+            { 
+                id: 'q11', 
+                q: "11. The word \"vanished\" in Paragraph 1 is closest in meaning to:", 
+                options: {A: "Appeared suddenly", B: "Disappeared completely", C: "Changed color", D: "Grew larger"}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> \"Vanished\" means to disappear. The context is removing from the fossil record.<br><br><strong>Chi:</strong> \"Vanished\" 意指消失。上下文是指從化石紀錄中消失。" 
+            },
+            { 
+                id: 'q12', 
+                q: "12. In Paragraph 2, the word \"cartilage\" refers to:", 
+                options: {A: "A type of rock.", B: "A soft bone material found in sharks.", C: "A large tooth.", D: "A deep ocean trench."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> It refers to the material of the skeleton, contrasting with \"hard bone.\"<br><br><strong>Chi:</strong> 它指的是骨骼的材料，與「硬骨」形成對比，即軟骨。" 
+            },
+            { 
+                id: 'q13', 
+                q: "13. Why does the author mention The Meg movie in Paragraph 3?", 
+                options: {A: "To say it is a documentary.", B: "To explain why the idea of a living Megalodon is popular.", C: "To review the acting.", D: "To show scientific facts."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> It is mentioned to show why \"many people love to believe that it might still be alive.\"<br><br><strong>Chi:</strong> 提到它是為了說明為什麼「許多人喜歡相信牠今天可能還活著」。" 
+            },
+            { 
+                id: 'q14', 
+                q: "14. What is the tone of Paragraph 5?", 
+                options: {A: "Angry and shouting.", B: "Fearful and warning.", C: "Scientific but reflective.", D: "Funny and joking."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> The tone accepts the science (extinction) but reflects on the cultural impact (\"imagination,\" \"legend\").<br><br><strong>Chi:</strong> 語氣接受科學事實（滅絕），但也反思文化影響（「想像力」、「傳奇」）。" 
+            },
+            { 
+                id: 'q15', 
+                q: "15. Which statement is TRUE based on the article?", 
+                options: {A: "Megalodon lived at the same time as humans.", B: "Megalodon teeth are very rare.", C: "We have explored 100% of the ocean.", D: "Megalodon had a stronger bite than a T-Rex."}, 
+                ans: 'D', 
+                expl: "<strong>Eng:</strong> Paragraph 2 states: \"Megalodon had a bite force stronger than a Tyrannosaurus rex.\"<br><br><strong>Chi:</strong> 第二段指出：「巨齒鯊的咬合力比暴龍還強。」" 
+            }
         ];
 
         window.initAudioContext = function() {
