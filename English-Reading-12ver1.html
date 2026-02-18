@@ -923,24 +923,6 @@
             "gravity": { pos: "n.", trans: "重力", example: "There is less gravity on the moon than on Earth." }
         };
 
-        // Mapping for word variations (plural, past tense, etc.) to base vocabulary keys
-        const wordMappings = {
-            "agencies": "agency",
-            "disasters": "disaster",
-            "discarded": "discard",
-            "explosions": "explosion",
-            "consists": "consist",
-            "bombarded": "bombard",
-            "settlers": "settler",
-            "critics": "critic",
-            "inspiring": "inspire",
-            "boundaries": "boundary",
-            "ambitious": "ambition", 
-            "sustaining": "sustain",
-            "transforming": "transform",
-            "propose": "propose"
-        };
-
         const articleData = [
             { en: "For centuries, humans have looked up at the night sky and wondered what lies beyond our planet.", zh: "幾個世紀以來，人類仰望夜空，想知道我們星球之外存在著什麼。" },
             { en: "Among all the celestial bodies, the \"Red Planet,\" Mars, has captured our imagination the most.", zh: "在所有的天體中，「紅色星球」火星最能抓住我們的想像力。" },
@@ -956,20 +938,20 @@
             { en: "To solve this problem, SpaceX has developed \"Starship,\" the largest and most powerful rocket ever built.", zh: "為了解決這個問題，SpaceX 開發了「星艦」（Starship），這是以此來建造的最大且最強大的火箭。" },
             { en: "The key feature of Starship is that it is fully reusable.", zh: "星艦的關鍵特點是它可以完全重複使用。" },
             { en: "It is designed to launch into orbit, refuel in space, land on Mars, and eventually return to Earth.", zh: "它的設計是發射進入軌道，在太空中加燃料，降落在火星上，並最終返回地球。" },
-            { en: "This reusability could reduce the cost of interplanetary travel by a huge margin, making the ticket price to Mars comparable to buying a house.", zh: "這種可重複使用性可以大幅降低行星際旅行的成本，使去火星的票價與買房相當。" },
+            { en: "This reusability could reduce the cost of space travel by a huge margin, making the ticket price to Mars comparable to buying a house.", zh: "這種可重複使用性可以大幅降低太空旅行的成本，使去火星的票價與買房相當。" },
             { en: "Starship is currently being tested in Texas, and although there have been explosions during testing, each failure provides valuable data to improve the design.", zh: "星艦目前正在德克薩斯州進行測試，雖然在測試期間發生過爆炸，但每一次失敗都提供了寶貴的數據來改進設計。" },
 
             { en: "However, getting to Mars is only the first step; surviving there is an even greater challenge.", zh: "然而，到達火星只是第一步；在那裡生存是更大的挑戰。" },
-            { en: "Mars is a hostile, non-habitable environment for humans.", zh: "火星對人類來說是一個惡劣、不適合居住的環境。" },
+            { en: "Mars is not a friendly place for humans.", zh: "火星對人類來說不是一個友善的地方。" },
             { en: "The atmosphere is very thin and consists mostly of carbon dioxide, which means we cannot breathe without spacesuits.", zh: "大氣層非常稀薄，主要由二氧化碳組成，這意味著沒有太空衣我們無法呼吸。" },
-            { en: "The temperature is freezing cold, and the gravity is much weaker than Earth's.", zh: "溫度極低，而且重力比地球弱得多。" },
+            { en: "The temperature is freezing cold, averaging around -60 degrees Celsius (-80 degrees Fahrenheit).", zh: "溫度極低，平均約為攝氏零下 60 度（華氏零下 80 度）。" },
             { en: "Furthermore, because Mars lacks a strong magnetic field like Earth, the surface is bombarded by dangerous cosmic radiation.", zh: "此外，由於火星缺乏像地球那樣強大的磁場，表面會受到危險的宇宙輻射轟炸。" },
             { en: "To survive, the first settlers will likely have to live underground or in domes protected by thick layers of ice or soil.", zh: "為了生存，第一批定居者可能必須生活在地下或由厚冰層或土壤保護的圓頂中。" },
             { en: "They will need to grow their own food using hydroponic systems and recycle every drop of water.", zh: "他們需要使用水耕系統種植自己的食物，並回收每一滴水。" },
             { en: "Life on Mars will be a constant struggle against the harsh elements.", zh: "火星上的生活將是一場對抗惡劣因素的持續鬥爭。" },
 
             { en: "In the long term, Musk and many scientists propose a process called \"terraforming.\"", zh: "從長遠來看，馬斯克和許多科學家提出了一個稱為「地球化改造」（Terraforming）的過程。" },
-            { en: "This involves transforming the environment of a planet to make it more like Earth.", zh: "這涉及改變行星的環境，使其更像地球。" },
+            { en: "This involves changing the environment of a planet to make it more like Earth.", zh: "這涉及改變行星的環境，使其更像地球。" },
             { en: "The idea is to warm up the planet to release frozen water and carbon dioxide from the polar ice caps.", zh: "這個想法是讓行星變暖，從極地冰蓋釋放凍結的水和二氧化碳。" },
             { en: "This would thicken the atmosphere and trap heat, creating a greenhouse effect.", zh: "這將使大氣層變厚並留住熱量，產生溫室效應。" },
             { en: "Over hundreds or even thousands of years, it might be possible to plant trees that produce oxygen, eventually allowing humans to walk on the surface without breathing masks.", zh: "經過數百年甚至數千年，或許可以種植產生氧氣的樹木，最終讓人類無需呼吸面罩就能在表面行走。" },
@@ -1201,52 +1183,28 @@
         }
 
         function processWords(text) {
-            // Pre-process for specific phrases (multi-word vocabulary)
-            // Replace "carbon dioxide" with a placeholder to prevent splitting
-            let processedText = text.replace(/\bcarbon dioxide\b/gi, "carbon-dioxide");
-
-            const words = processedText.split(' ');
+            const words = text.split(' ');
             return words.map(word => {
-                // Clean punctuation
-                let cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 const originalWord = word;
-
-                // Handle the placeholder replacement back to readable check
-                if (cleanWord === 'carbon-dioxide') cleanWord = 'carbon dioxide';
-
-                // 1. Check direct match
-                let targetKey = null;
                 if (vocabulary[cleanWord]) {
-                    targetKey = cleanWord;
-                } 
-                // 2. Check mapping (plurals, tenses)
-                else if (wordMappings[cleanWord]) {
-                    targetKey = wordMappings[cleanWord];
-                }
-
-                if (targetKey) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                    const data = vocabulary[cleanWord];
+                    const isFav = favoriteWords.has(cleanWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    // Note: We use originalWord for display, but pass targetKey to functions
-                    // If originalWord contains the placeholder hyphen, replace it back for display
-                    let displayWord = originalWord.replace('carbon-dioxide', 'carbon dioxide');
-
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${displayWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${cleanWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
                         <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
                 }
-                // Return original word (restoring space if it was the special phrase)
-                return originalWord.replace('carbon-dioxide', 'carbon dioxide');
+                return originalWord;
             }).join(' ');
         }
         
