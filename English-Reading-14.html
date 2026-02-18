@@ -1189,19 +1189,43 @@
             return words.map(word => {
                 const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 const originalWord = word;
-                if (vocabulary[cleanWord]) {
-                    const data = vocabulary[cleanWord];
-                    const isFav = favoriteWords.has(cleanWord);
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                // Map text variations (e.g. plurals, tenses) to base vocabulary keys
+                const wordMapping = {
+                    "decades": "decade",
+                    "predicted": "predict",
+                    "vehicles": "vehicle",
+                    "rotors": "rotor",
+                    "advancing": "advance",
+                    "consequences": "consequence",
+                    "authorities": "authority",
+                    "regulations": "regulation",
+                    "certifying": "certify",
+                    "collisions": "collision",
+                    "residents": "resident",
+                    "imagined": "imagine",
+                    "soaring": "soar"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${cleanWord}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
                         <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
