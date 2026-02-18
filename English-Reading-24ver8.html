@@ -943,6 +943,163 @@
             "fiery": { pos: "adj.", trans: "火熱的；激烈的", example: "She has a fiery temper." }
         };
 
+        const articleData = [
+            { en: "Japan is a country famous for its rich history and polite society, but beneath the surface lies a world of terrifying folklore.", zh: "日本是一個以豐富歷史和禮貌社會聞名的國家，但在表面之下，隱藏著一個可怕的民間傳說世界。" },
+            { en: "One of the most famous and unsettling figures is Kuchisake-onna, or the \"Slit-Mouthed Woman.\"", zh: "最著名且令人不安的人物之一是「裂嘴女」(Kuchisake-onna)。" },
+            { en: "According to the legend, she appears as a beautiful woman wearing a surgical mask and a trench coat.", zh: "根據傳說，她以一名戴著外科口罩和風衣的美麗女子形象出現。" },
+            { en: "She often approaches people walking alone at night and asks a simple question: \"Am I beautiful?\"", zh: "她經常接近在夜間獨自行走的人，並問一個簡單的問題：「我漂亮嗎？」" },
+            { en: "If you say \"no,\" she kills you immediately with a pair of large scissors.", zh: "如果你說「不」，她會用一把大剪刀立刻殺死你。" },
+            { en: "If you say \"yes,\" she removes her mask to reveal a mouth slit from ear to ear, screaming, \"How about now?\"", zh: "如果你說「是」，她會摘下口罩，露出從耳朵裂到耳朵的嘴巴，尖叫著：「現在呢？」" },
+            { en: "A terrified \"no\" results in death, while a \"yes\" leads to a gruesome fate where she cuts your mouth to look like hers.", zh: "恐懼地回答「不」會導致死亡，而回答「是」則會導致悲慘的命運——她會把你的嘴巴剪得跟她一樣。" },
+            { en: "This legend became so widespread in the 1970s that children were afraid to walk home from school alone, and police even increased patrols in some areas.", zh: "這個傳說在 1970 年代流傳甚廣，以至於孩子們不敢獨自放學回家，警方甚至在某些地區增加了巡邏。" },
+            { en: "While Kuchisake-onna terrifies pedestrians, another spirit haunts the areas near train stations.", zh: "當裂嘴女讓行人感到恐懼時，另一個靈魂則在火車站附近出沒。" },
+            { en: "Her name is Teke Teke, named after the chilling sound she makes when she moves.", zh: "她的名字叫 Teke Teke，是以她移動時發出的令人毛骨悚然的聲音命名的。" },
+            { en: "The legend tells the tragic story of a young schoolgirl who fell onto a railway line and was cut in half by an oncoming train.", zh: "這個傳說講述了一個年輕女學生跌落鐵軌並被火車輾成兩半的悲劇故事。" },
+            { en: "Now, she is a vengeful spirit (Onryō) who crawls around on her hands and elbows, dragging her upper torso along the ground.", zh: "現在，她是一個復仇的怨靈 (Onryō)，用雙手和手肘在地上爬行，拖著她的上半身。" },
+            { en: "Despite having no legs, she moves at an incredibly fast speed, making a \"teke-teke-teke\" sound as her elbows hit the pavement.", zh: "儘管沒有腿，她的移動速度卻快得驚人，當手肘撞擊路面時會發出「teke-teke-teke」的聲音。" },
+            { en: "It is said that if you hear this sound at night, you must not look back.", zh: "據說如果你在晚上聽到這個聲音，絕對不能回頭。" },
+            { en: "If she catches you, she will slice you in half at the waist with a scythe, making you just like her.", zh: "如果她抓住了你，她會用鐮刀將你從腰部切成兩半，讓你變得跟她一樣。" },
+            { en: "This story serves as a dark warning to be careful around trains and late-night streets.", zh: "這個故事是對人們在火車和深夜街道旁要小心的黑暗警告。" },
+            { en: "Schools are common settings for Japanese ghost stories, and the restroom is often the scariest place of all.", zh: "學校是日本鬼故事常見的背景，而廁所往往是最可怕的地方。" },
+            { en: "Aka Manto, or \"Red Cape,\" is a male spirit who haunts the last stall of public or school bathrooms.", zh: "「赤マント」(Aka Manto)，即「紅披風」，是一個出沒在公共廁所或學校廁所最後一間隔間的男性靈魂。" },
+            { en: "Legend says that once you are seated, a mysterious voice will ask you a strange question: \"Do you want red paper or blue paper?\"", zh: "傳說一旦你坐下，一個神秘的聲音會問你一個奇怪的問題：「你要紅紙還是藍紙？」" },
+            { en: "This is a trick question with no happy ending.", zh: "這是一個沒有快樂結局的陷阱題。" },
+            { en: "If you choose red paper, you will be sliced apart until your clothes are stained red with blood.", zh: "如果你選擇紅紙，你會被切碎，直到你的衣服被鮮血染紅。" },
+            { en: "If you choose blue paper, you will be strangled until your face turns blue.", zh: "如果你選擇藍紙，你會被勒死，直到你的臉色發青。" },
+            { en: "Some versions suggest that choosing \"yellow paper\" will result in your head being forced into the toilet.", zh: "有些版本說選擇「黃紙」會導致你的頭被強行塞進馬桶裡。" },
+            { en: "The only way to survive is to ignore the voice completely or run away immediately, proving that sometimes, silence is the best answer.", zh: "唯一生存的方法是完全無視那個聲音或立即逃跑，這證明了有時候，沉默是最好的回答。" },
+            { en: "Another bathroom legend, perhaps even more famous than Aka Manto, is Toire no Hanako-san (Hanako of the Toilet).", zh: "另一個廁所傳說，也許比「紅披風」更有名，那就是「廁所裡的花子」(Toire no Hanako-san)。" },
+            { en: "Unlike the violent spirits, Hanako is often described as a mischievous young girl with bobbed hair and a red skirt.", zh: "與那些暴力的靈魂不同，花子通常被描述為一個留著鮑伯頭、穿著紅裙子的惡作劇小女孩。" },
+            { en: "She is said to haunt the third stall of the girls' bathroom on the third floor.", zh: "據說她出沒在三樓女廁的第三間隔間。" },
+            { en: "To summon her, a brave (or foolish) student must knock on the door three times and ask, \"Hanako-san, are you there?\"", zh: "要召喚她，勇敢（或愚蠢）的學生必須敲門三次並問：「花子小姐，妳在嗎？」" },
+            { en: "If she is present, a faint voice may reply, \"Yes, I am here.\"", zh: "如果她在，一個微弱的聲音可能會回答：「是的，我在這裡。」" },
+            { en: "While some versions of the story say a ghostly hand will reach out or the door will open to reveal a monster, others suggest she is simply a lonely spirit.", zh: "雖然有些版本說會有一隻鬼手伸出來，或者門會打開露出怪物，但其他版本則認為她只是一個孤獨的靈魂。" },
+            { en: "Hanako is often compared to the Western legend of \"Bloody Mary,\" serving as a rite of passage for students trying to prove their courage.", zh: "花子常被拿來與西方的「血腥瑪麗」傳說相提並論，作為學生證明膽量的儀式。" },
+            { en: "Finally, there is a legend that proves words can be dangerous.", zh: "最後，有一個傳說證明了文字可能是危險的。" },
+            { en: "Tomino's Hell is a poem written by Yomota Inuhiko in a 1919 book.", zh: "《多美子的地獄》(Tomino's Hell) 是由四方田犬彥寫於 1919 年一本書中的詩。" },
+            { en: "The urban legend claims that you must never read this poem out loud.", zh: "都市傳說聲稱你絕對不能大聲朗讀這首詩。" },
+            { en: "Reading it silently in your mind is safe, but speaking the words is said to invite tragedy.", zh: "在心中默讀是安全的，但說出這些字句據說會招致悲劇。" },
+            { en: "The consequences range from falling ill or getting injured to sudden death.", zh: "後果從生病、受傷到突然死亡不等。" },
+            { en: "The poem itself describes a descent into a dark and fiery hell, filled with disturbing imagery.", zh: "這首詩本身描述了墮入充滿不安意象的黑暗火焰地獄的過程。" },
+            { en: "While many people have read it aloud on the internet to test the curse without dying, the psychological fear remains potent.", zh: "雖然許多人在網路上大聲朗讀它來測試詛咒且並未身亡，但心理上的恐懼依然強烈。" },
+            { en: "These five legends—from slit-mouthed women to cursed poems—reveal a fascinating aspect of Japanese culture: the belief that the supernatural is always watching, waiting in the shadows of everyday life.", zh: "這五個傳說——從裂嘴女到被詛咒的詩——揭示了日本文化中迷人的一面：相信超自然力量總是在注視著，在日常生活的陰影中等待著。" }
+        ];
+
+        const quizData = [
+            { id: 'q1', q: "1. What is the main theme of this article?", options: {A: "The history of Japanese train stations.", B: "Five famous scary stories from Japanese folklore.", C: "How to write a horror poem.", D: "A travel guide to Japan's haunted places."}, ans: 'B', expl: "The article introduces and details five specific urban legends from Japan." },
+            { id: 'q2', q: "2. In Paragraph 1, what item does Kuchisake-onna use as a weapon?", options: {A: "A kitchen knife", B: "A samurai sword", C: "A pair of large scissors", D: "A heavy hammer"}, ans: 'C', expl: "The text states she kills or attacks with \"a pair of large scissors.\"" },
+            { id: 'q3', q: "3. Why did police increase patrols in the 1970s according to Paragraph 1?", options: {A: "Due to a rise in robberies.", B: "Because children were afraid of the Kuchisake-onna legend.", C: "Because of a real serial killer.", D: "To stop students from skipping school."}, ans: 'B', expl: "The text mentions the legend became so widespread that children were afraid, leading to increased patrols." },
+            { id: 'q4', q: "4. How did Teke Teke get her name?", options: {A: "It was her name when she was alive.", B: "It comes from the sound she makes when moving.", C: "It means \"half-body\" in Japanese.", D: "It is the name of the train station."}, ans: 'B', expl: "Paragraph 2 says she is \"named after the chilling sound she makes when she moves.\"" },
+            { id: 'q5', q: "5. What is the defining physical characteristic of Teke Teke?", options: {A: "She has no face.", B: "She wears a red cape.", C: "She is missing her lower body (legs).", D: "She has three arms."}, ans: 'C', expl: "The text describes her as having been \"cut in half\" and dragging her \"upper torso.\"" },
+            { id: 'q6', q: "6. In the legend of Aka Manto (Paragraph 3), what happens if you choose \"blue paper\"?", options: {A: "You are drowned in water.", B: "You are strangled until your face turns blue.", C: "You are set free.", D: "You are given a blue cape."}, ans: 'B', expl: "The text explicitly states: \"If you choose blue paper, you will be strangled until your face turns blue.\"" },
+            { id: 'q7', q: "7. What is the only way to survive Aka Manto?", options: {A: "Choose yellow paper.", B: "Fight the spirit.", C: "Ignore the voice or run away.", D: "Carry a lucky charm."}, ans: 'C', expl: "Paragraph 3 says: \"The only way to survive is to ignore the voice completely or run away immediately.\"" },
+            { id: 'q8', q: "8. Where does Toire no Hanako-san usually haunt?", options: {A: "The library.", B: "The boys' locker room.", C: "The third stall of the girls' bathroom on the third floor.", D: "The rooftop of the school."}, ans: 'C', expl: "Paragraph 4 specifies: \"haunt the third stall of the girls' bathroom on the third floor.\"" },
+            { id: 'q9', q: "9. How is Hanako-san different from Aka Manto?", options: {A: "She is always violent.", B: "She is often described as mischievous rather than purely violent.", C: "She appears in the library.", D: "She is an old woman."}, ans: 'B', expl: "The text contrasts her with \"violent spirits,\" describing her as a \"mischievous young girl\" or even a \"lonely spirit.\"" },
+            { id: 'q10', q: "10. Hanako-san is compared to which Western urban legend?", options: {A: "The Boogeyman", B: "Slender Man", C: "Bloody Mary", D: "Dracula"}, ans: 'C', expl: "Paragraph 4 mentions she is \"often compared to the Western legend of 'Bloody Mary'.\"" },
+            { id: 'q11', q: "11. What is the specific warning regarding the poem Tomino's Hell?", options: {A: "Never read it silently.", B: "Never read it out loud.", C: "Never write it down.", D: "Never listen to it."}, ans: 'B', expl: "Paragraph 5 states: \"you must never read this poem out loud.\"" },
+            { id: 'q12', q: "12. The word \"mischievous\" in Paragraph 4 is closest in meaning to:", options: {A: "Very dangerous and evil", B: "Playful and causing minor trouble", C: "Silent and invisible", D: "Sad and depressed"}, ans: 'B', expl: "In this context, \"mischievous\" refers to a spirit that plays tricks or is slightly naughty, but not necessarily deadly." },
+            { id: 'q13', q: "13. What does the author imply about these legends in the conclusion?", options: {A: "They are scientifically true.", B: "They are silly and should be ignored.", C: "They reveal a cultural belief that the supernatural is always watching.", D: "They are only for children."}, ans: 'C', expl: "The last sentence mentions they reveal \"the belief that the supernatural is always watching, waiting in the shadows.\"" },
+            { id: 'q14', q: "14. Which legend serves as a warning about safety near trains?", options: {A: "Kuchisake-onna", B: "Teke Teke", C: "Aka Manto", D: "Tomino's Hell"}, ans: 'B', expl: "Teke Teke involves a girl falling onto railway lines, serving as a \"dark warning to be careful around trains.\"" },
+            { id: 'q15', q: "15. Which of the following is true about Kuchisake-onna’s victims?", options: {A: "They can survive if they answer \"yes\" twice.", B: "They are safe if they wear a mask.", C: "Answering \"yes\" results in a cut mouth; \"no\" results in death.", D: "She only attacks adults."}, ans: 'C', expl: "Paragraph 1 explains: \"A terrified 'no' results in death, while a 'yes' leads to... she cuts your mouth.\"" }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic preserved
+                if (index === 0) insertImage(displayArea, 'p1.jpg', 'Slit-Mouthed Woman');
+                else if (index === 8) insertImage(displayArea, 'p2.jpg', 'Teke Teke');
+                else if (index === 16) insertImage(displayArea, 'p3.jpg', 'Aka Manto');
+                else if (index === 24) insertImage(displayArea, 'p4.jpg', 'Hanako-san');
+                else if (index === 31) insertImage(displayArea, 'p5.jpg', 'Tomino Hell');
+                
+                if (index === 0 || index === 8 || index === 16 || index === 24 || index === 31) {
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-gray-700 rounded transition leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                const divZh = document.createElement('div');
+                divZh.className = 'translation-text hidden';
+                divZh.innerText = item.zh;
+                p.appendChild(divZh);
+            });
+        }
+
         function insertImage(container, filename, altText) {
              const img = document.createElement('img');
              img.src = `English-Reading-24-images/${filename}`; 
@@ -959,43 +1116,19 @@
             return words.map(word => {
                 const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 const originalWord = word;
-                
-                // Enhanced matching logic for plural/past tense
-                let targetKey = cleanWord;
-                
-                // Try direct match first
-                if (!vocabulary[targetKey]) {
-                    // Try removing 'es' (e.g., approaches -> approach)
-                    if (targetKey.endsWith('es') && vocabulary[targetKey.slice(0, -2)]) {
-                        targetKey = targetKey.slice(0, -2);
-                    } 
-                    // Try removing 's' (e.g., shadows -> shadow, though shadows is in vocab as plural)
-                    else if (targetKey.endsWith('s') && vocabulary[targetKey.slice(0, -1)]) {
-                        targetKey = targetKey.slice(0, -1);
-                    }
-                    // Try removing 'd' (e.g., used -> use)
-                    else if (targetKey.endsWith('d') && vocabulary[targetKey.slice(0, -1)]) {
-                        targetKey = targetKey.slice(0, -1);
-                    }
-                    // Try removing 'ed' (e.g., walked -> walk)
-                    else if (targetKey.endsWith('ed') && vocabulary[targetKey.slice(0, -2)]) {
-                        targetKey = targetKey.slice(0, -2);
-                    }
-                }
-
-                if (vocabulary[targetKey]) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                if (vocabulary[cleanWord]) {
+                    const data = vocabulary[cleanWord];
+                    const isFav = favoriteWords.has(cleanWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${cleanWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
                         <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
@@ -1003,8 +1136,6 @@
                 return originalWord;
             }).join(' ');
         }
-        
-        // ... (rest of the functions remain the same) ...
         
         window.speakAndShowDef = function(e, word) {
             e.stopPropagation(); 
