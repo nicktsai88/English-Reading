@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：Ferrari vs. Lamborghini: The Ultimate Rivalry (Firebase Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #111827; /* Darker background for horror theme */
+            color: #e5e7eb;
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #4c1d95; /* violet-900 */
+            color: #c4b5fd; /* violet-300 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            background-color: #1f2937; /* Dark gray */
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #374151;
+            border-color: #6b7280;
+        }
+        .quiz-option.correct {
+            background-color: #064e3b !important;
+            border-color: #10b981 !important;
+            color: #a7f3d0;
+        }
+        .quiz-option.wrong {
+            background-color: #7f1d1d !important;
+            border-color: #ef4444 !important;
+            color: #fca5a5;
+            opacity: 0.9;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.1em;
+            color: #d1d5db;
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #8b5cf6; /* Violet border */
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #a78bfa;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #a78bfa;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #4c1d95;
+            color: #fff;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            min-width: 240px; 
+            max-width: 320px;
+            background-color: #0f172a; /* Darker blue/black */
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 15px rgba(139, 92, 246, 0.3); /* Glowing shadow */
+            line-height: 1.5;
+            border: 1px solid #4c1d95;
+        }
+        
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #0f172a transparent transparent transparent;
+        }
+        
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #5b21b6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #ddd6fe;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block;
+            font-size: 0.95em;
+            color: #9ca3af;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            padding-left: 10px;
+            border-left: 3px solid #6b7280;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #a78bfa;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(12px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #1f2937;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            position: relative;
+            color: #f3f4f6;
+            border: 1px solid #374151;
+        }
+
+        /* Login Modal Specific */
+        #login-modal {
+            display: flex; /* Initially visible */
+            z-index: 2000;
+        }
+        #login-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Status Dot Styles */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: rgba(17, 24, 39, 0.8);
+            border-radius: 20px;
+            border: 1px solid #374151; /* Default border */
+            margin-left: 0;
+            transition: all 0.3s ease; /* Smooth transition for color changes */
+        }
+        /* Dynamic Border Colors for Container */
+        .status-container.loading {
+            border-color: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+        }
+        .status-container.success {
+            border-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+        .status-container.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: #10b981; box-shadow: 0 0 8px #10b981; }
+        .status-dot.error { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .status-text { font-size: 0.75rem; color: #d1d5db; font-weight: 500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Neon Restart Button */
+        .neon-btn {
+            background-color: transparent;
+            color: #00ff00; /* Neon Green Text */
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 5px #00ff00, inset 0 0 5px #00ff00;
+            text-shadow: 0 0 3px #00ff00;
+            transition: all 0.3s ease-in-out;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .neon-btn:hover {
+            background-color: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00, inset 0 0 10px #00ff00;
+            transform: scale(1.02);
+        }
+        .neon-btn:active {
+            box-shadow: 0 0 5px #00ff00;
+            transform: scale(0.98);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                color: black;
+                background: white;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+                color: black;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen pb-12 text-gray-100">
+
+    <!-- Navbar / Audio Player Sticky Header -->
+    <div class="sticky top-0 z-50 bg-gray-800 text-white shadow-xl border-b border-gray-700 transition-all duration-300 no-print" id="audio-player-bar">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title, User, Badges -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <!-- Icon (Purple Neon) -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-violet-900/50 flex items-center justify-center text-violet-300 border border-violet-500 shadow-[0_0_10px_rgba(139,92,246,0.6)] shrink-0">
+                            <i class="fas fa-flag-checkered text-lg"></i>
+                        </div>
+                        
+                        <!-- Info Column -->
+                        <div class="flex flex-col gap-1">
+                            
+                            <!-- Top Row: User Name & Status -->
+                            <div class="flex items-center gap-3">
+                                <!-- Neon User Name -->
+                                <div id="header-username" class="text-sm font-bold text-pink-400 drop-shadow-[0_0_3px_rgba(244,114,182,0.8)] flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                                </div>
+                                <!-- Firebase Status Indicator (Dynamic Border) -->
+                                <div class="status-container" id="cloud-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Row: Neon Badges (Replaces old Title & Voice) -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Level Badge (Neon Yellow) -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500 text-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.4)] text-[10px] md:text-xs font-bold bg-yellow-900/20 whitespace-nowrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Level: CEFR B2 (Upper-Intermediate)</span>
+                                </div>
+                                <!-- Word Count Badge (Neon Cyan) -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500 text-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.4)] text-[10px] md:text-xs font-bold bg-cyan-900/20 whitespace-nowrap">
+                                    <i class="fas fa-file-word"></i>
+                                    <span>Words: ~700</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Play Button (Right aligned on mobile) -->
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition shrink-0 ml-auto border border-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)]">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4 hidden md:flex">
+                    <!-- Rewind (Blue Neon) -->
+                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-sky-500 text-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.5)] flex items-center justify-center hover:bg-sky-900/30 transition hover:scale-105" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <!-- Main Play Button (Purple/Pink Neon) -->
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-violet-600 text-white rounded-full shadow-[0_0_15px_rgba(217,70,239,0.6)] flex items-center justify-center hover:scale-105 transition border-2 border-fuchsia-500">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <!-- Visualizer -->
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t md:border-gray-700 border-t-0 md:pt-0 mt-2 md:mt-0">
+                    
+                    <!-- Translation Toggle (Green Neon) -->
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-green-900/20 text-green-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(74,222,128,0.4)] border border-green-500">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <!-- Toggle Text (Amber Neon) -->
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-amber-900/20 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(251,191,36,0.4)] border border-amber-500">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                    
+                    <!-- Logout (Red Neon - Enlarged) -->
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)] flex items-center justify-center hover:bg-red-900/30 transition hover:scale-105 ml-1">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-900 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-violet-500 w-0 transition-all duration-300 shadow-[0_0_10px_#8b5cf6]"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700">
+             <!-- Image with fallback -->
+             <div class="w-full h-64 md:h-80 bg-gray-900 relative overflow-hidden group">
+                <img 
+                    src="English-Reading-123-images/p0.jpg" 
+                    alt="Ferrari vs. Lamborghini: The Ultimate Rivalry" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <!-- Dark Gradient Overlay for better text readability -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-4 left-4 right-4 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium opacity-90 backdrop-blur-sm bg-black/60 w-fit px-3 py-1 rounded-full border border-gray-600">
+                        <i class="fas fa-search-location"></i> Listening Focus: Automotive History, Business & Biography
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="window.openVocabModal()" class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:border-violet-500 transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-violet-900/30 text-violet-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-200">完整單字表 (Vocabulary)</h3>
+                        <p class="text-sm text-gray-400">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 group-hover:text-violet-400"></i>
+            </button>
+
+            <button onclick="window.openStudyModal()" class="bg-gray-800 p-4 rounded-xl shadow-md border border-gray-700 hover:border-pink-500 transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-900/30 text-pink-400 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-200">我的學習清單 (Favorites)</h3>
+                        <p class="text-sm text-gray-400" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-600 group-hover:text-pink-400"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700 relative">
+            <h2 class="text-2xl font-bold text-gray-100 mb-6 pb-4 border-b border-gray-700">Ferrari vs. Lamborghini: The Ultimate Rivalry</h2>
+            
+            <div class="bg-gray-900/50 border-l-4 border-violet-500 p-4 mb-6 text-sm text-gray-300 rounded-r-lg">
+                <i class="fas fa-mouse-pointer mr-1 text-violet-400"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-gray-900/95 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-gray-800 p-6 rounded-full mb-4 border border-gray-700 shadow-lg shadow-violet-900/20">
+                    <i class="fas fa-ear-listen text-4xl text-violet-500"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-200 mb-2">Listen Carefully</h3>
+                <p class="text-gray-400 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="window.toggleText()" class="bg-violet-600 text-white px-6 py-2 rounded-full hover:bg-violet-700 transition shadow-lg border border-violet-500">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <div id="article-display" class="prose max-w-none text-gray-300 text-lg md:text-xl leading-loose tracking-wide space-y-6">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700 relative">
+            
+            <!-- Quiz Header with Restart Button -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
+                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                    <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
+                        <i class="fas fa-pen"></i>
+                    </span>
+                    Reading Comprehension Quiz (15 Questions)
+                </h3>
+                
+                <!-- Restart Button (Fluorescent Style) -->
+                <button onclick="window.resetQuiz()" class="neon-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
+                </button>
+            </div>
+            
+            <form id="quizForm" class="space-y-8">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-700 flex flex-col items-center gap-4">
+                <button type="button" onclick="window.showFinalScore()" class="w-full md:w-auto bg-violet-600 hover:bg-violet-700 text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95 border border-violet-500">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-gray-900 p-6 rounded-xl border border-gray-700 animate-fade-in relative">
+                    <p class="text-gray-400 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-5xl font-extrabold text-violet-400 my-2" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-300 font-medium mb-4"></p>
+                    
+                    <button id="mistake-review-btn" onclick="window.openMistakeModal()" class="hidden w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold shadow transition flex items-center justify-center gap-2 mx-auto border border-red-500">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (New) -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col items-center justify-center gap-6">
+            <div class="w-16 h-16 rounded-full bg-violet-900 flex items-center justify-center text-violet-300 mb-2 border border-violet-500 shadow-lg shadow-violet-500/30">
+                <i class="fas fa-user-astronaut text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white">歡迎來到英語閱讀挑戰</h2>
+            <p class="text-gray-400 text-sm mb-4">請輸入名字以儲存您的學習進度</p>
+            
+            <div class="w-full space-y-3">
+                <input type="text" id="username-input" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500 text-center text-lg" placeholder="輸入您的名字 (Enter Name)">
+                <button id="login-btn" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
+                    開始閱讀 (Start)
+                </button>
+            </div>
+
+            <div class="w-full border-t border-gray-700 pt-4 mt-2">
+                <p class="text-xs text-gray-500 uppercase font-bold mb-3 tracking-wider">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-600">載入挑戰者名單中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b border-gray-700 flex justify-between items-center bg-gray-800 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-100"><i class="fas fa-book-open text-violet-400 mr-2"></i> 完整單字表</h3>
+                <button onclick="window.closeModal('vocab-modal')" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="vocab-table-container"></div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('vocab')" class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="window.closeModal('vocab-modal')" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b border-gray-700 flex justify-between items-center bg-gray-800 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-gray-100"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="window.closeModal('study-modal')" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="study-table-container"></div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('study')" class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="window.closeModal('study-modal')" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-4 md:p-6 border-b border-gray-700 flex justify-between items-center bg-red-900/30 rounded-t-2xl">
+                <h3 class="text-xl font-bold text-red-400"><i class="fas fa-times-circle text-red-500 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="window.closeModal('mistake-modal')" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="mistake-table-container"></div>
+            <div class="p-4 border-t border-gray-700 bg-gray-800 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('mistakes')" class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="window.closeModal('mistake-modal')" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <!-- Firebase & App Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-123';
+        const DOC_GLOBAL = 'global';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCan2_Rc26HsLkOPr0i5QrgdjAYyqcigJ0",
+            authDomain: "english-reading-6b506.firebaseapp.com",
+            projectId: "english-reading-6b506",
+            storageBucket: "english-reading-6b506.firebasestorage.app",
+            messagingSenderId: "494747176273",
+            appId: "1:494747176273:web:585487fadb29b2e5e2d770",
+            measurementId: "G-4JD6R9MRPQ"
+        };
+
+        let app, db, auth;
+        let isFirebaseReady = false;
+        let currentUser = null; // Store current user info {name: string}
+        let unsubscribeUser = null; // Listener for specific user data
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                updateConnectionStatus('loading', '讀取資料中...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                
+                isFirebaseReady = true;
+                console.log("Firebase Connected");
+                
+                // Listen to Global Users List for Quick Login
+                onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { users: [] };
+                    renderQuickLogin(data.users || []);
+                }, (error) => {
+                    console.error("Global listener error:", error);
+                    updateConnectionStatus('error', '雲端同步失敗');
+                });
+
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                updateConnectionStatus('error', '連線錯誤');
+            }
+        }
+
+        // --- User Logic ---
+        window.startLogin = async (name) => {
+            if (!name || !isFirebaseReady) return;
+            const cleanName = name.trim();
+            if (cleanName.length === 0) return;
+
+            currentUser = { name: cleanName };
+            document.getElementById('login-modal').style.display = 'none';
+            
+            // Update Header Name (Neon Style)
+            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
+
+            // Register user in Global List (if new)
+            try {
+                const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
+                await setDoc(globalRef, {
+                    users: arrayUnion({ name: cleanName })
+                }, { merge: true });
+
+                subscribeToUserData(cleanName);
+            } catch (e) {
+                console.error("Login save error:", e);
+            }
+        };
+
+        function subscribeToUserData(userName) {
+            if (unsubscribeUser) unsubscribeUser();
+            
+            const userDocRef = doc(db, COLLECTION_NAME, `user_${userName}`);
+            
+            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                updateConnectionStatus('success', '已同步');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // 1. Restore Favorites
+                    if (data.favorites) {
+                        favoriteWords = new Set(data.favorites);
+                        document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+                        // Re-render open modals if needed
+                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+                        if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+                    }
+
+                    // 2. Restore Progress
+                    if (data.progressIndex !== undefined && data.progressIndex > 0) {
+                        // Only update if playing is false to avoid jumping while listening
+                        if (!isPlaying && data.progressIndex > currentSentenceIndex) {
+                            currentSentenceIndex = data.progressIndex;
+                            window.updateProgressBar();
+                            window.highlightSentence(currentSentenceIndex);
+                        }
+                    }
+
+                    // 3. Restore Quiz Answers & State
+                    if (data.quizAnswers) {
+                         const serverAnswers = data.quizAnswers;
+                         
+                         // Reset local quiz state before rebuilding
+                         userScore = 0;
+                         wrongAnswers = [];
+                         userAnswers = serverAnswers;
+                         
+                         Object.keys(serverAnswers).forEach(qid => {
+                             const ans = serverAnswers[qid];
+                             const qObj = quizData.find(q => q.id === qid);
+                             
+                             if(qObj) {
+                                 if(ans === qObj.ans) userScore += (100/15);
+                                 else wrongAnswers.push({q: qObj, yourAns: ans});
+                             }
+
+                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
+                             if (!alreadyAnswered) {
+                                 window.checkAnswer(qid, ans, true); // true = isRestoring
+                             }
+                         });
+                    }
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        // Exposed function to save data
+        window.saveUserData = async () => {
+            if (!currentUser || !isFirebaseReady) return;
+            updateConnectionStatus('loading', '同步中...');
+            
+            try {
+                const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                await setDoc(userDocRef, {
+                    favorites: Array.from(favoriteWords),
+                    mistakes: wrongAnswers,
+                    progressIndex: currentSentenceIndex,
+                    quizAnswers: userAnswers, // Save the map of answers
+                    lastUpdated: new Date()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+                updateConnectionStatus('error', '存檔失敗');
+            }
+        };
+
+        // Reset Quiz Data
+        window.resetQuiz = async () => {
+            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
+            
+            userScore = 0;
+            wrongAnswers = [];
+            userAnswers = {};
+            
+            document.querySelectorAll('.quiz-option').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'disabled');
+            });
+            document.querySelectorAll('.quiz-option input').forEach(el => {
+                el.disabled = false;
+                el.checked = false;
+            });
+            document.querySelectorAll('.quiz-option div').forEach(el => {
+                const key = el.id.split('-').pop(); // get A, B, C...
+                el.className = "w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                el.innerHTML = key;
+            });
+            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('score-card').classList.add('hidden');
+
+            if (currentUser && isFirebaseReady) {
+                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                 await updateDoc(userDocRef, {
+                     quizAnswers: deleteField(),
+                     mistakes: deleteField()
+                 });
+            }
+            
+            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function renderQuickLogin(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-500 py-2">尚無挑戰者紀錄，歡迎加入！</span>';
+                return;
+            }
+
+            const recentUsers = users.slice().reverse().slice(0, 5); 
+            
+            recentUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = "bg-gray-800 hover:bg-gray-700 text-violet-300 border border-violet-900 px-4 py-2 rounded-full text-sm transition";
+                btn.innerText = u.name;
+                btn.onclick = () => {
+                    document.getElementById('username-input').value = u.name;
+                    window.startLogin(u.name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateConnectionStatus(status, text) {
+            const container = document.getElementById('cloud-status');
+            const dot = container.querySelector('.status-dot');
+            const label = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; // reset
+            dot.classList.add(status); // loading, success, error
+            label.innerText = text;
+
+            container.className = 'status-container'; // reset
+            container.classList.add(status);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            const name = document.getElementById('username-input').value;
+            window.startLogin(name);
+        };
+        
+        initFirebase();
+
+
+        // ---------------------------------------------------------
+        // --- Existing App Logic (Attached to Window) ---
+        // ---------------------------------------------------------
+        
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
+        let userAnswers = {}; // Store { qID: "Answer" }
+        let audioCtx;
+
+        const vocabulary = {
+            "rivalry": { pos: "n.", trans: "競爭；對抗", example: "The rivalry between the two teams is intense." },
+            "pinnacle": { pos: "n.", trans: "巔峰；頂點", example: "She reached the pinnacle of her career at age 30." },
+            "heritage": { pos: "n.", trans: "遺產；傳統", example: "The city is proud of its cultural heritage." },
+            "flamboyant": { pos: "adj.", trans: "浮誇的；艷麗的", example: "The singer is known for his flamboyant costumes." },
+            "icon": { pos: "n.", trans: "象徵；偶像", example: "Marilyn Monroe is a global fashion icon." },
+            "mutual": { pos: "adj.", trans: "相互的", example: "Respect must be mutual in a healthy relationship." },
+            "arrogance": { pos: "n.", trans: "傲慢", example: "His arrogance made him unpopular with his colleagues." },
+            "obsessed": { pos: "adj.", trans: "著迷的；無法自拔的", example: "He is obsessed with collecting rare coins." },
+            "merely": { pos: "adv.", trans: "僅僅；只不過", example: "I was merely asking a question, not arguing." },
+            "temperamental": { pos: "adj.", trans: "性情不定的；(機器)不穩定的", example: "The old car is very temperamental in cold weather." },
+            "notoriously": { pos: "adv.", trans: "惡名昭彰地", example: "The road is notoriously dangerous at night." },
+            "criticism": { pos: "n.", trans: "批評", example: "Constructive criticism helps us improve." },
+            "tycoon": { pos: "n.", trans: "大亨；巨頭", example: "The real estate tycoon bought another hotel." },
+            "industrialist": { pos: "n.", trans: "實業家", example: "The wealthy industrialist built a new factory." },
+            "frustrated": { pos: "adj.", trans: "沮喪的；灰心的", example: "I felt frustrated when the computer crashed." },
+            "clutch": { pos: "n.", trans: "離合器", example: "You need to press the clutch to change gears." },
+            "component": { pos: "n.", trans: "零件；成分", example: "Trust is a key component of friendship." },
+            "commercial": { pos: "adj.", trans: "商業的", example: "Commercial flights are cheaper than private jets." },
+            "spark": { pos: "v.", trans: "引發；點燃", example: "The news report sparked a debate on the topic." },
+            "revolution": { pos: "n.", trans: "革命", example: "The smartphone caused a technological revolution." },
+            "furious": { pos: "adj.", trans: "暴怒的", example: "He was furious when he found out the truth." },
+            "dismiss": { pos: "v.", trans: "不予理會；解僱", example: "Don't dismiss his idea without thinking about it." },
+            "insult": { pos: "n.", trans: "侮辱", example: "His rude comment was a huge insult." },
+            "ignite": { pos: "v.", trans: "點燃；激起", example: "The speech helped to ignite the crowd's passion." },
+            "superior": { pos: "adj.", trans: "優越的；較好的", example: "This product is vastly superior to the old one." },
+            "reliable": { pos: "adj.", trans: "可靠的", example: "We need a reliable person for this job." },
+            "refined": { pos: "adj.", trans: "精緻的；精煉的", example: "Her taste in art is very refined." },
+            "unveil": { pos: "v.", trans: "揭幕；公佈", example: "The company will unveil its new phone tomorrow." },
+            "coin": { pos: "v.", trans: "創造(新詞)", example: "Shakespeare coined many words we use today." },
+            "scramble": { pos: "v.", trans: "倉促行動；攀爬", example: "Everyone scrambled to finish the work on time." },
+            "legacy": { pos: "n.", trans: "遺產；留給後世之物", example: "He left a legacy of kindness and generosity." },
+            "innovation": { pos: "n.", trans: "創新", example: "Innovation is key to business success." },
+            "dominance": { pos: "n.", trans: "主導地位；優勢", example: "The team maintained its dominance throughout the season." },
+            "presence": { pos: "n.", trans: "存在感；出席", example: "He has a commanding presence on stage." },
+            "roaring": { pos: "adj.", trans: "咆哮的；轟鳴的", example: "The roaring sound of the engine was deafening." },
+            "enthusiast": { pos: "n.", trans: "愛好者", example: "He is a dedicated sports enthusiast." },
+            "immensely": { pos: "adv.", trans: "極度地；非常", example: "I enjoyed the movie immensely." },
+            "feud": { pos: "n.", trans: "不和；世仇", example: "The family feud lasted for generations." },
+            "spectacular": { pos: "adj.", trans: "壯觀的", example: "The fireworks display was spectacular." },
+            "deny": { pos: "v.", trans: "否認；拒絕給予", example: "He denied taking the money." }
+        };
+
+        const articleData = [
+            // Paragraph 1
+            { en: "In the pantheon of automotive history, no rivalry is as legendary or as personal as the one between Ferrari and Lamborghini.", zh: "在汽車歷史的殿堂中，沒有哪一段競爭像法拉利和藍寶堅尼之間那樣具有傳奇色彩或個人恩怨。" },
+            { en: "Located just a few kilometers apart in the region of Emilia-Romagna, Italy, these two manufacturers represent the pinnacle of speed, luxury, and Italian design.", zh: "這兩家製造商位於義大利艾米利亞-羅馬涅大區，相距僅幾公里，代表了速度、奢華和義大利設計的巔峰。" },
+            { en: "Ferrari, symbolized by the \"Prancing Horse,\" is famous for its racing heritage and elegant, aerodynamic sports cars.", zh: "以「躍馬」為標誌的法拉利，以其賽車傳統和優雅、符合空氣動力學的跑車而聞名。" },
+            { en: "Lamborghini, represented by the \"Raging Bull,\" is known for its flamboyant designs, raw power, and aggressive styling.", zh: "以「蠻牛」為代表的藍寶堅尼，則以其浮誇的設計、原始的動力和侵略性的風格著稱。" },
+            { en: "While both brands are now global icons of wealth and performance, their relationship did not begin with mutual respect.", zh: "雖然這兩個品牌現在都是財富和性能的全球象徵，但它們的關係並非始於相互尊重。" },
+            { en: "Instead, the creation of Lamborghini as a supercar brand was the direct result of a heated argument, an insult, and a desire for revenge.", zh: "相反地，藍寶堅尼作為一個超級跑車品牌的誕生，是一場激烈的爭吵、一次侮辱和復仇渴望的直接結果。" },
+            
+            // Paragraph 2
+            { en: "To understand the rivalry, one must first understand Enzo Ferrari.", zh: "要理解這場競爭，首先必須了解恩佐·法拉利（Enzo Ferrari）。" },
+            { en: "Known as Il Commendatore (The Commander), Enzo was a man obsessed with motor racing.", zh: "恩佐被稱為 Il Commendatore（指揮官），是一個痴迷於賽車的人。" },
+            { en: "For him, road cars were merely a means to an end; he sold them only to fund his racing team, Scuderia Ferrari.", zh: "對他來說，公路車僅僅是達到目的的手段；他出售這些車只是為了資助他的賽車隊——法拉利車隊（Scuderia Ferrari）。" },
+            { en: "His cars were undeniably fast and beautiful, but they were also known to be mechanically temperamental and uncomfortable.", zh: "他的車無疑是快速且美麗的，但也以機械結構不穩定和不舒適而聞名。" },
+            { en: "Enzo was notoriously difficult to deal with and often looked down upon his customers, believing that they should be grateful just to own one of his creations.", zh: "恩佐以難以相處著稱，經常看不起他的客戶，認為他們應該僅僅因為擁有一輛他的作品而感到感激。" },
+            { en: "He considered himself a god of the racing world, and he did not take criticism lightly, especially from people he considered to be beneath him.", zh: "他自認為是賽車界的神，不輕易接受批評，尤其是來自他認為地位低於他的人的批評。" },
+            
+            // Paragraph 3
+            { en: "Enter Ferruccio Lamborghini.", zh: "費魯齊歐·藍寶堅尼（Ferruccio Lamborghini）登場。" },
+            { en: "Before he became a name associated with supercars, Ferruccio was a highly successful industrialist who made his fortune building tractors.", zh: "在成為與超級跑車相關的名字之前，費魯齊歐是一位非常成功的實業家，靠製造拖拉機發家致富。" },
+            { en: "He was a wealthy man who appreciated the finer things in life, including fast cars.", zh: "他是一個富有的人，懂得欣賞生活中的美好事物，包括快車。" },
+            { en: "He owned several Ferraris but was constantly frustrated by their mechanical issues, particularly the clutches, which burned out frequently.", zh: "他擁有多輛法拉利，但經常因其機械問題感到沮喪，特別是經常燒壞的離合器。" },
+            { en: "Being a skilled mechanic himself, Ferruccio decided to inspect his Ferrari 250 GT personally.", zh: "身為一名熟練的機械師，費魯齊歐決定親自檢查他的法拉利 250 GT。" },
+            { en: "To his shock, he discovered that the clutch used in his expensive Ferrari was the exact same commercial component he used in his own tractors.", zh: "讓他震驚的是，他發現昂貴的法拉利中使用的離合器，竟然與他在自己的拖拉機中使用的商用零件完全相同。" },
+            { en: "Feeling cheated, he drove to the Ferrari factory in Maranello to complain directly to Enzo Ferrari and offer advice on how to fix the problem.", zh: "感到被欺騙的他，開車前往馬拉內羅的法拉利工廠，直接向恩佐·法拉利投訴，並提供如何解決問題的建議。" },
+            
+            // Paragraph 4
+            { en: "The meeting between the two men is now the stuff of legend.", zh: "這兩個人之間的會面現在已成為傳奇。" },
+            { en: "When Ferruccio presented his findings and suggested improvements, Enzo was furious.", zh: "當費魯齊歐提出他的發現並建議改進時，恩佐勃然大怒。" },
+            { en: "He reportedly told Ferruccio, \"You may be able to drive a tractor, but you will never be able to handle a Ferrari properly.\"", zh: "據報導，他告訴費魯齊歐：「你也許會開拖拉機，但你永遠無法正確地駕馭法拉利。」" },
+            { en: "He dismissed Ferruccio as a simple farmer who knew nothing about sports cars.", zh: "他將費魯齊歐斥為一個對跑車一無所知的單純農夫。" },
+            { en: "This insult wounded Ferruccio’s pride, but instead of giving up, it ignited a fire within him.", zh: "這種侮辱傷害了費魯齊歐的自尊，但他沒有放棄，反而在心中點燃了一把火。" },
+            { en: "He returned to his factory with a singular goal: to build a car that was superior to Ferrari in every way—faster, more reliable, and more refined.", zh: "他帶著一個單一的目標回到工廠：製造一輛在各方面都優於法拉利的汽車——更快、更可靠、更精緻。" },
+            { en: "In 1963, Automobili Lamborghini was founded.", zh: "1963 年，藍寶堅尼汽車公司成立。" },
+            { en: "Within months, he hired ex-Ferrari engineers and released the 350 GTV, proving he was serious.", zh: "幾個月內，他聘請了前法拉利工程師並發布了 350 GTV，證明他是認真的。" },
+            { en: "A few years later, Lamborghini unveiled the Miura, a car so revolutionary that it coined the term \"supercar,\" leaving Ferrari scrambling to catch up.", zh: "幾年後，藍寶堅尼推出了 Miura，這款車極具革命性，以至於創造了「超級跑車」一詞，讓法拉利不得不急起直追。" },
+            
+            // Paragraph 5
+            { en: "Decades later, the rivalry continues to drive innovation in the automotive industry.", zh: "幾十年後，這場競爭繼續推動著汽車行業的創新。" },
+            { en: "Enzo Ferrari passed away in 1988 and Ferruccio Lamborghini in 1993, but their spirits live on in the machines they created.", zh: "恩佐·法拉利於 1988 年去世，費魯齊歐·藍寶堅尼於 1993 年去世，但他們的精神在他們創造的機器中延續。" },
+            { en: "Ferrari maintains its dominance in Formula 1 racing and continues to produce cars that focus on track performance and handling.", zh: "法拉利保持著在一級方程式賽車中的主導地位，並繼續生產專注於賽道性能和操控性的汽車。" },
+            { en: "Lamborghini, on the other hand, focuses on street presence, producing cars with sharp angles and roaring V12 engines that turn heads wherever they go.", zh: "另一方面，藍寶堅尼專注於街頭存在感，生產具有銳利棱角和轟鳴 V12 引擎的汽車，無論走到哪裡都能引人注目。" },
+            { en: "While car enthusiasts often debate which brand is better, the truth is that the automotive world benefited immensely from their feud.", zh: "雖然汽車愛好者經常爭論哪個品牌更好，但事實是，汽車世界從他們的不和中受益匪淺。" },
+            { en: "Without Enzo’s arrogance, Ferruccio might have continued making tractors forever, and the world would have been denied some of the most spectacular machines ever built.", zh: "如果沒有恩佐的傲慢，費魯齊歐可能會永遠繼續製造拖拉機，而世界將會錯失一些有史以來最壯觀的機器。" }
+        ];
+
+        const quizData = [
+            { 
+                id: 'q1', 
+                q: "1. What is the main cause of the rivalry between Ferrari and Lamborghini mentioned in the text?", 
+                options: {A: "A competition over who could win more Formula 1 races.", B: "A personal conflict stemming from a mechanical complaint.", C: "A disagreement over the price of steel in Italy.", D: "A marketing strategy planned by both companies."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 1 and 4 explain the rivalry began with an argument and an insult regarding a mechanical issue.<br><br><strong>Chi:</strong> 第一和第四段解釋了競爭始於關於機械問題的爭吵和侮辱。" 
+            },
+            { 
+                id: 'q2', 
+                q: "2. What was Enzo Ferrari’s primary motivation for selling road cars?", 
+                options: {A: "To provide comfortable transportation for families.", B: "To compete directly with American car manufacturers.", C: "To fund his passion for his racing team.", D: "To become the richest man in Italy."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 2 states he sold road cars \"only to fund his racing team.\"<br><br><strong>Chi:</strong> 第二段指出他出售公路車「只是為了資助他的賽車隊」。" 
+            },
+            { 
+                id: 'q3', 
+                q: "3. Before founding his car company, how did Ferruccio Lamborghini make his fortune?", 
+                options: {A: "By manufacturing agricultural tractors.", B: "By racing professional sports cars.", C: "By designing luxury clothing.", D: "By investing in oil companies."}, 
+                ans: 'A', 
+                expl: "<strong>Eng:</strong> Paragraph 3 introduces him as an industrialist who \"made his fortune building tractors.\"<br><br><strong>Chi:</strong> 第三段介紹他是一位「靠製造拖拉機發家致富」的實業家。" 
+            },
+            { 
+                id: 'q4', 
+                q: "4. What specific mechanical part in his Ferrari frustrated Ferruccio Lamborghini?", 
+                options: {A: "The steering wheel connection.", B: "The braking system.", C: "The clutch mechanism.", D: "The air conditioning unit."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 3 mentions he was frustrated by issues, \"particularly the clutches.\"<br><br><strong>Chi:</strong> 第三段提到他對問題感到沮喪，「特別是離合器」。" 
+            },
+            { 
+                id: 'q5', 
+                q: "5. What did Ferruccio discover when he inspected his Ferrari?", 
+                options: {A: "It had no engine installed.", B: "It used the same clutch component as his tractors.", C: "It was made entirely of plastic.", D: "It was actually built by another company."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 3 states he found the clutch was the \"exact same commercial component he used in his own tractors.\"<br><br><strong>Chi:</strong> 第三段指出他發現離合器與「他在自己的拖拉機中使用的商用零件完全相同」。" 
+            },
+            { 
+                id: 'q6', 
+                q: "6. How did Enzo Ferrari react to Ferruccio’s advice?", 
+                options: {A: "He thanked him and offered him a job.", B: "He ignored him and walked away silently.", C: "He insulted him by dismissing his knowledge.", D: "He agreed to fix the car immediately."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 4 says Enzo \"dismissed Ferruccio as a simple farmer\" and insulted his ability.<br><br><strong>Chi:</strong> 第四段說恩佐「將費魯齊歐斥為一個單純的農夫」並侮辱了他的能力。" 
+            },
+            { 
+                id: 'q7', 
+                q: "7. What was the famous insult Enzo Ferrari reportedly said to Ferruccio?", 
+                options: {A: "\"You should stick to driving tractors.\"", B: "\"Your tractors are faster than my cars.\"", C: "\"Please teach me how to build better clutches.\"", D: "\"I will never sell you a car again.\""}, 
+                ans: 'A', 
+                expl: "<strong>Eng:</strong> Paragraph 4 quotes Enzo: \"You may be able to drive a tractor, but you will never be able to handle a Ferrari properly.\"<br><br><strong>Chi:</strong> 第四段引用恩佐的話：「你也許會開拖拉機，但你永遠無法正確地駕馭法拉利。」" 
+            },
+            { 
+                id: 'q8', 
+                q: "8. What was the goal of Ferruccio Lamborghini after the argument?", 
+                options: {A: "To sue Ferrari for poor quality.", B: "To stop buying Italian cars altogether.", C: "To build a car superior to Ferrari in every way.", D: "To join the Ferrari racing team as a mechanic."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 4 states his goal was \"to build a car that was superior to Ferrari in every way.\"<br><br><strong>Chi:</strong> 第四段指出他的目標是「製造一輛在各方面都優於法拉利的汽車」。" 
+            },
+            { 
+                id: 'q9', 
+                q: "9. Which car is credited with coining the term \"supercar\"?", 
+                options: {A: "The Ferrari 250 GT.", B: "The Lamborghini 350 GTV.", C: "The Lamborghini Miura.", D: "The Ferrari Enzo."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 4 mentions the Miura was \"so revolutionary that it coined the term 'supercar'.\"<br><br><strong>Chi:</strong> 第四段提到 Miura 極具革命性，「以至於創造了『超級跑車』一詞」。" 
+            },
+            { 
+                id: 'q10', 
+                q: "10. How do Ferrari and Lamborghini differ in their focus today?", 
+                options: {A: "Ferrari focuses on tractors; Lamborghini focuses on racing.", B: "Ferrari focuses on racing heritage; Lamborghini focuses on flamboyant design.", C: "Both focus exclusively on electric family vehicles.", D: "Lamborghini focuses on racing; Ferrari focuses on tractors."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 5 contrasts Ferrari's \"racing heritage\" with Lamborghini's \"street presence\" and design.<br><br><strong>Chi:</strong> 第五段對比了法拉利的「賽車傳統」與藍寶堅尼的「街頭存在感」和設計。" 
+            },
+            { 
+                id: 'q11', 
+                q: "11. The word \"temperamental\" in Paragraph 2 describes the cars as:", 
+                options: {A: "Very reliable and easy to use.", B: "Unpredictable and prone to breaking down.", C: "Extremely quiet and smooth.", D: "Cheap and affordable."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> \"Temperamental\" means liable to unreasonable changes of mood; for machines, it means unreliable.<br><br><strong>Chi:</strong> \"Temperamental\" 意指情緒化；對機器而言，意味著不可靠。" 
+            },
+            { 
+                id: 'q12', 
+                q: "12. The word \"feud\" in Paragraph 5 is closest in meaning to:", 
+                options: {A: "Friendship", B: "Partnership", C: "Rivalry or conflict", D: "Agreement"}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> A feud is a prolonged and bitter quarrel or dispute.<br><br><strong>Chi:</strong> Feud 是指長期的爭執或不和。" 
+            },
+            { 
+                id: 'q13', 
+                q: "13. What does the author imply would have happened without Enzo's arrogance?", 
+                options: {A: "Ferrari would have gone bankrupt.", B: "Lamborghini would have bought Ferrari.", C: "The world would not have Lamborghini supercars.", D: "Tractors would be faster than cars."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 5 concludes: \"Without Enzo’s arrogance... the world would have been denied some of the most spectacular machines.\"<br><br><strong>Chi:</strong> 第五段總結：「如果沒有恩佐的傲慢……世界將會錯失一些有史以來最壯觀的機器。」" 
+            },
+            { 
+                id: 'q14', 
+                q: "14. Which symbol represents the Lamborghini brand?", 
+                options: {A: "The Prancing Horse.", B: "The Golden Eagle.", C: "The Raging Bull.", D: "The Fast Cheetah."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 1 states Lamborghini is \"represented by the 'Raging Bull'.\"<br><br><strong>Chi:</strong> 第一段指出藍寶堅尼「以『蠻牛』為代表」。" 
+            },
+            { 
+                id: 'q15', 
+                q: "15. What is the tone of the article regarding the rivalry?", 
+                options: {A: "It suggests the rivalry was a mistake and waste of time.", B: "It portrays the rivalry as beneficial for the automotive world.", C: "It sides heavily with Ferrari and criticizes Lamborghini.", D: "It sides heavily with Lamborghini and criticizes Ferrari."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The author states \"the automotive world benefited immensely from their feud.\"<br><br><strong>Chi:</strong> 作者指出「汽車世界從他們的不和中受益匪淺」。" 
+            }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic
+                if (index === 0) insertImage(displayArea, 'p0.jpg', 'Two Titans of Italy');
+                else if (index === 6) insertImage(displayArea, 'p1.jpg', 'The Commander’s Arrogance');
+                else if (index === 12) insertImage(displayArea, 'p2.jpg', 'The Tractor Tycoon');
+                else if (index === 19) insertImage(displayArea, 'p3.jpg', 'The Insult That Sparked a Revolution');
+                else if (index === 28) insertImage(displayArea, 'p4.jpg', 'A Legacy of Competition');
+                
+                if (index === 0 || index === 6 || index === 12 || index === 19 || index === 28) {
+                    p = document.createElement('p');
+                    p.className = "mb-10"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-gray-700 rounded transition leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                const divZh = document.createElement('div');
+                divZh.className = 'translation-text hidden';
+                divZh.innerText = item.zh;
+                p.appendChild(divZh);
+            });
+        }
+
+        function insertImage(container, filename, altText) {
+             const img = document.createElement('img');
+             img.src = `English-Reading-123-images/${filename}`; 
+             img.alt = altText;
+             img.width = 1300;
+             img.height = 576;
+             img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-md hover:opacity-95 transition border border-gray-700";
+             img.onerror = function() { this.style.display = 'none'; };
+             container.appendChild(img);
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                // Keep the original punctuation for display
+                const originalWord = word;
+                // Remove punctuation for lookup
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                const wordMapping = {
+                    "rivalries": "rivalry",
+                    "pinnacles": "pinnacle",
+                    "heritages": "heritage",
+                    "icons": "icon",
+                    "arrogances": "arrogance",
+                    "criticisms": "criticism",
+                    "tycoons": "tycoon",
+                    "industrialists": "industrialist",
+                    "clutches": "clutch",
+                    "components": "component",
+                    "sparks": "spark",
+                    "revolutions": "revolution",
+                    "dismisses": "dismiss",
+                    "insults": "insult",
+                    "ignites": "ignite",
+                    "unveils": "unveil",
+                    "coins": "coin",
+                    "scrambles": "scramble",
+                    "legacies": "legacy",
+                    "innovations": "innovation",
+                    "dominances": "dominance",
+                    "presences": "presence",
+                    "enthusiasts": "enthusiast",
+                    "feuds": "feud",
+                    "denies": "deny",
+                    "dismissed": "dismiss",
+                    "sparked": "spark",
+                    "ignited": "ignite",
+                    "unveiled": "unveil",
+                    "coined": "coin",
+                    "scrambling": "scramble",
+                    "roaring": "roaring",
+                    "denied": "deny"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="mb-3 text-lg font-medium">${data.trans}</div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        window.speakAndShowDef = function(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.speakWord = function(word) {
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.toggleFavorite = function(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#f472b6']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+
+            window.saveUserData();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            tableIcons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
+            });
+        }
+
+        window.openVocabModal = function() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        window.openStudyModal = function() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-600"></i><p>您的學習清單是空的。</p><p class="text-sm">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        window.openMistakeModal = function() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-700"></i><p>太棒了！您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-900/40 border-b border-red-800">
+                                <th class="p-3 font-bold text-gray-300 w-4/12">題目 (Question)</th>
+                                <th class="p-3 font-bold text-gray-300 w-2/12">您的答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-2/12">正確答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-4/12">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-gray-700/50">
+                            <td class="p-3 font-medium text-gray-300">${item.q.q}</td>
+                            <td class="p-3 text-red-400 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-400 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-400 text-sm">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse text-gray-200">
+                    <thead>
+                        <tr class="bg-gray-700 border-b border-gray-600">
+                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
+                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-gray-700/50 transition duration-150">
+                        <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        </td>
+
+                        <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
+                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        window.printList = function(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: Ferrari vs. Lamborghini</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        window.toggleTranslation = function() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-violet-600', 'border-violet-500');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-violet-600', 'border-violet-500');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        window.togglePlay = function() {
+            if (isPlaying) {
+                window.pauseAudio();
+            } else {
+                window.playAudio();
+            }
+        }
+
+        window.playAudio = function() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            window.speakSentence(currentSentenceIndex);
+        }
+
+        window.speakSentence = function(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    window.highlightSentence(-1);
+                    currentSentenceIndex = 0;
+                    window.saveUserData();
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            window.highlightSentence(index);
+            window.updateProgressBar();
+            window.saveUserData();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        window.speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        window.pauseAudio = function() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        window.restartAudio = function() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            window.updateProgressBar();
+            window.highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => window.speakSentence(0), 100);
+            }
+        }
+        
+        window.playFromSentence = function(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            window.speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        window.highlightSentence = function(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        window.updateProgressBar = function() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        window.toggleText = function() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.replace('bg-amber-600', 'bg-violet-600');
+                btn.classList.replace('hover:bg-amber-500', 'hover:bg-violet-700');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.replace('bg-violet-600', 'bg-amber-600');
+                btn.classList.replace('hover:bg-violet-700', 'hover:bg-amber-500');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <div class="space-y-3" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box">
+                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p>${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            userAnswers[questionId] = selectedKey;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                if(!isRestoring) window.playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                if(!isRestoring) userScore += (100 / 15); 
+            } else {
+                if(!isRestoring) window.playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-300', 'bg-red-900');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-300', 'bg-green-900');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#10b981';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-400";
+            } else {
+                explBox.style.borderLeftColor = '#ef4444';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-400";
+            }
+
+            if(!isRestoring) window.saveUserData();
+        }
+
+        window.showFinalScore = function() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Perfect! You survived the legends!";
+                } else {
+                    feedback.innerText = "Great job! You know your horror stories.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Be careful in the dark...";
+            } else {
+                feedback.innerText = "Don't look behind you! Try listening again.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                renderArticle();
+                renderQuiz();
+                initVoice();
+            });
+        } else {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        }
+    </script>
+</body>
+</html>
