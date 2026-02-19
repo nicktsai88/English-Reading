@@ -57,7 +57,7 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.1em; /* Increased for better readability */
+            font-size: 1.3em; /* Increased for better readability (Was 1.1em) */
             color: #374151;
             background: #f9fafb;
             padding: 20px;
@@ -805,7 +805,8 @@
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
                 const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-8 h-8 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white";
+                // Updated w-8 h-8 to w-10 h-10 to match larger text
+                el.className = "w-10 h-10 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -1661,21 +1662,21 @@
                 const div = document.createElement('div');
                 div.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md hover:border-blue-300';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-800 mb-4 text-xl">${item.q}</p>
-                    <div class="space-y-3" id="${item.id}-options">
+                    <p class="font-bold text-gray-800 mb-6 text-2xl md:text-3xl leading-relaxed">${item.q}</p>
+                    <div class="space-y-4" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
                             <label class="quiz-option flex items-center p-4 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white" id="${item.id}-icon-${key}">
+                                <div class="w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-700 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-700 font-medium text-xl md:text-2xl leading-normal">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
-                    <div id="${item.id}-expl" class="explanation-box mt-4 bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
-                        <p class="font-bold mb-1" id="${item.id}-status"></p>
-                        <p>${item.expl}</p>
+                    <div id="${item.id}-expl" class="explanation-box mt-6 bg-gray-50 p-6 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
+                        <p class="font-bold mb-2 text-xl" id="${item.id}-status"></p>
+                        <p class="leading-relaxed">${item.expl}</p>
                     </div>
                 `;
                 form.appendChild(div);
