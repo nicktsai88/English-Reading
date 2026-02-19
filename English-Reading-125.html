@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：The Lockheed SR-71 Blackbird (Firebase Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #f9fafb; /* Light background */
+            color: #111827; /* Dark text */
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #fef08a; /* yellow-200 */
+            color: #854d0e; /* yellow-800 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(234, 179, 8, 0.5);
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff; 
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #16a34a !important;
+            color: #166534;
+        }
+        .quiz-option.wrong {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #dc2626 !important;
+            color: #991b1b;
+            opacity: 0.9;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.1em; /* Increased for better readability */
+            color: #374151;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb; /* Blue border */
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+            border: 1px solid #e5e7eb;
+            border-left-width: 4px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #2563eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            min-width: 240px; 
+            max-width: 320px;
+            background-color: #ffffff; 
+            color: #1f2937;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            line-height: 1.5;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+            filter: drop-shadow(0 2px 1px rgba(0,0,0,0.05));
+        }
+        
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #3730a3;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block;
+            font-size: 0.95em;
+            color: #4b5563;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            padding-left: 10px;
+            border-left: 3px solid #9ca3af;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #60a5fa;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Login Modal Specific */
+        #login-modal {
+            display: flex; /* Initially visible */
+            z-index: 2000;
+        }
+        #login-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Status Dot Styles */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 0;
+            transition: all 0.3s ease; 
+        }
+        /* Dynamic Border Colors for Container */
+        .status-container.loading {
+            border-color: #fbbf24;
+            box-shadow: 0 0 5px rgba(251, 191, 36, 0.4);
+        }
+        .status-container.success {
+            border-color: #34d399;
+            box-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+        }
+        .status-container.error {
+            border-color: #f87171;
+            box-shadow: 0 0 5px rgba(248, 113, 113, 0.4);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: #34d399; box-shadow: 0 0 8px #34d399; }
+        .status-dot.error { background-color: #f87171; box-shadow: 0 0 8px #f87171; }
+        .status-text { font-size: 0.75rem; color: #e5e7eb; font-weight: 500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background-color: #ffffff;
+            color: #2563eb; 
+            border: 1px solid #2563eb;
+            transition: all 0.2s ease-in-out;
+            font-weight: bold;
+        }
+        .action-btn:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                color: black;
+                background: white;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+                color: black;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-12 text-gray-900">
+
+    <!-- Navbar / Audio Player Sticky Header (Keep dark for contrast) -->
+    <div class="sticky top-0 z-50 bg-slate-900 text-white shadow-lg transition-all duration-300 no-print" id="audio-player-bar">
+        <!-- Adjusted width for iPad/Widescreen -->
+        <div class="w-[95%] max-w-[1800px] mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title, User, Badges -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <!-- Icon -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                            <i class="fas fa-cogs text-lg"></i>
+                        </div>
+                        
+                        <!-- Info Column -->
+                        <div class="flex flex-col gap-1">
+                            
+                            <!-- Top Row: User Name & Status -->
+                            <div class="flex items-center gap-3">
+                                <!-- User Name -->
+                                <div id="header-username" class="text-sm font-bold text-blue-200 flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                                </div>
+                                <!-- Firebase Status Indicator -->
+                                <div class="status-container" id="cloud-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Row: Badges -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Level Badge -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500/50 text-yellow-300 text-[10px] md:text-xs font-bold bg-yellow-900/30 whitespace-nowrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Level: CEFR C1</span>
+                                </div>
+                                <!-- Word Count Badge -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500/50 text-cyan-300 text-[10px] md:text-xs font-bold bg-cyan-900/30 whitespace-nowrap">
+                                    <i class="fas fa-file-word"></i>
+                                    <span>Words: ~850</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Play Button (Right aligned on mobile) -->
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-500 transition shrink-0 ml-auto">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4 hidden md:flex">
+                    <!-- Rewind -->
+                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <!-- Main Play Button -->
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition hover:bg-blue-500">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <!-- Visualizer -->
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t border-slate-700 md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                    
+                    <!-- Translation Toggle -->
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-green-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <!-- Toggle Text -->
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                    
+                    <!-- Logout -->
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/20 flex items-center justify-center transition ml-1">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <!-- Adjusted width for iPad/Widescreen -->
+    <div class="w-[95%] max-w-[1800px] mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+             <!-- Image with fallback -->
+             <div class="w-full h-64 md:h-96 bg-gray-100 relative overflow-hidden group">
+                <img 
+                    src="English-Reading-125-images/p0.jpg" 
+                    alt="The Lockheed SR-71 Blackbird" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542461927-410e31379f04?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium bg-black/60 w-fit px-4 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                        <i class="fas fa-search-location"></i> Listening Focus: Aviation History & Cold War
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="window.openVocabModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-blue-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">完整單字表 (Vocabulary)</h3>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-blue-500"></i>
+            </button>
+
+            <button onclick="window.openStudyModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-pink-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">我的學習清單 (Favorites)</h3>
+                        <p class="text-sm text-gray-500" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-pink-500"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">The Lockheed SR-71 Blackbird: A Legend of the Cold War</h2>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 text-sm text-gray-700 rounded-r-lg">
+                <i class="fas fa-mouse-pointer mr-1 text-blue-600"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-white p-6 rounded-full mb-4 border border-gray-200 shadow-xl">
+                    <i class="fas fa-ear-listen text-4xl text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Listen Carefully</h3>
+                <p class="text-gray-500 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="window.toggleText()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg font-bold">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <!-- Font size increased to text-xl md:text-2xl -->
+            <div id="article-display" class="prose max-w-none text-gray-700 text-xl md:text-2xl leading-loose tracking-wide space-y-8 font-serif md:font-sans">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            
+            <!-- Quiz Header with Restart Button -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-200 pb-4">
+                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <span class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-base">
+                        <i class="fas fa-pen"></i>
+                    </span>
+                    Reading Comprehension Quiz (15 Questions)
+                </h3>
+                
+                <!-- Restart Button -->
+                <button onclick="window.resetQuiz()" class="action-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
+                </button>
+            </div>
+            
+            <form id="quizForm" class="space-y-10">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-10 pt-8 border-t border-gray-200 flex flex-col items-center gap-4">
+                <button type="button" onclick="window.showFinalScore()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 px-12 rounded-full shadow-xl transition transform hover:-translate-y-1 active:scale-95">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-slate-50 p-8 rounded-2xl border border-slate-200 animate-fade-in relative shadow-inner">
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-6xl font-extrabold text-blue-600 my-4" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-6 text-lg"></p>
+                    
+                    <button id="mistake-review-btn" onclick="window.openMistakeModal()" class="hidden w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2 mx-auto">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (New) -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col items-center justify-center gap-6 shadow-2xl border-0">
+            <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                <i class="fas fa-user-astronaut text-4xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">歡迎來到英語閱讀挑戰</h2>
+            <p class="text-gray-500 text-base mb-2">請輸入名字以儲存您的學習進度</p>
+            
+            <div class="w-full space-y-4 max-w-xs">
+                <input type="text" id="username-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-lg transition" placeholder="輸入您的名字 (Enter Name)">
+                <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    開始閱讀 (Start)
+                </button>
+            </div>
+
+            <div class="w-full border-t border-gray-200 pt-6 mt-4">
+                <p class="text-xs text-gray-400 uppercase font-bold mb-4 tracking-wider">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-400">載入挑戰者名單中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <button onclick="window.closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="vocab-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('vocab')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="window.closeModal('vocab-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="window.closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="study-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('study')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="window.closeModal('study-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-red-700"><i class="fas fa-times-circle text-red-500 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="window.closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-red-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="mistake-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('mistakes')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="window.closeModal('mistake-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <!-- Firebase & App Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-125';
+        const DOC_GLOBAL = 'global';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCan2_Rc26HsLkOPr0i5QrgdjAYyqcigJ0",
+            authDomain: "english-reading-6b506.firebaseapp.com",
+            projectId: "english-reading-6b506",
+            storageBucket: "english-reading-6b506.firebasestorage.app",
+            messagingSenderId: "494747176273",
+            appId: "1:494747176273:web:585487fadb29b2e5e2d770",
+            measurementId: "G-4JD6R9MRPQ"
+        };
+
+        let app, db, auth;
+        let isFirebaseReady = false;
+        let currentUser = null; // Store current user info {name: string}
+        let unsubscribeUser = null; // Listener for specific user data
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                updateConnectionStatus('loading', '讀取資料中...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                
+                isFirebaseReady = true;
+                console.log("Firebase Connected");
+                
+                // Listen to Global Users List for Quick Login
+                onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { users: [] };
+                    renderQuickLogin(data.users || []);
+                }, (error) => {
+                    console.error("Global listener error:", error);
+                    updateConnectionStatus('error', '雲端同步失敗');
+                });
+
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                updateConnectionStatus('error', '連線錯誤');
+            }
+        }
+
+        // --- User Logic ---
+        window.startLogin = async (name) => {
+            if (!name || !isFirebaseReady) return;
+            const cleanName = name.trim();
+            if (cleanName.length === 0) return;
+
+            currentUser = { name: cleanName };
+            document.getElementById('login-modal').style.display = 'none';
+            
+            // Update Header Name
+            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
+
+            // Register user in Global List (if new)
+            try {
+                const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
+                await setDoc(globalRef, {
+                    users: arrayUnion({ name: cleanName })
+                }, { merge: true });
+
+                subscribeToUserData(cleanName);
+            } catch (e) {
+                console.error("Login save error:", e);
+            }
+        };
+
+        function subscribeToUserData(userName) {
+            if (unsubscribeUser) unsubscribeUser();
+            
+            const userDocRef = doc(db, COLLECTION_NAME, `user_${userName}`);
+            
+            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                updateConnectionStatus('success', '已同步');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // 1. Restore Favorites
+                    if (data.favorites) {
+                        favoriteWords = new Set(data.favorites);
+                        document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+                        // Re-render open modals if needed
+                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+                        if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+                    }
+
+                    // 2. Restore Progress
+                    if (data.progressIndex !== undefined && data.progressIndex > 0) {
+                        // Only update if playing is false to avoid jumping while listening
+                        if (!isPlaying && data.progressIndex > currentSentenceIndex) {
+                            currentSentenceIndex = data.progressIndex;
+                            window.updateProgressBar();
+                            window.highlightSentence(currentSentenceIndex);
+                        }
+                    }
+
+                    // 3. Restore Quiz Answers & State
+                    if (data.quizAnswers) {
+                         const serverAnswers = data.quizAnswers;
+                         
+                         // Reset local quiz state before rebuilding
+                         userScore = 0;
+                         wrongAnswers = [];
+                         userAnswers = serverAnswers;
+                         
+                         Object.keys(serverAnswers).forEach(qid => {
+                             const ans = serverAnswers[qid];
+                             const qObj = quizData.find(q => q.id === qid);
+                             
+                             if(qObj) {
+                                 if(ans === qObj.ans) userScore += (100/15);
+                                 else wrongAnswers.push({q: qObj, yourAns: ans});
+                             }
+
+                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
+                             if (!alreadyAnswered) {
+                                 window.checkAnswer(qid, ans, true); // true = isRestoring
+                             }
+                         });
+                    }
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        // Exposed function to save data
+        window.saveUserData = async () => {
+            if (!currentUser || !isFirebaseReady) return;
+            updateConnectionStatus('loading', '同步中...');
+            
+            try {
+                const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                await setDoc(userDocRef, {
+                    favorites: Array.from(favoriteWords),
+                    mistakes: wrongAnswers,
+                    progressIndex: currentSentenceIndex,
+                    quizAnswers: userAnswers, // Save the map of answers
+                    lastUpdated: new Date()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+                updateConnectionStatus('error', '存檔失敗');
+            }
+        };
+
+        // Reset Quiz Data
+        window.resetQuiz = async () => {
+            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
+            
+            userScore = 0;
+            wrongAnswers = [];
+            userAnswers = {};
+            
+            document.querySelectorAll('.quiz-option').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'disabled');
+            });
+            document.querySelectorAll('.quiz-option input').forEach(el => {
+                el.disabled = false;
+                el.checked = false;
+            });
+            document.querySelectorAll('.quiz-option div').forEach(el => {
+                const key = el.id.split('-').pop(); // get A, B, C...
+                el.className = "w-8 h-8 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white";
+                el.innerHTML = key;
+            });
+            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('score-card').classList.add('hidden');
+
+            if (currentUser && isFirebaseReady) {
+                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                 await updateDoc(userDocRef, {
+                     quizAnswers: deleteField(),
+                     mistakes: deleteField()
+                 });
+            }
+            
+            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function renderQuickLogin(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-400 py-2">尚無挑戰者紀錄，歡迎加入！</span>';
+                return;
+            }
+
+            const recentUsers = users.slice().reverse().slice(0, 5); 
+            
+            recentUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-full text-sm transition shadow-sm";
+                btn.innerText = u.name;
+                btn.onclick = () => {
+                    document.getElementById('username-input').value = u.name;
+                    window.startLogin(u.name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateConnectionStatus(status, text) {
+            const container = document.getElementById('cloud-status');
+            const dot = container.querySelector('.status-dot');
+            const label = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; // reset
+            dot.classList.add(status); // loading, success, error
+            label.innerText = text;
+
+            container.className = 'status-container'; // reset
+            container.classList.add(status);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            const name = document.getElementById('username-input').value;
+            window.startLogin(name);
+        };
+        
+        initFirebase();
+
+
+        // ---------------------------------------------------------
+        // --- Existing App Logic (Attached to Window) ---
+        // ---------------------------------------------------------
+        
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
+        let userAnswers = {}; // Store { qID: "Answer" }
+        let audioCtx;
+
+        const vocabulary = {
+            "espionage": { pos: "n.", trans: "間諜活動", example: "He was charged with industrial espionage." },
+            "vulnerable": { pos: "adj.", trans: "脆弱的", example: "The old castle was vulnerable to attack." },
+            "division": { pos: "n.", trans: "部門", example: "He works in the sales division of the company." },
+            "legendary": { pos: "adj.", trans: "傳奇的", example: "Babe Ruth is a legendary baseball player." },
+            "air-breathing": { pos: "adj.", trans: "吸氣式的", example: "Jet engines are air-breathing engines, unlike rockets." },
+            "manned": { pos: "adj.", trans: "載人的", example: "The first manned mission to Mars is planned for the future." },
+            "exceed": { pos: "v.", trans: "超過", example: "Do not exceed the speed limit." },
+            "altitude": { pos: "n.", trans: "高度", example: "The plane climbed to an altitude of 30,000 feet." },
+            "curvature": { pos: "n.", trans: "曲率", example: "You can see the curvature of the Earth from space." },
+            "marvel": { pos: "n.", trans: "奇蹟", example: "The internet is a technological marvel." },
+            "friction": { pos: "n.", trans: "摩擦力", example: "Friction between the tires and the road stops the car." },
+            "fuselage": { pos: "n.", trans: "機身", example: "The fuselage contains the cockpit and passenger cabin." },
+            "ironically": { pos: "adv.", trans: "諷刺地", example: "Ironically, the fire station burned down." },
+            "covertly": { pos: "adv.", trans: "秘密地", example: "The spy operated covertly in the enemy country." },
+            "expand": { pos: "v.", trans: "膨脹", example: "Metal tends to expand when heated." },
+            "accommodate": { pos: "v.", trans: "適應；容納", example: "The hotel can accommodate 500 guests." },
+            "sieve": { pos: "n.", trans: "篩子", example: "Water ran through the cracks like a sieve." },
+            "sophisticated": { pos: "adj.", trans: "精密的", example: "This camera uses sophisticated sensors." },
+            "protocol": { pos: "n.", trans: "協議；規程", example: "We must follow the safety protocol strictly." },
+            "accelerate": { pos: "v.", trans: "加速", example: "The car accelerated quickly to pass the truck." },
+            "hostile": { pos: "adj.", trans: "敵對的", example: "The soldiers entered hostile territory." },
+            "invincibility": { pos: "n.", trans: "無敵", example: "The team lost its aura of invincibility after the defeat." },
+            "supreme": { pos: "adj.", trans: "極度的", example: "He acted with supreme confidence." },
+            "reconnaissance": { pos: "n.", trans: "偵察", example: "The drone was sent on a reconnaissance mission." },
+            "cramped": { pos: "adj.", trans: "狹窄的", example: "The seats in economy class are very cramped." },
+            "demanding": { pos: "adj.", trans: "吃力的", example: "Being a surgeon is a demanding job." },
+            "refueling": { pos: "n.", trans: "加油", example: "Mid-air refueling allows planes to fly longer." },
+            "spiritual": { pos: "adj.", trans: "心靈的", example: "Meditation can be a spiritual experience." },
+            "recount": { pos: "v.", trans: "講述", example: "He recounted his adventures in the jungle." },
+            "astonishment": { pos: "n.", trans: "驚訝", example: "She looked at him in astonishment." },
+            "dominance": { pos: "n.", trans: "主導地位", example: "The company maintained its dominance in the market." },
+            "reactivate": { pos: "v.", trans: "重新啟用", example: "The old factory was reactivated last month." },
+            "intelligence": { pos: "n.", trans: "情報", example: "The spy gathered valuable intelligence." },
+            "exhibit": { pos: "n.", trans: "展覽品", example: "Please do not touch the museum exhibits." },
+            "charisma": { pos: "n.", trans: "魅力", example: "The politician has great charisma." },
+            "brute": { pos: "adj.", trans: "蠻力的", example: "He used brute force to open the door." },
+            "testament": { pos: "n.", trans: "見證", example: "The ruins are a testament to the ancient civilization." },
+            "ingenuity": { pos: "n.", trans: "獨創性", example: "Solving the puzzle required a lot of ingenuity." },
+            "detection": { pos: "n.", trans: "偵測", example: "Early detection of the disease is crucial." },
+            "leak": { pos: "v.", trans: "洩漏", example: "The pipe began to leak water." }
+        };
+
+        const articleData = [
+            // Paragraph 1
+            { 
+                en: "During the height of the Cold War, the United States needed a way to spy on the Soviet Union without being detected or shot down. Satellites were still in their infancy, and the previous spy plane, the U-2, had proven vulnerable after one was famously shot down in 1960. The solution came from Lockheed’s secret \"Skunk Works\" division, led by the legendary engineer Kelly Johnson. Their creation was the SR-71 Blackbird, an aircraft so advanced that it remains the fastest air-breathing manned aircraft ever built, even though it was retired decades ago. Introduced in 1966, the Blackbird was designed to fly at speeds exceeding Mach 3 (over 3,500 km/h) and at altitudes above 85,000 feet. At that height, the sky is a dark purple, and the curvature of the Earth is clearly visible. The SR-71 wasn't just a plane; it was a technological marvel that operated on the very edge of space.",
+                zh: "在冷戰最激烈的時期，美國需要一種方法來監視蘇聯，而不被發現或擊落。當時衛星仍處於起步階段，而之前的間諜飛機 U-2 在 1960 年一架被著名的擊落後證明是脆弱的。解決方案來自洛克希德公司的秘密「臭鼬工廠」部門，由傳奇工程師凱利·約翰遜領導。他們的創造是 SR-71 黑鳥，這是一架如此先進的飛機，即使在幾十年前退役，它仍然是有史以來建造的最快的吸氣式載人飛機。黑鳥於 1966 年推出，設計飛行速度超過 3 馬赫（超過 3,500 公里/小時），高度超過 85,000 英尺。在這個高度，天空呈現深紫色，地球的曲率清晰可見。SR-71 不僅僅是一架飛機；它是運行在太空邊緣的技術奇蹟。"
+            },
+            // Paragraph 2
+            {
+                en: "Flying at three times the speed of sound creates immense challenges, the most significant being heat. The friction of the air rushing over the plane caused the fuselage to reach temperatures of over 500 degrees Celsius. Traditional aluminum, used in most aircraft, would have melted instantly. To solve this, Lockheed built the SR-71 almost entirely out of titanium. Ironically, the US did not have enough titanium for the project, so the CIA had to covertly purchase the metal from the Soviet Union—the very country the plane was designed to spy on. Furthermore, the extreme heat caused the titanium panels to expand. To accommodate this, the plane was built with gaps between the panels. On the ground, the Blackbird leaked fuel constantly, like a sieve. It was only when the plane reached high speeds and the metal expanded that the gaps sealed shut, stopping the leaks.",
+                zh: "以三倍音速飛行會帶來巨大的挑戰，最顯著的是熱量。空氣衝過飛機的摩擦力導致機身溫度超過攝氏 500 度。大多數飛機使用的傳統鋁材會瞬間熔化。為了解決這個問題，洛克希德幾乎完全用鈦建造了 SR-71。諷刺的是，美國沒有足夠的鈦來進行這個項目，因此中央情報局不得不從蘇聯——這架飛機設計用來監視的國家——秘密購買金屬。此外，極端的熱量導致鈦面板膨脹。為了適應這種情況，飛機在面板之間留有縫隙。在地面上，黑鳥像篩子一樣不斷漏油。只有當飛機達到高速且金屬膨脹時，縫隙才會密封，停止洩漏。"
+            },
+            // Paragraph 3
+            {
+                en: "The SR-71 carried no weapons. It had no guns, no bombs, and no missiles. Its only defense was speed. It was equipped with sophisticated cameras and sensors capable of photographing a license plate from 80,000 feet, but if an enemy radar locked onto it, the pilot had a simple protocol: accelerate. Over its 24 years of service, more than 4,000 missiles were fired at Blackbirds by hostile nations. Not a single one ever hit. The plane was simply too fast. By the time a surface-to-air missile had calculated the SR-71's position and climbed to its altitude, the Blackbird was already miles away. This invincibility gave its pilots a supreme sense of confidence, knowing they were flying a machine that could literally outrun trouble.",
+                zh: "SR-71 不攜帶任何武器。它沒有槍，沒有炸彈，也沒有飛彈。它唯一的防禦就是速度。它配備了精密的相機和感測器，能夠從 80,000 英尺高空拍攝車牌，但如果敵方雷達鎖定它，飛行員有一個簡單的協議：加速。在其 24 年的服役期間，敵對國家向黑鳥發射了 4,000 多枚飛彈。沒有一枚擊中過。飛機實在太快了。當地對空飛彈計算出 SR-71 的位置並爬升到其高度時，黑鳥已經在幾英里之外了。這種無敵性給了飛行員極大的信心，因為他們知道自己駕駛的是一台名副其實能跑贏麻煩的機器。"
+            },
+            // Paragraph 4
+            {
+                en: "Flying the SR-71 was unlike flying any other aircraft. The two-man crew (a pilot and a reconnaissance systems officer) wore full-pressure space suits, similar to those worn by astronauts, to survive in the thin atmosphere if the cabin lost pressure. The cockpit was cramped, hot, and noisy. Missions were long and physically demanding, often requiring multiple mid-air refuelings from special tanker aircraft. Despite the discomfort, pilots describe the experience as almost spiritual. Major Brian Shul, a famous Blackbird pilot, recounted stories of requesting speed checks from air traffic control just to hear the controllers’ astonishment when he reported a ground speed of nearly 2,000 knots. The Blackbird was not just a tool of war; it was a symbol of American engineering dominance and a source of immense pride for those who flew and maintained it.",
+                zh: "駕駛 SR-71 不同於駕駛任何其他飛機。兩名機組人員（一名飛行員和一名偵察系統官）穿著全壓力太空衣，類似於太空人穿的，以便在機艙失壓時在稀薄的大氣中生存。駕駛艙狹窄、炎熱且嘈雜。任務漫長且對體力要求很高，通常需要從特殊加油機進行多次空中加油。儘管不適，飛行員將這種體驗描述為近乎精神上的。著名的黑鳥飛行員布萊恩·舒爾少校講述了向空中交通管制請求速度檢查的故事，只是為了聽到管制員在他報告地面速度接近 2,000 節時的驚訝。黑鳥不僅僅是戰爭工具；它是美國工程主導地位的象徵，也是那些駕駛和維護它的人的巨大驕傲之源。"
+            },
+            // Paragraph 5
+            {
+                en: "The SR-71 was retired by the US Air Force in 1990, briefly reactivated in the mid-90s, and permanently grounded in 1998. The reasons were primarily financial and political; the program was incredibly expensive to maintain, costing hundreds of millions of dollars annually. Additionally, spy satellites had become more advanced and could provide real-time intelligence without risking pilots' lives. Today, the surviving Blackbirds are museum exhibits, inspiring a new generation of engineers and dreamers. While modern drones and satellites have taken over its role, none possess the sheer charisma or the raw, brute performance of the Blackbird. It stands as a testament to a specific era of daring innovation, proving that with enough ingenuity (and titanium), humanity can literally touch the edge of the impossible.",
+                zh: "SR-71 於 1990 年被美國空軍退役，在 90 年代中期短暫重新啟用，並於 1998 年永久停飛。原因主要是財政和政治方面的；該計畫維護費用極其昂貴，每年耗資數億美元。此外，間諜衛星變得更加先進，可以在不冒飛行員生命危險的情況下提供即時情報。今天，倖存的黑鳥是博物館的展品，激勵著新一代的工程師和夢想家。雖然現代無人機和衛星已經接管了它的角色，但沒有一個擁有黑鳥那種純粹的魅力或原始、強悍的性能。它證明了一個大膽創新的特定時代，證明只要有足夠的獨創性（和鈦），人類就可以真正觸及不可能的邊緣。"
+            }
+        ];
+
+        const quizData = [
+            {
+                id: 'q1',
+                q: "1. What was the primary reason for developing the SR-71 Blackbird?",
+                options: {A: "To transport nuclear weapons.", B: "To replace satellites.", C: "To spy on the Soviet Union safely.", D: "To win an air race."},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 1 states the US needed a way to spy on the Soviet Union without being detected or shot down.<br><br><strong>Chi:</strong> 第一段指出美國需要一種方法來監視蘇聯而不被發現或擊落。"
+            },
+            {
+                id: 'q2',
+                q: "2. Why was the U-2 considered vulnerable?",
+                options: {A: "One was famously shot down.", B: "It could not fly high enough.", C: "It was too expensive.", D: "It required too many crew members."},
+                ans: 'A',
+                expl: "<strong>Eng:</strong> Paragraph 1 mentions the U-2 had proven vulnerable after one was famously shot down in 1960.<br><br><strong>Chi:</strong> 第一段提到 U-2 在 1960 年一架被著名的擊落後證明是脆弱的。"
+            },
+            {
+                id: 'q3',
+                q: "3. What material was primarily used to build the SR-71?",
+                options: {A: "Aluminum", B: "Steel", C: "Carbon Fiber", D: "Titanium"},
+                ans: 'D',
+                expl: "<strong>Eng:</strong> Paragraph 2 states Lockheed built the SR-71 almost entirely out of titanium to solve the heat problem.<br><br><strong>Chi:</strong> 第二段指出洛克希德幾乎完全用鈦建造 SR-71 以解決熱量問題。"
+            },
+            {
+                id: 'q4',
+                q: "4. Where did the US acquire the titanium?",
+                options: {A: "From Nevada.", B: "Covertly from the Soviet Union.", C: "From the UK.", D: "Recycled from battleships."},
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 2 mentions the CIA had to covertly purchase the metal from the Soviet Union.<br><br><strong>Chi:</strong> 第二段提到中央情報局不得不從蘇聯秘密購買這種金屬。"
+            },
+            {
+                id: 'q5',
+                q: "5. Why did the SR-71 leak fuel on the ground?",
+                options: {A: "Damaged fuel tanks.", B: "Mechanics' error.", C: "Gaps designed for thermal expansion.", D: "Corrosive fuel."},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 2 explains the plane was built with gaps to accommodate expansion, sealing only at high speeds.<br><br><strong>Chi:</strong> 第二段解釋飛機留有縫隙以適應膨脹，只有在高速時才會密封。"
+            },
+            {
+                id: 'q6',
+                q: "6. What was the SR-71's primary defense?",
+                options: {A: "Jamming devices.", B: "Armor plating.", C: "Machine guns.", D: "Accelerating to outrun missiles."},
+                ans: 'D',
+                expl: "<strong>Eng:</strong> Paragraph 3 states the pilot had a simple protocol: accelerate.<br><br><strong>Chi:</strong> 第三段指出飛行員有一個簡單的協議：加速。"
+            },
+            {
+                id: 'q7',
+                q: "7. Approximately how many missiles were fired at the SR-71?",
+                options: {A: "None", B: "Around 100", C: "More than 4,000", D: "Less than 10"},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 3 mentions more than 4,000 missiles were fired at Blackbirds.<br><br><strong>Chi:</strong> 第三段提到有超過 4,000 枚飛彈射向黑鳥。"
+            },
+            {
+                id: 'q8',
+                q: "8. What did the crew wear?",
+                options: {A: "Standard uniforms.", B: "Full-pressure space suits.", C: "Scuba gear.", D: "Winter coats."},
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 4 states the crew wore full-pressure space suits.<br><br><strong>Chi:</strong> 第四段指出機組人員穿著全壓力太空衣。"
+            },
+            {
+                id: 'q9',
+                q: "9. Why was the SR-71 retired?",
+                options: {A: "Too slow.", B: "Crashed too often.", C: "High costs and advanced satellites.", D: "Pilots refused to fly it."},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 5 cites financial reasons and advanced spy satellites.<br><br><strong>Chi:</strong> 第五段引用了財政原因和先進的間諜衛星。"
+            },
+            {
+                id: 'q10',
+                q: "10. What is the \"Skunk Works\"?",
+                options: {A: "A chemical factory.", B: "A secret division of Lockheed.", C: "A Soviet spy agency.", D: "An engine name."},
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 1 introduces Lockheed’s secret \"Skunk Works\" division.<br><br><strong>Chi:</strong> 第一段介紹了洛克希德秘密「臭鼬工廠」部門。"
+            },
+            {
+                id: 'q11',
+                q: "11. \"Covertly\" is closest in meaning to:",
+                options: {A: "Openly", B: "Secretly", C: "Quickly", D: "Legally"},
+                ans: 'B',
+                expl: "<strong>Eng:</strong> \"Covertly\" means secretly.<br><br><strong>Chi:</strong> \"Covertly\" 意指秘密地。"
+            },
+            {
+                id: 'q12',
+                q: "12. \"Like a sieve\" describes:",
+                options: {A: "Speed", B: "Data gathering", C: "Leaking fuel", D: "Pilot protection"},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> A sieve has holes; describes the fuel leaks.<br><br><strong>Chi:</strong> 篩子有孔；描述燃油洩漏。"
+            },
+            {
+                id: 'q13',
+                q: "13. \"Curvature of the Earth\" refers to:",
+                options: {A: "Mountains", B: "The rounded shape of the planet.", C: "Flight path", D: "Map"},
+                ans: 'B',
+                expl: "<strong>Eng:</strong> At 85,000 feet, you can see the curve of the planet.<br><br><strong>Chi:</strong> 在 85,000 英尺高空，可見行星曲線。"
+            },
+            {
+                id: 'q14',
+                q: "14. Who was Kelly Johnson?",
+                options: {A: "A pilot.", B: "The President.", C: "The legendary engineer.", D: "A spy."},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 1 identifies him as the legendary engineer.<br><br><strong>Chi:</strong> 第一段確認他是傳奇工程師。"
+            },
+            {
+                id: 'q15',
+                q: "15. What is the main legacy of the SR-71?",
+                options: {A: "Waste of money.", B: "Titanium failure.", C: "Symbol of daring innovation.", D: "Started a war."},
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 5 calls it a testament to daring innovation.<br><br><strong>Chi:</strong> 第五段稱其為大膽創新的證明。"
+            }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic - specific to SR-71
+                if (index === 0) insertImage(displayArea, 'p1.jpg', 'SR-71 Blackbird in Flight');
+                else if (index === 1) insertImage(displayArea, 'p2.jpg', 'Titanium Structure and Heat');
+                else if (index === 2) insertImage(displayArea, 'p3.jpg', 'Outrunning Missiles');
+                else if (index === 3) insertImage(displayArea, 'p4.jpg', 'Pilot in Pressure Suit');
+                else if (index === 4) insertImage(displayArea, 'p5.jpg', 'Legacy and Museum Exhibit');
+                
+                p = document.createElement('p');
+                p.className = "mb-10 text-gray-800 leading-relaxed"; 
+                displayArea.appendChild(p);
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-yellow-100 rounded transition duration-200 leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                const divZh = document.createElement('div');
+                divZh.className = 'translation-text hidden';
+                divZh.innerText = item.zh;
+                p.appendChild(divZh);
+            });
+        }
+
+        function insertImage(container, filename, altText) {
+             const img = document.createElement('img');
+             img.src = `English-Reading-125-images/${filename}`; 
+             img.alt = altText;
+             img.width = 1300;
+             img.height = 576;
+             img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-lg hover:shadow-2xl transition duration-500 border border-gray-100";
+             img.onerror = function() { this.style.display = 'none'; };
+             container.appendChild(img);
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                // Keep the original punctuation for display
+                const originalWord = word;
+                // Remove punctuation for lookup
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                const wordMapping = {
+                    "detected": "detection",
+                    "exceeding": "exceed",
+                    "altitudes": "altitude",
+                    "friction": "friction",
+                    "ironically": "ironically",
+                    "covertly": "covertly",
+                    "expanded": "expand",
+                    "leaked": "leak",
+                    "leaks": "leak",
+                    "refuelings": "refueling",
+                    "recounted": "recount",
+                    "reactivated": "reactivate",
+                    "exhibits": "exhibit",
+                    // Plurals and simple forms
+                    "spying": "espionage", // Contextual map
+                    "divisions": "division",
+                    "marvels": "marvel",
+                    "fuselages": "fuselage",
+                    "protocols": "protocol",
+                    "accelerates": "accelerate",
+                    "accelerated": "accelerate",
+                    "reconnaissances": "reconnaissance",
+                    "refuels": "refueling",
+                    "recounts": "recount",
+                    "dominances": "dominance",
+                    "reactivates": "reactivate",
+                    "leaking": "leak",
+                    "expanding": "expand"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                // Check for singular/plural or simple verb forms if not mapped
+                if (!vocabulary[targetKey]) {
+                    if (targetKey.endsWith('s') && vocabulary[targetKey.slice(0, -1)]) {
+                        targetKey = targetKey.slice(0, -1);
+                    } else if (targetKey.endsWith('ed') && vocabulary[targetKey.slice(0, -2)]) {
+                        targetKey = targetKey.slice(0, -2);
+                    } else if (targetKey.endsWith('ing') && vocabulary[targetKey.slice(0, -3)]) {
+                        targetKey = targetKey.slice(0, -3);
+                    }
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1 text-gray-500 hover:text-pink-500" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-blue-800 text-2xl mb-2">${targetKey}</div>
+                        <div class="mb-3 text-lg font-medium text-gray-800">${data.trans}</div>
+                        <div class="text-lg text-gray-600 italic border-t border-gray-200 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        window.speakAndShowDef = function(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.speakWord = function(word) {
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.toggleFavorite = function(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#ec4899', '#f43f5e']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+
+            window.saveUserData();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            tableIcons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+        }
+
+        window.openVocabModal = function() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        window.openStudyModal = function() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p class="text-lg">您的學習清單是空的。</p><p class="text-sm text-gray-400 mt-2">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        window.openMistakeModal = function() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-500"></i><p class="text-lg font-bold">太棒了！</p><p class="text-sm text-gray-400 mt-2">您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-50 border-b border-red-100 text-red-800">
+                                <th class="p-4 font-bold w-4/12 rounded-tl-lg">題目 (Question)</th>
+                                <th class="p-4 font-bold w-2/12">您的答案</th>
+                                <th class="p-4 font-bold w-2/12">正確答案</th>
+                                <th class="p-4 font-bold w-4/12 rounded-tr-lg">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-red-50/50 transition">
+                            <td class="p-4 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-4 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-4 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-4 text-gray-600 text-sm leading-relaxed">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse text-gray-800">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200 text-gray-700">
+                            <th class="p-4 font-bold w-1/12 text-lg rounded-tl-lg">收藏</th>
+                            <th class="p-4 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-4 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-4 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-4 font-bold w-5/12 text-lg rounded-tr-lg">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-blue-50/50 transition duration-150">
+                        <td class="p-4 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition text-gray-400 hover:text-pink-500"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        
+                        <td class="p-4 font-bold text-blue-700 text-xl md:text-2xl cursor-pointer hover:text-blue-900 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition text-blue-400"></i>
+                        </td>
+
+                        <td class="p-4 text-base md:text-lg"><span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-4 text-gray-700 text-lg md:text-xl font-medium">${data.trans}</td>
+                        <td class="p-4 text-gray-500 text-lg md:text-xl italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        window.printList = function(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: SR-71 Blackbird</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        window.toggleTranslation = function() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.remove('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.add('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        window.togglePlay = function() {
+            if (isPlaying) {
+                window.pauseAudio();
+            } else {
+                window.playAudio();
+            }
+        }
+
+        window.playAudio = function() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            window.speakSentence(currentSentenceIndex);
+        }
+
+        window.speakSentence = function(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    window.highlightSentence(-1);
+                    currentSentenceIndex = 0;
+                    window.saveUserData();
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            window.highlightSentence(index);
+            window.updateProgressBar();
+            window.saveUserData();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        window.speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        window.pauseAudio = function() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        window.restartAudio = function() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            window.updateProgressBar();
+            window.highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => window.speakSentence(0), 100);
+            }
+        }
+        
+        window.playFromSentence = function(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            window.speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        window.highlightSentence = function(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        window.updateProgressBar = function() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        window.toggleText = function() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.remove('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.add('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md hover:border-blue-300';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-800 mb-4 text-xl">${item.q}</p>
+                    <div class="space-y-3" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-4 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-700 font-medium text-lg">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box mt-4 bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
+                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p>${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            userAnswers[questionId] = selectedKey;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                if(!isRestoring) window.playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                if(!isRestoring) userScore += (100 / 15); 
+            } else {
+                if(!isRestoring) window.playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-600', 'bg-red-100');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#16a34a';
+                explBox.style.backgroundColor = '#f0fdf4';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-700";
+            } else {
+                explBox.style.borderLeftColor = '#dc2626';
+                explBox.style.backgroundColor = '#fef2f2';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-700";
+            }
+
+            if(!isRestoring) window.saveUserData();
+        }
+
+        window.showFinalScore = function() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Maverick level! You are a true ace pilot!";
+                } else {
+                    feedback.innerText = "Great job! You're ready for TOPGUN.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Keep training, wingman.";
+            } else {
+                feedback.innerText = "You crashed and burned. Try listening again.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                renderArticle();
+                renderQuiz();
+                initVoice();
+            });
+        } else {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        }
+    </script>
+</body>
+</html>
