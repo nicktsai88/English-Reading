@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：Superyachts: Floating Palaces (Firebase Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #f9fafb; /* Light background */
+            color: #111827; /* Dark text */
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #fef08a; /* yellow-200 */
+            color: #854d0e; /* yellow-800 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(234, 179, 8, 0.5);
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff; 
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #16a34a !important;
+            color: #166534;
+        }
+        .quiz-option.wrong {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #dc2626 !important;
+            color: #991b1b;
+            opacity: 0.9;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.3em; /* Increased for better readability */
+            color: #374151;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb; /* Blue border */
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+            border: 1px solid #e5e7eb;
+            border-left-width: 4px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #2563eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            min-width: 240px; 
+            max-width: 320px;
+            background-color: #ffffff; 
+            color: #1f2937;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            line-height: 1.5;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+            filter: drop-shadow(0 2px 1px rgba(0,0,0,0.05));
+        }
+        
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #3730a3;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block; /* Makes it start on a new line */
+            font-size: 0.95em;
+            color: #4b5563;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            padding-left: 14px;
+            border-left: 4px solid #cbd5e1; /* Gray bar like the screenshot */
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #60a5fa;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Login Modal Specific */
+        #login-modal {
+            display: flex; /* Initially visible */
+            z-index: 2000;
+        }
+        #login-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Status Dot Styles */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 0;
+            transition: all 0.3s ease; 
+        }
+        /* Dynamic Border Colors for Container */
+        .status-container.loading {
+            border-color: #fbbf24;
+            box-shadow: 0 0 5px rgba(251, 191, 36, 0.4);
+        }
+        .status-container.success {
+            border-color: #34d399;
+            box-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+        }
+        .status-container.error {
+            border-color: #f87171;
+            box-shadow: 0 0 5px rgba(248, 113, 113, 0.4);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: #34d399; box-shadow: 0 0 8px #34d399; }
+        .status-dot.error { background-color: #f87171; box-shadow: 0 0 8px #f87171; }
+        .status-text { font-size: 0.75rem; color: #e5e7eb; font-weight: 500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background-color: #ffffff;
+            color: #2563eb; 
+            border: 1px solid #2563eb;
+            transition: all 0.2s ease-in-out;
+            font-weight: bold;
+        }
+        .action-btn:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                color: black;
+                background: white;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+                color: black;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-12 text-gray-900">
+
+    <!-- Navbar / Audio Player Sticky Header -->
+    <div class="sticky top-0 z-50 bg-slate-900 text-white shadow-lg transition-all duration-300 no-print" id="audio-player-bar">
+        <div class="w-[95%] max-w-[1800px] mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title, User, Badges -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                            <i class="fas fa-ship text-lg"></i>
+                        </div>
+                        
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-3">
+                                <div id="header-username" class="text-sm font-bold text-blue-200 flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                                </div>
+                                <div class="status-container" id="cloud-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500/50 text-yellow-300 text-[10px] md:text-xs font-bold bg-yellow-900/30 whitespace-nowrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Level: CEFR B2</span>
+                                </div>
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500/50 text-cyan-300 text-[10px] md:text-xs font-bold bg-cyan-900/30 whitespace-nowrap">
+                                    <i class="fas fa-file-word"></i>
+                                    <span>Words: ~750</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-500 transition shrink-0 ml-auto">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4 hidden md:flex">
+                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition hover:bg-blue-500">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t border-slate-700 md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-green-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                    
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/20 flex items-center justify-center transition ml-1">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="w-[95%] max-w-[1800px] mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+             <div class="w-full h-64 md:h-96 bg-gray-100 relative overflow-hidden group">
+                <img 
+                    src="English-Reading-126-images/p0.jpg" 
+                    alt="Superyachts: Floating Palaces" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium bg-black/60 w-fit px-4 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                        <i class="fas fa-search-location"></i> Listening Focus: Luxury Lifestyle & Maritime Industry
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="window.openVocabModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-blue-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">完整單字表 (Vocabulary)</h3>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-blue-500"></i>
+            </button>
+
+            <button onclick="window.openStudyModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-pink-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">我的學習清單 (Favorites)</h3>
+                        <p class="text-sm text-gray-500" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-pink-500"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Superyachts: Floating Palaces</h2>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 text-sm text-gray-700 rounded-r-lg">
+                <i class="fas fa-mouse-pointer mr-1 text-blue-600"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-white p-6 rounded-full mb-4 border border-gray-200 shadow-xl">
+                    <i class="fas fa-ear-listen text-4xl text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Listen Carefully</h3>
+                <p class="text-gray-500 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="window.toggleText()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg font-bold">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <div id="article-display" class="prose max-w-none text-gray-700 text-xl md:text-2xl leading-loose tracking-wide space-y-8 font-serif md:font-sans">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            
+            <!-- Quiz Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-200 pb-4">
+                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <span class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-base">
+                        <i class="fas fa-pen"></i>
+                    </span>
+                    Reading Comprehension Quiz (15 Questions)
+                </h3>
+                
+                <button onclick="window.resetQuiz()" class="action-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
+                </button>
+            </div>
+            
+            <form id="quizForm" class="space-y-10">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-10 pt-8 border-t border-gray-200 flex flex-col items-center gap-4">
+                <button type="button" onclick="window.showFinalScore()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 px-12 rounded-full shadow-xl transition transform hover:-translate-y-1 active:scale-95">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-slate-50 p-8 rounded-2xl border border-slate-200 animate-fade-in relative shadow-inner">
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-6xl font-extrabold text-blue-600 my-4" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-6 text-lg"></p>
+                    
+                    <button id="mistake-review-btn" onclick="window.openMistakeModal()" class="hidden w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2 mx-auto">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col items-center justify-center gap-6 shadow-2xl border-0">
+            <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                <i class="fas fa-user-astronaut text-4xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">歡迎來到英語閱讀挑戰</h2>
+            <p class="text-gray-500 text-base mb-2">請輸入名字以儲存您的學習進度</p>
+            
+            <div class="w-full space-y-4 max-w-xs">
+                <input type="text" id="username-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-lg transition" placeholder="輸入您的名字 (Enter Name)">
+                <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    開始閱讀 (Start)
+                </button>
+            </div>
+
+            <div class="w-full border-t border-gray-200 pt-6 mt-4">
+                <p class="text-xs text-gray-400 uppercase font-bold mb-4 tracking-wider">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-400">載入挑戰者名單中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <button onclick="window.closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="vocab-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('vocab')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="window.closeModal('vocab-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="window.closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="study-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('study')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="window.closeModal('study-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-red-700"><i class="fas fa-times-circle text-red-500 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="window.closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-red-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="mistake-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('mistakes')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="window.closeModal('mistake-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <!-- Firebase & App Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-126';
+        const DOC_GLOBAL = 'global';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCan2_Rc26HsLkOPr0i5QrgdjAYyqcigJ0",
+            authDomain: "english-reading-6b506.firebaseapp.com",
+            projectId: "english-reading-6b506",
+            storageBucket: "english-reading-6b506.firebasestorage.app",
+            messagingSenderId: "494747176273",
+            appId: "1:494747176273:web:585487fadb29b2e5e2d770",
+            measurementId: "G-4JD6R9MRPQ"
+        };
+
+        let app, db, auth;
+        let isFirebaseReady = false;
+        let currentUser = null; 
+        let unsubscribeUser = null; 
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                updateConnectionStatus('loading', '讀取資料中...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                
+                isFirebaseReady = true;
+                console.log("Firebase Connected");
+                
+                // Listen to Global Users List for Quick Login
+                onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { users: [] };
+                    renderQuickLogin(data.users || []);
+                }, (error) => {
+                    console.error("Global listener error:", error);
+                    updateConnectionStatus('error', '雲端同步失敗');
+                });
+
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                updateConnectionStatus('error', '連線錯誤');
+            }
+        }
+
+        // --- User Logic ---
+        window.startLogin = async (name) => {
+            if (!name || !isFirebaseReady) return;
+            const cleanName = name.trim();
+            if (cleanName.length === 0) return;
+
+            currentUser = { name: cleanName };
+            document.getElementById('login-modal').style.display = 'none';
+            
+            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
+
+            try {
+                const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
+                await setDoc(globalRef, {
+                    users: arrayUnion({ name: cleanName })
+                }, { merge: true });
+
+                subscribeToUserData(cleanName);
+            } catch (e) {
+                console.error("Login save error:", e);
+            }
+        };
+
+        function subscribeToUserData(userName) {
+            if (unsubscribeUser) unsubscribeUser();
+            
+            const userDocRef = doc(db, COLLECTION_NAME, `user_${userName}`);
+            
+            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                updateConnectionStatus('success', '已同步');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (data.favorites) {
+                        favoriteWords = new Set(data.favorites);
+                        document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+                        if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+                    }
+
+                    if (data.progressIndex !== undefined && data.progressIndex > 0) {
+                        if (!isPlaying && data.progressIndex > currentSentenceIndex) {
+                            currentSentenceIndex = data.progressIndex;
+                            window.updateProgressBar();
+                            window.highlightSentence(currentSentenceIndex);
+                        }
+                    }
+
+                    if (data.quizAnswers) {
+                         const serverAnswers = data.quizAnswers;
+                         
+                         userScore = 0;
+                         wrongAnswers = [];
+                         userAnswers = serverAnswers;
+                         
+                         Object.keys(serverAnswers).forEach(qid => {
+                             const ans = serverAnswers[qid];
+                             const qObj = quizData.find(q => q.id === qid);
+                             
+                             if(qObj) {
+                                 if(ans === qObj.ans) userScore += (100/15);
+                                 else wrongAnswers.push({q: qObj, yourAns: ans});
+                             }
+
+                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
+                             if (!alreadyAnswered) {
+                                 window.checkAnswer(qid, ans, true); 
+                             }
+                         });
+                    }
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        window.saveUserData = async () => {
+            if (!currentUser || !isFirebaseReady) return;
+            updateConnectionStatus('loading', '同步中...');
+            
+            try {
+                const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                await setDoc(userDocRef, {
+                    favorites: Array.from(favoriteWords),
+                    mistakes: wrongAnswers,
+                    progressIndex: currentSentenceIndex,
+                    quizAnswers: userAnswers, 
+                    lastUpdated: new Date()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+                updateConnectionStatus('error', '存檔失敗');
+            }
+        };
+
+        window.resetQuiz = async () => {
+            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
+            
+            userScore = 0;
+            wrongAnswers = [];
+            userAnswers = {};
+            
+            document.querySelectorAll('.quiz-option').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'disabled');
+            });
+            document.querySelectorAll('.quiz-option input').forEach(el => {
+                el.disabled = false;
+                el.checked = false;
+            });
+            document.querySelectorAll('.quiz-option div').forEach(el => {
+                const key = el.id.split('-').pop(); 
+                el.className = "w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg";
+                el.innerHTML = key;
+            });
+            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('score-card').classList.add('hidden');
+
+            if (currentUser && isFirebaseReady) {
+                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                 await updateDoc(userDocRef, {
+                     quizAnswers: deleteField(),
+                     mistakes: deleteField()
+                 });
+            }
+            
+            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function renderQuickLogin(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-400 py-2">尚無挑戰者紀錄，歡迎加入！</span>';
+                return;
+            }
+
+            const recentUsers = users.slice().reverse().slice(0, 5); 
+            
+            recentUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-full text-sm transition shadow-sm";
+                btn.innerText = u.name;
+                btn.onclick = () => {
+                    document.getElementById('username-input').value = u.name;
+                    window.startLogin(u.name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateConnectionStatus(status, text) {
+            const container = document.getElementById('cloud-status');
+            const dot = container.querySelector('.status-dot');
+            const label = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; 
+            dot.classList.add(status); 
+            label.innerText = text;
+
+            container.className = 'status-container'; 
+            container.classList.add(status);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            const name = document.getElementById('username-input').value;
+            window.startLogin(name);
+        };
+        
+        initFirebase();
+
+
+        // ---------------------------------------------------------
+        // --- Existing App Logic (Attached to Window) ---
+        // ---------------------------------------------------------
+        
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
+        let userAnswers = {}; 
+        let audioCtx;
+
+        const vocabulary = {
+            "pinnacle": { pos: "n.", trans: "巔峰；極點", example: "Winning the championship was the pinnacle of his career." },
+            "realm": { pos: "n.", trans: "領域；範圍", example: "He is a respected expert in the realm of neuroscience." },
+            "exclusive": { pos: "adj.", trans: "獨有的；高檔的", example: "They stayed at a very exclusive hotel in Paris." },
+            "vessel": { pos: "n.", trans: "船隻；艦艇", example: "The Coast Guard intercepted a suspicious vessel." },
+            "navigate": { pos: "v.", trans: "航行；導航", example: "The captain had to navigate carefully through the fog." },
+            "colossal": { pos: "adj.", trans: "巨大的；龐大的", example: "They are building a colossal statue in the city center." },
+            "unparalleled": { pos: "adj.", trans: "無與倫比的", example: "The museum offers an unparalleled collection of ancient art." },
+            "prestige": { pos: "n.", trans: "聲望；威信", example: "The job offers a high salary and a lot of prestige." },
+            "sanctuary": { pos: "n.", trans: "庇護所；避難所", example: "For many, the library is a quiet sanctuary for studying." },
+            "secluded": { pos: "adj.", trans: "隱蔽的；與世隔絕的", example: "We found a secluded beach far away from the tourists." },
+            "whim": { pos: "n.", trans: "突發奇想；心血來潮", example: "He bought the expensive watch on a whim." },
+            "amenity": { pos: "n.", trans: "設施；便利設施", example: "The hotel offers every modern amenity you could want." },
+            "staggering": { pos: "adj.", trans: "令人震驚的", example: "The project will cost a staggering two billion dollars." },
+            "self-contained": { pos: "adj.", trans: "自給自足的；設備齊全的", example: "The resort is completely self-contained with its own shops." },
+            "extravagant": { pos: "adj.", trans: "奢華的；揮霍的", example: "She threw an extravagant party for her birthday." },
+            "bespoke": { pos: "adj.", trans: "客製化的；訂製的", example: "He wore a beautifully tailored bespoke suit." },
+            "discreetly": { pos: "adv.", trans: "謹慎地；不引人注目地", example: "He coughed discreetly to get her attention." },
+            "stern": { pos: "n.", trans: "船尾", example: "The name of the ship was painted on the stern." },
+            "tender": { pos: "n.", trans: "接駁艇；附屬船", example: "The cruise ship used a tender to bring passengers ashore." },
+            "ferry": { pos: "v.", trans: "運送；渡運", example: "Helicopters were used to ferry supplies to the island." },
+            "dedication": { pos: "n.", trans: "奉獻；盡職", example: "Her dedication to her studies resulted in excellent grades." },
+            "lavish": { pos: "adj.", trans: "奢華的；慷慨的", example: "They hosted a lavish banquet for the visiting diplomats." },
+            "labyrinth": { pos: "n.", trans: "迷宮", example: "The old city is a labyrinth of narrow streets and alleys." },
+            "stabilization": { pos: "n.", trans: "穩定（系統/作用）", example: "The camera has built-in image stabilization." },
+            "turbulent": { pos: "adj.", trans: "狂暴的；動盪的", example: "The plane flew through some heavy, turbulent weather." },
+            "desalination": { pos: "n.", trans: "海水淡化", example: "The desert country relies on desalination for fresh water." },
+            "treacherous": { pos: "adj.", trans: "危險的；暗藏陷阱的", example: "The icy roads were incredibly treacherous to drive on." },
+            "impeccable": { pos: "adj.", trans: "無懈可擊的；完美的", example: "His timing during the performance was absolutely impeccable." },
+            "illusion": { pos: "n.", trans: "幻覺；錯覺", example: "Mirrors can create the illusion of a larger space." },
+            "scrutiny": { pos: "n.", trans: "仔細審查；監視", example: "The politician's actions came under intense media scrutiny." },
+            "notorious": { pos: "adj.", trans: "臭名昭著的", example: "The neighborhood is notorious for its high crime rate." },
+            "footprint": { pos: "n.", trans: "足跡；（碳）足跡", example: "We must try to reduce our carbon footprint." },
+            "transformation": { pos: "n.", trans: "轉變；變革", example: "The caterpillar undergoes a complete transformation." },
+            "propulsion": { pos: "n.", trans: "推進（力）", example: "The submarine uses nuclear power for propulsion." },
+            "discharge": { pos: "v.", trans: "排放；排出", example: "The factory was fined for attempting to discharge chemicals." },
+            "fragile": { pos: "adj.", trans: "脆弱的", example: "Be careful with that box; the glass inside is very fragile." },
+            "endeavor": { pos: "n.", trans: "努力；嘗試；活動", example: "Climbing the mountain was a dangerous endeavor." },
+            "hurdle": { pos: "n.", trans: "障礙；難關", example: "Passing the exam is the first hurdle to getting the license." },
+            "exorbitant": { pos: "adj.", trans: "過高的；高昂的", example: "The prices at that luxury restaurant are exorbitant." },
+            "charter": { pos: "v.", trans: "包租（船、飛機等）", example: "They decided to charter a bus for the school trip." },
+            "itinerary": { pos: "n.", trans: "行程表；旅行路線", example: "We planned our vacation itinerary weeks in advance." },
+            "privilege": { pos: "n.", trans: "特權；殊榮", example: "Education should be a right, not a privilege." },
+            "testament": { pos: "n.", trans: "證明；見證", example: "The successful project is a testament to their teamwork." },
+            "relentless": { pos: "adj.", trans: "不懈的；持續不斷的", example: "His relentless practice made him the best player." },
+            "opulence": { pos: "n.", trans: "奢華；富麗堂皇", example: "The sheer opulence of the palace left the tourists speechless." }
+        };
+
+        const articleData = [
+            // Paragraph 1
+            { en: "In the realm of ultimate luxury and exclusive lifestyles, nothing quite captures the imagination like a superyacht.", zh: "在極致奢華與專屬生活方式的領域中，沒有什麼比超級遊艇更能抓住人們的想像力了。" },
+            { en: "These vessels have evolved far beyond their origins as simple recreational boats; today, they are best described as floating palaces that navigate the world's most glamorous coastlines.", zh: "這些船隻早已超越了其作為簡單休閒船的起源；如今，將它們描述為航行於世界上最迷人海岸線的海上移動皇宮最為貼切。" },
+            { en: "While the maritime industry generally defines a superyacht as a privately owned vessel measuring over 24 meters in length, the modern standard for billionaires has expanded into the categories of \"megayachts\" and \"gigayachts,\" some of which stretch well over 100 meters.", zh: "雖然航海業通常將長度超過 24 公尺的私人船隻定義為超級遊艇，但現代億萬富翁的標準已經擴展到了「巨型遊艇 (megayachts)」和「超巨型遊艇 (gigayachts)」的類別，其中一些長度甚至遠超過 100 公尺。" },
+            { en: "These colossal ships represent the absolute pinnacle of wealth, offering their owners an unparalleled level of privacy, prestige, and freedom.", zh: "這些巨大的船隻代表了財富的絕對巔峰，為船主提供了無與倫比的隱私、聲望和自由。" },
+            { en: "The allure of the ocean, combined with absolute control over one's environment, makes the superyacht the ultimate sanctuary.", zh: "海洋的魅力，加上對自身環境的絕對控制權，使超級遊艇成為終極的庇護所。" },
+            { en: "Owners can anchor in the secluded bays of the Caribbean during winter and cruise the glittering French Riviera in the summer, completely dictated by their personal whims.", zh: "船主可以在冬天停泊在加勒比海隱蔽的海灣，夏天則巡航於閃耀的法國蔚藍海岸，完全由他們個人的心血來潮所決定。" },
+
+            // Paragraph 2
+            { en: "The amenities found aboard these maritime masterpieces are truly staggering and limited only by the owner’s imagination and bank account.", zh: "這些海上傑作所配備的設施令人嘆為觀止，其限制僅在於船主的想像力和銀行帳戶。" },
+            { en: "A modern superyacht is custom-built to be a luxurious, self-contained resort.", zh: "現代超級遊艇是為了成為一個奢華、自給自足的度假村而客製化建造的。" },
+            { en: "It is entirely common to find features such as multiple infinity pools, fully equipped gymnasiums, and state-of-the-art cinemas.", zh: "擁有多座無邊際泳池、設備齊全的健身房和最先進的電影院是司空見慣的事。" },
+            { en: "However, the most extravagant vessels take bespoke luxury to astonishing new heights.", zh: "然而，最奢華的船隻將客製化奢華推向了令人驚嘆的新高度。" },
+            { en: "They may boast onboard waterfalls, glass-bottomed observation lounges, and internal docking stations for personal submarines.", zh: "它們可能擁有船上瀑布、玻璃底觀景休息室以及供個人潛水艇使用的內部停靠站。" },
+            { en: "Exterior decks often feature certified helipads, allowing owners and their high-profile guests to arrive or depart discreetly without ever stepping foot in a public airport.", zh: "外部甲板通常配有經過認證的直升機停機坪，允許船主及其高知名度的客人謹慎地抵達或離開，而無需踏足公共機場。" },
+            { en: "For water sports enthusiasts, the \"beach club\" at the stern folds out directly to the sea.", zh: "對於水上運動愛好者來說，船尾的「海灘俱樂部」可直接向海面展開。" },
+            { en: "Some even carry matching bespoke speedboats, known as tenders, specifically designed to ferry guests to shallow shores where the massive mother ship cannot go.", zh: "有些甚至攜帶配套的客製化快艇（稱為接駁艇），專門設計用來將客人運送到巨大的母船無法到達的淺灘。" },
+
+            // Paragraph 3
+            { en: "Yet, the true magic of a superyacht relies just as much on unseen engineering and human dedication as it does on lavish decor.", zh: "然而，超級遊艇真正的魔力，同樣依賴於看不見的工程技術和人員的奉獻，而不僅僅是奢華的裝飾。" },
+            { en: "Beneath the stunning interior lies a labyrinth of advanced technology.", zh: "在令人驚豔的內裝之下，隱藏著如同迷宮般的先進科技。" },
+            { en: "Complex stabilization systems work constantly to ensure a remarkably smooth ride, preventing seasickness even in turbulent waters, while onboard desalination plants convert seawater into thousands of liters of fresh drinking water daily.", zh: "複雜的穩定系統持續運作以確保極其平穩的航行，即使在波濤洶湧的水域也能防止暈船，而船上的海水淡化設備每天能將海水轉化為數千公升的新鮮飲用水。" },
+            { en: "Furthermore, operating such a sophisticated machine requires a highly trained, dedicated crew.", zh: "此外，操作如此精密的機器需要訓練有素、盡職盡責的船員。" },
+            { en: "It is not unusual for the staff-to-guest ratio to be two-to-one or even higher.", zh: "員工與客人的比例達到二比一甚至更高是很常見的。" },
+            { en: "From the captain navigating treacherous reefs to Michelin-starred chefs preparing gourmet meals, and stewards providing impeccable around-the-clock service, the crew works tirelessly behind the scenes to maintain an illusion of effortless perfection.", zh: "從在危險礁石中導航的船長，到準備精緻美食的米其林星級主廚，再到提供無懈可擊的全天候服務的服務員，船員們在幕後不知疲倦地工作，以維持一種毫不費力的完美幻覺。" },
+
+            // Paragraph 4
+            { en: "Despite their glamorous appeal, superyachts have recently faced intense scrutiny regarding their environmental impact.", zh: "儘管超級遊艇極具魅力，但它們最近在環境影響方面面臨了嚴格的審查。" },
+            { en: "Traditional luxury vessels are notorious for their massive carbon footprints, consuming thousands of liters of diesel fuel simply to cruise from one port to another.", zh: "傳統的奢華船隻以其巨大的碳足跡而臭名昭著，僅僅為了從一個港口巡航到另一個港口，就會消耗數千公升的柴油。" },
+            { en: "In response to growing ecological concerns and stricter maritime regulations, the industry is undergoing a significant transformation towards sustainability.", zh: "為了應對日益增長的生態擔憂和更嚴格的航海法規，該行業正在經歷向永續發展的重大轉型。" },
+            { en: "Naval architects are increasingly integrating eco-friendly technologies into their new designs.", zh: "造船工程師正越來越多地將環保技術整合到他們的新設計中。" },
+            { en: "This includes the development of hybrid-electric propulsion systems, solar-paneled sails, and even hydrogen fuel cells that emit only water vapor.", zh: "這包括開發混合動力電力推進系統、太陽能電池板風帆，甚至是只排放水蒸氣的氫燃料電池。" },
+            { en: "Furthermore, specialized waste management systems are being installed to ensure that nothing harmful is discharged into fragile marine ecosystems, proving that luxury and environmental responsibility can potentially coexist.", zh: "此外，專門的廢物處理系統正在被安裝，以確保沒有任何有害物質被排放到脆弱的海洋生態系統中，這證明了奢華與環境責任是有可能共存的。" },
+
+            // Paragraph 5
+            { en: "Ultimately, owning a superyacht is an economic endeavor of epic proportions.", zh: "歸根結底，擁有一艘超級遊艇是一項規模龐大的經濟活動。" },
+            { en: "Purchasing the vessel is only the initial financial hurdle; the annual maintenance, docking fees, fuel, insurance, and crew salaries typically amount to about ten percent of the yacht's original purchase price.", zh: "購買船隻只是最初的財務障礙；每年的維護、停泊費、燃料、保險和船員薪水通常高達遊艇最初購買價格的百分之十左右。" },
+            { en: "Because of these exorbitant ongoing costs, many owners choose to charter their yachts to wealthy vacationers when they are not personally using them.", zh: "由於這些高昂的持續費用，許多船主選擇在他們個人不使用時，將遊艇包租給富有的度假者。" },
+            { en: "For a few hundred thousand dollars a week, individuals can experience the lifestyle of a billionaire, complete with a tailored itinerary and a private chef.", zh: "只需每週花費數十萬美元，個人就能體驗億萬富翁的生活方式，並配備量身定制的行程和私人廚師。" },
+            { en: "Whether purchased or rented, stepping aboard a superyacht offers a glimpse into a world of limitless privilege.", zh: "無論是購買還是租賃，踏上超級遊艇都能讓人一窺無限特權的世界。" },
+            { en: "They stand as testaments to human engineering and the relentless pursuit of perfection, remaining the ultimate status symbol as they sail toward the horizon.", zh: "它們是人類工程技術和不懈追求完美的證明，在它們以壯麗的姿態駛向地平線時，依然是世界菁英的終極地位象徵。" }
+        ];
+
+        const quizData = [
+            {
+                id: 'q1',
+                q: "1. What is the main purpose of the first paragraph in the article?",
+                options: {
+                    A: "To describe the technical specifications of standard yachts.", 
+                    B: "To outline the environmental impact of gigayachts.", 
+                    C: "To introduce superyachts as the ultimate symbol of wealth.", 
+                    D: "To compare the prices of various luxury recreational boats."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 1 establishes superyachts as \"floating palaces\" representing the \"pinnacle of wealth.\"<br><br><strong>Chi:</strong> 第一段將超級遊艇確立為代表「財富巔峰」的「海上移動皇宮」。"
+            },
+            {
+                id: 'q2',
+                q: "2. According to the text, what distinguishes a \"gigayacht\" from a traditional superyacht?",
+                options: {
+                    A: "It is primarily used for commercial fishing operations.", 
+                    B: "It operates exclusively on hydrogen fuel cell systems.", 
+                    C: "It generally stretches well over one hundred meters in length.", 
+                    D: "It requires significantly fewer crew members to navigate."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 1 mentions that \"gigayachts\" are categories of ships that \"stretch well over 100 meters.\"<br><br><strong>Chi:</strong> 第一段提到「超巨型遊艇」是「長度遠超過 100 公尺」的船隻類別。"
+            },
+            {
+                id: 'q3',
+                q: "3. Why are helipads considered an important feature on extravagant superyachts?",
+                options: {
+                    A: "They provide an emergency landing area for commercial flights.", 
+                    B: "They allow guests to arrive discreetly without using public airports.", 
+                    C: "They generate additional electricity through wind power systems.", 
+                    D: "They serve as a specialized platform for deep-sea scuba diving."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 2 states helipads allow guests \"to arrive or depart discreetly without ever stepping foot in a public airport.\"<br><br><strong>Chi:</strong> 第二段指出停機坪允許客人「謹慎地抵達或離開，而無需踏足公共機場」。"
+            },
+            {
+                id: 'q4',
+                q: "4. What is the primary function of the boats known as \"tenders\"?",
+                options: {
+                    A: "To transport massive amounts of diesel fuel to the mother ship.", 
+                    B: "To carry guests to shallow areas where the large yacht cannot go.", 
+                    C: "To rescue passengers if the main stabilization system breaks down.", 
+                    D: "To provide high-speed entertainment for professional water athletes."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 2 explains tenders are designed \"to ferry guests to shallow shores where the massive mother ship cannot go.\"<br><br><strong>Chi:</strong> 第二段解釋接駁艇的設計是為了「將客人運送到巨大的母船無法到達的淺灘」。"
+            },
+            {
+                id: 'q5',
+                q: "5. How does the article describe the technology hidden beneath the stunning interior?",
+                options: {
+                    A: "As a labyrinth of advanced technology including stabilization systems.", 
+                    B: "As a simple mechanical structure that requires minimal maintenance.", 
+                    C: "As an outdated system that fails frequently in turbulent waters.", 
+                    D: "As a heavily automated network requiring zero human intervention."
+                },
+                ans: 'A',
+                expl: "<strong>Eng:</strong> Paragraph 3 describes it as a \"labyrinth of advanced technology,\" mentioning stabilization and desalination.<br><br><strong>Chi:</strong> 第三段將其描述為「迷宮般的先進科技」，並提到了穩定和海水淡化系統。"
+            },
+            {
+                id: 'q6',
+                q: "6. What does a \"two-to-one\" staff-to-guest ratio imply about the onboard experience?",
+                options: {
+                    A: "The guests are expected to help the crew with basic daily chores.", 
+                    B: "The service is highly personalized, with many staff serving few guests.", 
+                    C: "The yacht is currently understaffed and struggling to maintain order.", 
+                    D: "The crew members must work entirely independent of the captain's orders."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> It means there are two staff members for every one guest, ensuring \"impeccable around-the-clock service.\"<br><br><strong>Chi:</strong> 這意味著每位客人有兩名員工為其服務，確保提供「無懈可擊的全天候服務」。"
+            },
+            {
+                id: 'q7',
+                q: "7. What problem has caused superyachts to face intense scrutiny recently?",
+                options: {
+                    A: "Their inability to navigate safely through shallow coastal waters.", 
+                    B: "Their massive carbon footprints and excessive consumption of diesel fuel.", 
+                    C: "Their high interior design costs that frequently bankrupt the owners.", 
+                    D: "Their failure to provide adequate privacy for high-profile celebrities."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 4 states they face scrutiny because they are \"notorious for their massive carbon footprints.\"<br><br><strong>Chi:</strong> 第四段指出它們面臨審查是因為它們「以其巨大的碳足跡而臭名昭著」。"
+            },
+            {
+                id: 'q8',
+                q: "8. Which of the following is an eco-friendly technology mentioned in the text?",
+                options: {
+                    A: "Internal docking stations for gasoline-powered submarines.", 
+                    B: "Hydrogen fuel cells that emit nothing but pure water vapor.", 
+                    C: "High-speed jet skis equipped with modern acoustic silencers.", 
+                    D: "Desalination plants that dump toxic chemicals into the ocean."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 4 lists \"hydrogen fuel cells that emit only water vapor\" as an eco-friendly technology.<br><br><strong>Chi:</strong> 第四段將「只排放水蒸氣的氫燃料電池」列為環保技術。"
+            },
+            {
+                id: 'q9',
+                q: "9. What is the approximate annual cost of maintaining a superyacht?",
+                options: {
+                    A: "One hundred percent of the owner's total annual business income.", 
+                    B: "About ten percent of the yacht's original purchase price.", 
+                    C: "Exactly the same amount as renting it for a single weekend.", 
+                    D: "Less than one percent due to modern sustainable energy designs."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 5 explicitly states that annual costs \"typically amount to about ten percent of the yacht's original purchase price.\"<br><br><strong>Chi:</strong> 第五段明確指出，年度費用「通常高達遊艇最初購買價格的百分之十左右」。"
+            },
+            {
+                id: 'q10',
+                q: "10. Why do many yacht owners choose to \"charter\" their vessels?",
+                options: {
+                    A: "To legally avoid paying international maritime travel taxes.", 
+                    B: "To participate in competitive global boat racing tournaments.", 
+                    C: "To help offset the exorbitant ongoing costs of maintenance.", 
+                    D: "To provide free vacations for underprivileged coastal communities."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 5 explains they charter them \"Because of these exorbitant ongoing costs.\"<br><br><strong>Chi:</strong> 第五段解釋他們包租遊艇是「由於這些高昂的持續費用」。"
+            },
+            {
+                id: 'q11',
+                q: "11. The word \"bespoke\" in Paragraph 2 is closest in meaning to:",
+                options: {
+                    A: "Mass-produced in a factory", 
+                    B: "Outdated and old-fashioned", 
+                    C: "Custom-made for a specific buyer", 
+                    D: "Inexpensive and highly affordable"
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> \"Bespoke\" means made for a particular customer or user; custom-made.<br><br><strong>Chi:</strong> \"Bespoke\" 意指為特定客戶或使用者製作的；客製化的。"
+            },
+            {
+                id: 'q12',
+                q: "12. The word \"treacherous\" in Paragraph 3 is used to describe reefs that are:",
+                options: {
+                    A: "Colorful and full of vibrant sea life.", 
+                    B: "Safe and easy for beginners to navigate.", 
+                    C: "Hidden and extremely dangerous to ships.", 
+                    D: "Located exclusively in the Caribbean Sea."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> \"Treacherous\" means presenting hidden or unpredictable dangers.<br><br><strong>Chi:</strong> \"Treacherous\" 意指呈現隱藏的或不可預測的危險。"
+            },
+            {
+                id: 'q13',
+                q: "13. What does the phrase \"an illusion of effortless perfection\" suggest about the crew's work?",
+                options: {
+                    A: "The crew actually does very little work while the guests are sleeping.", 
+                    B: "The crew works extremely hard so the guests only see flawless results.", 
+                    C: "The crew uses magical tricks to entertain the guests during dinner.", 
+                    D: "The crew frequently makes mistakes but easily hides them from the captain."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> It means the crew works \"tirelessly behind the scenes\" so the guests feel the luxury is naturally perfect without effort.<br><br><strong>Chi:</strong> 這意味著船員在「幕後不知疲倦地工作」，讓客人覺得這種奢華是自然完美、毫不費力的。"
+            },
+            {
+                id: 'q14',
+                q: "14. According to the author, the push for environmental sustainability in yachting is:",
+                options: {
+                    A: "A complete failure that designers have decided to abandon entirely.", 
+                    B: "Reshaping how these floating palaces are being built and operated.", 
+                    C: "Only applied to small boats measuring under twenty-four meters.", 
+                    D: "An illegal practice banned by strict international maritime regulations."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 4 concludes that the push for sustainability \"is reshaping how these floating palaces are built and operated.\" (Undergoing significant transformation).<br><br><strong>Chi:</strong> 第四段總結，推動永續發展「正在經歷向永續發展的重大轉型」（重塑這些移動皇宮的建造和營運方式）。"
+            },
+            {
+                id: 'q15',
+                q: "15. What is the overall tone of the final paragraph regarding superyachts?",
+                options: {
+                    A: "Strictly critical and demanding immediate industry closure.", 
+                    B: "Acknowledging their grand engineering while noting financial reality.", 
+                    C: "Purely humorous and making fun of billionaire spending habits.", 
+                    D: "Deeply sorrowful about the loss of traditional sailing techniques."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> The paragraph balances the high costs (\"economic endeavor\") with admiration for their engineering and status.<br><br><strong>Chi:</strong> 該段落平衡了高昂的成本（「經濟活動」）與對其工程技術和地位的讚賞。"
+            }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic - Insert BEFORE the paragraph starts
+                // Indices correspond to the first sentence of each paragraph in the flattened array
+                if (index === 0) insertImage(displayArea, 'p1.jpg', 'Superyacht Overview');
+                else if (index === 6) insertImage(displayArea, 'p2.jpg', 'Luxury Amenities');
+                else if (index === 14) insertImage(displayArea, 'p3.jpg', 'Crew and Engineering');
+                else if (index === 20) insertImage(displayArea, 'p4.jpg', 'Eco-friendly Transformation');
+                else if (index === 26) insertImage(displayArea, 'p5.jpg', 'Superyacht Economics');
+                
+                // Create a new paragraph container at the start of each section
+                if (index === 0 || index === 6 || index === 14 || index === 20 || index === 26) {
+                    p = document.createElement('p');
+                    p.className = "mb-10 text-gray-800 leading-relaxed"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-yellow-100 rounded transition duration-200 leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                // Use SPAN instead of DIV to allow valid nesting inside P, but style it as block
+                const spanZh = document.createElement('span');
+                spanZh.className = 'translation-text hidden';
+                spanZh.innerText = item.zh;
+                p.appendChild(spanZh);
+            });
+        }
+
+        function insertImage(container, filename, altText) {
+             const img = document.createElement('img');
+             img.src = `English-Reading-126-images/${filename}`; 
+             img.alt = altText;
+             img.width = 1300;
+             img.height = 576;
+             img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-lg hover:shadow-2xl transition duration-500 border border-gray-100";
+             img.onerror = function() { this.style.display = 'none'; };
+             container.appendChild(img);
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                // Keep the original punctuation for display
+                const originalWord = word;
+                // Remove punctuation for lookup
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                const wordMapping = {
+                    "vessels": "vessel",
+                    "navigating": "navigate",
+                    "whims": "whim",
+                    "amenities": "amenity",
+                    "discharged": "discharge",
+                    "testaments": "testament",
+                    "footprints": "footprint",
+                    "chartered": "charter",
+                    "measuring": "measure",
+                    "expanded": "expand",
+                    "categories": "category",
+                    "megayachts": "megayacht",
+                    "gigayachts": "gigayacht",
+                    "representing": "represent",
+                    "offering": "offer",
+                    "anchored": "anchor",
+                    "secluded": "seclude",
+                    "dictated": "dictate",
+                    "masterpieces": "masterpiece",
+                    "gymnasiums": "gymnasium",
+                    "cinemas": "cinema",
+                    "submarines": "submarine",
+                    "helipads": "helipad",
+                    "enthusiasts": "enthusiast",
+                    "speedboats": "speedboat",
+                    "tenders": "tender",
+                    "relies": "rely",
+                    "systems": "system",
+                    "waters": "water",
+                    "plants": "plant",
+                    "operating": "operate",
+                    "requires": "require",
+                    "navigating": "navigate",
+                    "reefs": "reef",
+                    "chefs": "chef",
+                    "stewards": "steward",
+                    "providing": "provide",
+                    "works": "work",
+                    "superyachts": "superyacht",
+                    "consuming": "consume",
+                    "regulations": "regulation",
+                    "architects": "architect",
+                    "integrating": "integrate",
+                    "technologies": "technology",
+                    "designs": "design",
+                    "sails": "sail",
+                    "cells": "cell",
+                    "systems": "system",
+                    "coexist": "coexist",
+                    "proportions": "proportion",
+                    "salaries": "salary",
+                    "costs": "cost",
+                    "owners": "owner",
+                    "charter": "charter",
+                    "vacationers": "vacationer",
+                    "individuals": "individual",
+                    "privileges": "privilege",
+                    "testaments": "testament"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                // Check for singular/plural or simple verb forms if not mapped
+                if (!vocabulary[targetKey]) {
+                    if (targetKey.endsWith('s') && vocabulary[targetKey.slice(0, -1)]) {
+                        targetKey = targetKey.slice(0, -1);
+                    } else if (targetKey.endsWith('ed') && vocabulary[targetKey.slice(0, -2)]) {
+                        targetKey = targetKey.slice(0, -2);
+                    } else if (targetKey.endsWith('ing') && vocabulary[targetKey.slice(0, -3)]) {
+                        targetKey = targetKey.slice(0, -3);
+                    }
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1 text-gray-500 hover:text-pink-500" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-blue-800 text-2xl mb-2">${targetKey}</div>
+                        <div class="mb-3 text-lg font-medium text-gray-800">${data.trans}</div>
+                        <div class="text-lg text-gray-600 italic border-t border-gray-200 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        window.speakAndShowDef = function(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.speakWord = function(word) {
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.toggleFavorite = function(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#ec4899', '#f43f5e']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+
+            window.saveUserData();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            tableIcons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+        }
+
+        window.openVocabModal = function() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        window.openStudyModal = function() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p class="text-lg">您的學習清單是空的。</p><p class="text-sm text-gray-400 mt-2">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        window.openMistakeModal = function() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-500"></i><p class="text-lg font-bold">太棒了！</p><p class="text-sm text-gray-400 mt-2">您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-50 border-b border-red-100 text-red-800">
+                                <th class="p-4 font-bold w-4/12 rounded-tl-lg">題目 (Question)</th>
+                                <th class="p-4 font-bold w-2/12">您的答案</th>
+                                <th class="p-4 font-bold w-2/12">正確答案</th>
+                                <th class="p-4 font-bold w-4/12 rounded-tr-lg">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-red-50/50 transition">
+                            <td class="p-4 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-4 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-4 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-4 text-gray-600 text-sm leading-relaxed">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse text-gray-800">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200 text-gray-700">
+                            <th class="p-4 font-bold w-1/12 text-lg rounded-tl-lg">收藏</th>
+                            <th class="p-4 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-4 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-4 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-4 font-bold w-5/12 text-lg rounded-tr-lg">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-blue-50/50 transition duration-150">
+                        <td class="p-4 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition text-gray-400 hover:text-pink-500"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        
+                        <td class="p-4 font-bold text-blue-700 text-xl md:text-2xl cursor-pointer hover:text-blue-900 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition text-blue-400"></i>
+                        </td>
+
+                        <td class="p-4 text-base md:text-lg"><span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-4 text-gray-700 text-lg md:text-xl font-medium">${data.trans}</td>
+                        <td class="p-4 text-gray-500 text-lg md:text-xl italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        window.printList = function(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: Superyachts</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        window.toggleTranslation = function() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.remove('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.add('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        window.togglePlay = function() {
+            if (isPlaying) {
+                window.pauseAudio();
+            } else {
+                window.playAudio();
+            }
+        }
+
+        window.playAudio = function() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            window.speakSentence(currentSentenceIndex);
+        }
+
+        window.speakSentence = function(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    window.highlightSentence(-1);
+                    currentSentenceIndex = 0;
+                    window.saveUserData();
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            window.highlightSentence(index);
+            window.updateProgressBar();
+            window.saveUserData();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        window.speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        window.pauseAudio = function() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        window.restartAudio = function() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            window.updateProgressBar();
+            window.highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => window.speakSentence(0), 100);
+            }
+        }
+        
+        window.playFromSentence = function(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            window.speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        window.highlightSentence = function(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        window.updateProgressBar = function() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        window.toggleText = function() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.remove('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.add('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md hover:border-blue-300';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-800 mb-6 text-2xl md:text-3xl leading-relaxed">${item.q}</p>
+                    <div class="space-y-4" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-4 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
+                                <div class="w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-700 font-medium text-xl md:text-2xl leading-normal">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box mt-6 bg-gray-50 p-6 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
+                        <p class="font-bold mb-2 text-xl" id="${item.id}-status"></p>
+                        <p class="leading-relaxed">${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            userAnswers[questionId] = selectedKey;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                if(!isRestoring) window.playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                if(!isRestoring) userScore += (100 / 15); 
+            } else {
+                if(!isRestoring) window.playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-600', 'bg-red-100');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#16a34a';
+                explBox.style.backgroundColor = '#f0fdf4';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-700";
+            } else {
+                explBox.style.borderLeftColor = '#dc2626';
+                explBox.style.backgroundColor = '#fef2f2';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-700";
+            }
+
+            if(!isRestoring) window.saveUserData();
+        }
+
+        window.showFinalScore = function() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Maverick level! You are a true ace pilot!";
+                } else {
+                    feedback.innerText = "Great job! You're ready for TOPGUN.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Keep training, wingman.";
+            } else {
+                feedback.innerText = "You crashed and burned. Try listening again.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                renderArticle();
+                renderQuiz();
+                initVoice();
+            });
+        } else {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        }
+    </script>
+</body>
+</html>
