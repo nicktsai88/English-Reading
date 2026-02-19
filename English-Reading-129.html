@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：How Maglev Trains Float: The Future of Transportation (Firebase Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #f9fafb; /* Light background */
+            color: #111827; /* Dark text */
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #fef08a; /* yellow-200 */
+            color: #854d0e; /* yellow-800 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(234, 179, 8, 0.5);
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff; 
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #16a34a !important;
+            color: #166534;
+        }
+        .quiz-option.wrong {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #dc2626 !important;
+            color: #991b1b;
+            opacity: 0.9;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.3em; /* Increased for better readability */
+            color: #374151;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb; /* Blue border */
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+            border: 1px solid #e5e7eb;
+            border-left-width: 4px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #2563eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            min-width: 240px; 
+            max-width: 320px;
+            background-color: #ffffff; 
+            color: #1f2937;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            line-height: 1.5;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+            filter: drop-shadow(0 2px 1px rgba(0,0,0,0.05));
+        }
+        
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #3730a3;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block; /* Makes it start on a new line */
+            font-size: 0.95em;
+            color: #4b5563;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            padding-left: 14px;
+            border-left: 4px solid #cbd5e1; /* Gray bar like the screenshot */
+            font-family: 'Noto Sans TC', sans-serif;
+            line-height: 1.6;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #60a5fa;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Login Modal Specific */
+        #login-modal {
+            display: flex; /* Initially visible */
+            z-index: 2000;
+        }
+        #login-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Status Dot Styles */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 0;
+            transition: all 0.3s ease; 
+        }
+        /* Dynamic Border Colors for Container */
+        .status-container.loading {
+            border-color: #fbbf24;
+            box-shadow: 0 0 5px rgba(251, 191, 36, 0.4);
+        }
+        .status-container.success {
+            border-color: #34d399;
+            box-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+        }
+        .status-container.error {
+            border-color: #f87171;
+            box-shadow: 0 0 5px rgba(248, 113, 113, 0.4);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: #34d399; box-shadow: 0 0 8px #34d399; }
+        .status-dot.error { background-color: #f87171; box-shadow: 0 0 8px #f87171; }
+        .status-text { font-size: 0.75rem; color: #e5e7eb; font-weight: 500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background-color: #ffffff;
+            color: #2563eb; 
+            border: 1px solid #2563eb;
+            transition: all 0.2s ease-in-out;
+            font-weight: bold;
+        }
+        .action-btn:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                color: black;
+                background: white;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+                color: black;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-12 text-gray-900">
+
+    <!-- Navbar / Audio Player Sticky Header -->
+    <div class="sticky top-0 z-50 bg-slate-900 text-white shadow-lg transition-all duration-300 no-print" id="audio-player-bar">
+        <div class="w-[95%] max-w-[1800px] mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title, User, Badges -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                            <i class="fas fa-train text-lg"></i>
+                        </div>
+                        
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-3">
+                                <div id="header-username" class="text-sm font-bold text-blue-200 flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                                </div>
+                                <div class="status-container" id="cloud-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500/50 text-yellow-300 text-[10px] md:text-xs font-bold bg-yellow-900/30 whitespace-nowrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Level: CEFR B2</span>
+                                </div>
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500/50 text-cyan-300 text-[10px] md:text-xs font-bold bg-cyan-900/30 whitespace-nowrap">
+                                    <i class="fas fa-file-word"></i>
+                                    <span>Words: ~760</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-500 transition shrink-0 ml-auto">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4 hidden md:flex">
+                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition hover:bg-blue-500">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t border-slate-700 md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-green-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                    
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/20 flex items-center justify-center transition ml-1">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="w-[95%] max-w-[1800px] mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+             <div class="w-full h-64 md:h-96 bg-gray-100 relative overflow-hidden group">
+                <img 
+                    src="English-Reading-129-images/p0.jpg" 
+                    alt="How Maglev Trains Float" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1541427468627-a89a96e5ca1d?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium bg-black/60 w-fit px-4 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                        <i class="fas fa-search-location"></i> Listening Focus: Technology & Physics
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="window.openVocabModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-blue-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">完整單字表 (Vocabulary)</h3>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-blue-500"></i>
+            </button>
+
+            <button onclick="window.openStudyModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-pink-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">我的學習清單 (Favorites)</h3>
+                        <p class="text-sm text-gray-500" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-pink-500"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">How Maglev Trains Float: The Future of Transportation</h2>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 text-sm text-gray-700 rounded-r-lg">
+                <i class="fas fa-mouse-pointer mr-1 text-blue-600"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-white p-6 rounded-full mb-4 border border-gray-200 shadow-xl">
+                    <i class="fas fa-ear-listen text-4xl text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Listen Carefully</h3>
+                <p class="text-gray-500 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="window.toggleText()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg font-bold">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <div id="article-display" class="prose max-w-none text-gray-700 text-xl md:text-2xl leading-loose tracking-wide space-y-8 font-serif md:font-sans">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            
+            <!-- Quiz Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-200 pb-4">
+                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <span class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-base">
+                        <i class="fas fa-pen"></i>
+                    </span>
+                    Reading Comprehension Quiz (15 Questions)
+                </h3>
+                
+                <button onclick="window.resetQuiz()" class="action-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
+                </button>
+            </div>
+            
+            <form id="quizForm" class="space-y-10">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-10 pt-8 border-t border-gray-200 flex flex-col items-center gap-4">
+                <button type="button" onclick="window.showFinalScore()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 px-12 rounded-full shadow-xl transition transform hover:-translate-y-1 active:scale-95">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-slate-50 p-8 rounded-2xl border border-slate-200 animate-fade-in relative shadow-inner">
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-6xl font-extrabold text-blue-600 my-4" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-6 text-lg"></p>
+                    
+                    <button id="mistake-review-btn" onclick="window.openMistakeModal()" class="hidden w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2 mx-auto">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col items-center justify-center gap-6 shadow-2xl border-0">
+            <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                <i class="fas fa-user-astronaut text-4xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">歡迎來到英語閱讀挑戰</h2>
+            <p class="text-gray-500 text-base mb-2">請輸入名字以儲存您的學習進度</p>
+            
+            <div class="w-full space-y-4 max-w-xs">
+                <input type="text" id="username-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-lg transition" placeholder="輸入您的名字 (Enter Name)">
+                <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    開始閱讀 (Start)
+                </button>
+            </div>
+
+            <div class="w-full border-t border-gray-200 pt-6 mt-4">
+                <p class="text-xs text-gray-400 uppercase font-bold mb-4 tracking-wider">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-400">載入挑戰者名單中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <button onclick="window.closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="vocab-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('vocab')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="window.closeModal('vocab-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="window.closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="study-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('study')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="window.closeModal('study-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-red-700"><i class="fas fa-times-circle text-red-500 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="window.closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-red-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="mistake-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('mistakes')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="window.closeModal('mistake-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <!-- Firebase & App Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-129';
+        const DOC_GLOBAL = 'global';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCan2_Rc26HsLkOPr0i5QrgdjAYyqcigJ0",
+            authDomain: "english-reading-6b506.firebaseapp.com",
+            projectId: "english-reading-6b506",
+            storageBucket: "english-reading-6b506.firebasestorage.app",
+            messagingSenderId: "494747176273",
+            appId: "1:494747176273:web:585487fadb29b2e5e2d770",
+            measurementId: "G-4JD6R9MRPQ"
+        };
+
+        let app, db, auth;
+        let isFirebaseReady = false;
+        let currentUser = null; 
+        let unsubscribeUser = null; 
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                updateConnectionStatus('loading', '讀取資料中...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                
+                isFirebaseReady = true;
+                console.log("Firebase Connected");
+                
+                // Listen to Global Users List for Quick Login
+                onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { users: [] };
+                    renderQuickLogin(data.users || []);
+                }, (error) => {
+                    console.error("Global listener error:", error);
+                    updateConnectionStatus('error', '雲端同步失敗');
+                });
+
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                updateConnectionStatus('error', '連線錯誤');
+            }
+        }
+
+        // --- User Logic ---
+        window.startLogin = async (name) => {
+            if (!name || !isFirebaseReady) return;
+            const cleanName = name.trim();
+            if (cleanName.length === 0) return;
+
+            currentUser = { name: cleanName };
+            document.getElementById('login-modal').style.display = 'none';
+            
+            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
+
+            try {
+                const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
+                await setDoc(globalRef, {
+                    users: arrayUnion({ name: cleanName })
+                }, { merge: true });
+
+                subscribeToUserData(cleanName);
+            } catch (e) {
+                console.error("Login save error:", e);
+            }
+        };
+
+        function subscribeToUserData(userName) {
+            if (unsubscribeUser) unsubscribeUser();
+            
+            const userDocRef = doc(db, COLLECTION_NAME, `user_${userName}`);
+            
+            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                updateConnectionStatus('success', '已同步');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (data.favorites) {
+                        favoriteWords = new Set(data.favorites);
+                        document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+                        if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+                    }
+
+                    if (data.progressIndex !== undefined && data.progressIndex > 0) {
+                        if (!isPlaying && data.progressIndex > currentSentenceIndex) {
+                            currentSentenceIndex = data.progressIndex;
+                            window.updateProgressBar();
+                            window.highlightSentence(currentSentenceIndex);
+                        }
+                    }
+
+                    if (data.quizAnswers) {
+                         const serverAnswers = data.quizAnswers;
+                         
+                         userScore = 0;
+                         wrongAnswers = [];
+                         userAnswers = serverAnswers;
+                         
+                         Object.keys(serverAnswers).forEach(qid => {
+                             const ans = serverAnswers[qid];
+                             const qObj = quizData.find(q => q.id === qid);
+                             
+                             if(qObj) {
+                                 if(ans === qObj.ans) userScore += (100/15);
+                                 else wrongAnswers.push({q: qObj, yourAns: ans});
+                             }
+
+                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
+                             if (!alreadyAnswered) {
+                                 window.checkAnswer(qid, ans, true); 
+                             }
+                         });
+                    }
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        window.saveUserData = async () => {
+            if (!currentUser || !isFirebaseReady) return;
+            updateConnectionStatus('loading', '同步中...');
+            
+            try {
+                const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                await setDoc(userDocRef, {
+                    favorites: Array.from(favoriteWords),
+                    mistakes: wrongAnswers,
+                    progressIndex: currentSentenceIndex,
+                    quizAnswers: userAnswers, 
+                    lastUpdated: new Date()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+                updateConnectionStatus('error', '存檔失敗');
+            }
+        };
+
+        window.resetQuiz = async () => {
+            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
+            
+            userScore = 0;
+            wrongAnswers = [];
+            userAnswers = {};
+            
+            document.querySelectorAll('.quiz-option').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'disabled');
+            });
+            document.querySelectorAll('.quiz-option input').forEach(el => {
+                el.disabled = false;
+                el.checked = false;
+            });
+            document.querySelectorAll('.quiz-option div').forEach(el => {
+                const key = el.id.split('-').pop(); 
+                el.className = "w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg";
+                el.innerHTML = key;
+            });
+            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('score-card').classList.add('hidden');
+
+            if (currentUser && isFirebaseReady) {
+                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                 await updateDoc(userDocRef, {
+                     quizAnswers: deleteField(),
+                     mistakes: deleteField()
+                 });
+            }
+            
+            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function renderQuickLogin(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-400 py-2">尚無挑戰者紀錄，歡迎加入！</span>';
+                return;
+            }
+
+            const recentUsers = users.slice().reverse().slice(0, 5); 
+            
+            recentUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-full text-sm transition shadow-sm";
+                btn.innerText = u.name;
+                btn.onclick = () => {
+                    document.getElementById('username-input').value = u.name;
+                    window.startLogin(u.name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateConnectionStatus(status, text) {
+            const container = document.getElementById('cloud-status');
+            const dot = container.querySelector('.status-dot');
+            const label = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; 
+            dot.classList.add(status); 
+            label.innerText = text;
+
+            container.className = 'status-container'; 
+            container.classList.add(status);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            const name = document.getElementById('username-input').value;
+            window.startLogin(name);
+        };
+        
+        initFirebase();
+
+
+        // ---------------------------------------------------------
+        // --- Existing App Logic (Attached to Window) ---
+        // ---------------------------------------------------------
+        
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
+        let userAnswers = {}; 
+        let audioCtx;
+
+        const vocabulary = {
+            "levitation": { pos: "n.", trans: "懸浮；漂浮", example: "The magician's final trick involved the levitation of a heavy wooden table." },
+            "conventional": { pos: "adj.", trans: "傳統的；常規的", example: "He prefers conventional medicine over alternative natural therapies." },
+            "friction": { pos: "n.", trans: "摩擦；摩擦力", example: "When you rub your hands together, the friction creates body heat." },
+            "marvel": { pos: "n.", trans: "奇蹟；令人驚奇的事物", example: "The Golden Gate Bridge is considered a modern engineering marvel." },
+            "tantalizing": { pos: "adj.", trans: "誘人的；逗弄人的", example: "The bakery emitted a tantalizing aroma of fresh chocolate chip cookies." },
+            "electromagnetism": { pos: "n.", trans: "電磁學", example: "Students in the physics class studied the basic laws of electromagnetism." },
+            "grasp": { pos: "v.", trans: "領會；理解；抓緊", example: "It took him a while to fully grasp the complexity of the math problem." },
+            "fundamental": { pos: "adj.", trans: "基礎的；根本的", example: "Freedom of speech is a fundamental right in any democratic society." },
+            "repel": { pos: "v.", trans: "排斥；擊退", example: "Two magnets with identical poles will strongly repel each other." },
+            "magnify": { pos: "v.", trans: "放大；擴大", example: "The microscope can magnify the cells up to one thousand times." },
+            "guideway": { pos: "n.", trans: "導軌；行車軌道", example: "The maglev train glides smoothly along a specially constructed concrete guideway." },
+            "hover": { pos: "v.", trans: "盤旋；懸浮", example: "The rescue helicopter decided to hover directly above the sinking ship." },
+            "suspension": { pos: "n.", trans: "懸吊；暫停", example: "The car's newly repaired suspension made the bumpy ride much smoother." },
+            "prominently": { pos: "adv.", trans: "顯著地；突出地", example: "The company's new logo was displayed prominently on the front window." },
+            "champion": { pos: "v.", trans: "擁護；支持", example: "He has continued to champion the rights of underprivileged children." },
+            "superconducting": { pos: "adj.", trans: "超導的", example: "Superconducting materials can carry electricity without losing any energy to heat." },
+            "insufficient": { pos: "adj.", trans: "不足的；不夠的", example: "The police had insufficient evidence to arrest the prime suspect." },
+            "mechanism": { pos: "n.", trans: "機制；機械裝置", example: "The clock's internal mechanism was repaired by a skilled watchmaker." },
+            "propel": { pos: "v.", trans: "推動；驅使", example: "The strong ocean winds helped propel the sailboat toward the harbor." },
+            "momentum": { pos: "n.", trans: "動力；動量", example: "The political campaign gained significant momentum after the televised debate." },
+            "propulsion": { pos: "n.", trans: "推進力；推進", example: "The modern submarine relies on nuclear power for its underwater propulsion." },
+            "linear": { pos: "adj.", trans: "線性的；直線的", example: "The history book follows a strict linear timeline of major events." },
+            "coil": { pos: "n.", trans: "線圈；盤繞之物", example: "The mattress contains hundreds of metal coils for extra back support." },
+            "alternating": { pos: "adj.", trans: "交替的；輪流的", example: "The weather forecast predicts alternating periods of sunshine and heavy rain." },
+            "simultaneously": { pos: "adv.", trans: "同時地", example: "The twin explosions happened simultaneously on opposite sides of the building." },
+            "alter": { pos: "v.", trans: "改變；修改", example: "She decided to alter her travel plans due to the severe snowstorm." },
+            "frequency": { pos: "n.", trans: "頻率", example: "The sudden increased frequency of earthquakes alarmed the local scientists." },
+            "halt": { pos: "n.", trans: "停止；終止", example: "The construction work came to a sudden halt when they found ancient bones." },
+            "prospect": { pos: "n.", trans: "前景；展望", example: "The prospect of working in a foreign country was very exciting to her." },
+            "hurdle": { pos: "n.", trans: "障礙；難關", example: "Passing the incredibly difficult entrance exam was his first major hurdle." },
+            "implementation": { pos: "n.", trans: "實施；執行", example: "The successful implementation of the new software took almost six months." },
+            "prominent": { pos: "adj.", trans: "顯著的；重要的", example: "The Eiffel Tower is the most prominent landmark in the city of Paris." },
+            "obstacle": { pos: "n.", trans: "障礙（物）", example: "Lack of proper funding was a huge obstacle to finishing the research." },
+            "exorbitant": { pos: "adj.", trans: "（價格）過高的", example: "The luxury hotel charges an exorbitant fee for simple room service." },
+            "scratch": { pos: "n.", trans: "從頭開始 (from scratch)", example: "Because the file was deleted, he had to write the essay from scratch." },
+            "investment": { pos: "n.", trans: "投資", example: "Buying a reliable car is usually considered a very smart financial investment." },
+            "staggering": { pos: "adj.", trans: "令人震驚的", example: "The hurricane caused a staggering amount of physical damage to the coastline." },
+            "unparalleled": { pos: "adj.", trans: "無與倫比的", example: "The athlete demonstrated unparalleled skill during the final championship game." },
+            "short-haul": { pos: "adj.", trans: "短途的", example: "They usually take a short-haul flight from London to Paris for business." },
+            "revolutionary": { pos: "adj.", trans: "革命性的", example: "The invention of the internet was a revolutionary step for global communication." }
+        };
+
+        const articleData = [
+            // Paragraph 1
+            { en: "Imagine standing on a railway platform and watching a massive passenger train approach at over 500 kilometers per hour.", zh: "想像一下，站在鐵路月台上，看著一列巨大的客運列車以超過 500 公里的時速駛來。" },
+            { en: "However, instead of the deafening screech of metal wheels grinding against steel tracks, there is only a powerful, rushing swoosh of displaced air.", zh: "然而，沒有金屬車輪與鋼軌摩擦發出的震耳欲聾的尖銳聲，只有排開空氣的強大呼嘯聲。" },
+            { en: "This is not a scene from a science fiction movie; it is the reality of magnetic levitation, commonly known as \"maglev\" technology.", zh: "這不是科幻電影中的場景；這是磁浮（magnetic levitation，簡稱 maglev）技術的現實。" },
+            { en: "Unlike conventional trains that rely on internal combustion engines or electric motors to turn physical wheels, a maglev train actually hovers several centimeters above the ground.", zh: "與依靠內燃機或電動機轉動實體車輪的傳統列車不同，磁浮列車實際上懸浮在離地幾公分的高度。" },
+            { en: "By completely eliminating mechanical friction between the vehicle and the track, these engineering marvels can achieve speeds that rival domestic commercial airplanes, offering a tantalizing glimpse into the future of high-speed global transportation.", zh: "藉由完全消除車輛與軌道之間的機械摩擦力，這些工程奇蹟可以達到媲美國內商業客機的速度，為全球高速交通的未來提供了誘人的一瞥。" },
+
+            // Paragraph 2
+            { en: "To understand how a train weighing hundreds of tons can effortlessly float in mid-air, one must grasp the fundamental principles of magnetism.", zh: "要理解一列重達數百噸的火車如何能毫不費力地漂浮在半空中，就必須掌握磁力的基本原理。" },
+            { en: "Most people have played with basic permanent magnets and observed that opposite poles attract each other (north pulls toward south), while identical poles repel each other (north pushes away from north).", zh: "大多數人都玩過基本的永久磁鐵，並觀察到異性相吸（北極拉向南極），而同性相斥（北極推開北極）。" },
+            { en: "Maglev technology magnifies this simple concept using electromagnets—magnets whose magnetic field is generated by an electric current.", zh: "磁浮技術利用電磁鐵（由電流產生磁場的磁鐵）將這個簡單的概念放大。" },
+            { en: "By controlling the electrical input, engineers can rapidly adjust the strength of the magnetic field and instantly switch the poles from north to south.", zh: "透過控制電流輸入，工程師可以快速調整磁場強度，並瞬間將磁極從北極切換到南極。" },
+            { en: "This precise, computerized control of powerful electromagnetic forces allows the train to continuously push away from or pull towards the specialized track, known as the \"guideway,\" maintaining a stable hovering position.", zh: "這種對強大電磁力精確、電腦化的控制，使列車能夠持續地推開或拉向被稱為「導軌 (guideway)」的特殊軌道，從而保持穩定的懸浮姿態。" },
+
+            // Paragraph 3
+            { en: "There are two primary technological systems utilized to achieve magnetic levitation: Electromagnetic Suspension (EMS) and Electrodynamic Suspension (EDS).", zh: "目前有兩種主要技術系統被用來實現磁浮：電磁懸浮 (EMS) 和電動懸浮 (EDS)。" },
+            { en: "The EMS system, prominently used in Germany and China, relies on the principle of magnetic attraction.", zh: "在德國和中國廣泛使用的 EMS 系統依賴於磁力吸引的原理。" },
+            { en: "The bottom of the train wraps around the edges of the guideway, and electromagnets on the train pull upward toward the steel track, lifting the vehicle.", zh: "列車的底部包覆住導軌的邊緣，列車上的電磁鐵向上拉向鋼製軌道，從而將車輛抬起。" },
+            { en: "Sensors constantly adjust the magnetic pull to maintain a gap of just 15 millimeters.", zh: "感測器會不斷調整磁力拉力，以維持僅 15 毫米的間隙。" },
+            { en: "On the other hand, the EDS system, championed by Japan, utilizes magnetic repulsion.", zh: "另一方面，由日本主導的 EDS 系統則利用磁力排斥。" },
+            { en: "It employs super-cooled, superconducting electromagnets that generate incredibly strong repulsive forces, pushing the train away from the track.", zh: "它採用超冷卻的超導電磁鐵，產生難以置信的強大排斥力，將列車推離軌道。" },
+            { en: "Because the EDS repulsive force only becomes strong enough to lift the train at higher speeds, these specific trains must rely on rubber wheels until they accelerate past 100 kilometers per hour.", zh: "由於 EDS 的排斥力只有在較高速度時才會強大到足以抬起列車，因此這些特定的列車在加速超過時速 100 公里之前，必須依賴橡膠輪胎行駛。" },
+
+            // Paragraph 4
+            { en: "Once the massive train is successfully hovering above the guideway, it requires a mechanism to propel it forward.", zh: "一旦巨大的列車成功懸浮在導軌上方，它就需要一種機制來推動它前進。" },
+            { en: "Surprisingly, maglev trains do not contain an engine on board to generate forward momentum.", zh: "令人驚訝的是，磁浮列車上並沒有搭載用來產生前進動力的引擎。" },
+            { en: "Instead, the propulsion system is entirely built into the walls of the guideway itself in the form of a linear motor.", zh: "相反地，推進系統完全以線性馬達的形式內建在導軌的牆壁中。" },
+            { en: "The guideway is lined with a continuous series of electrified coils that create an alternating magnetic field.", zh: "導軌上排列著連續的通電線圈，產生交變磁場。" },
+            { en: "This shifting field works like an invisible, moving wave of magnetism.", zh: "這種不斷變化的磁場就像一波看不見的、移動的磁力波。" },
+            { en: "It simultaneously pulls the front of the train forward using magnetic attraction and pushes the rear of the train forward using magnetic repulsion.", zh: "它同時利用磁力吸引將列車前部向前拉，並利用磁力排斥將列車後部向前推。" },
+            { en: "By simply altering the frequency of the alternating electrical current in the guideway, operators can smoothly accelerate the train, maintain its cruising speed, or bring it to a safe and controlled halt.", zh: "只需改變導軌中交變電流的頻率，操作員就可以平穩地加速列車、維持巡航速度，或使其安全受控地停下。" },
+
+            // Paragraph 5
+            { en: "Despite these breathtaking technological advantages, maglev trains face significant hurdles that have prevented widespread global implementation.", zh: "儘管具備這些令人驚嘆的技術優勢，磁浮列車仍面臨著阻礙其在全球廣泛實施的重大障礙。" },
+            { en: "The most prominent obstacle is the exorbitant cost of construction.", zh: "最突出的障礙是極其高昂的建造成本。" },
+            { en: "Because maglev trains cannot operate on existing conventional railway networks, entire lines of specialized, highly precise guideways must be built from scratch.", zh: "由於磁浮列車無法在現有的傳統鐵路網絡上運行，因此必須從頭開始建造整條特殊且高度精密的導軌。" },
+            { en: "Furthermore, the immense amount of electricity required to cool the superconductors and power the tracks makes the initial investment staggering.", zh: "此外，冷卻超導體和為軌道供電所需的大量電力使得初期投資令人咋舌。" },
+            { en: "Nevertheless, the benefits of minimal maintenance (due to zero friction), exceptional safety records, and unparalleled passenger comfort continue to drive research.", zh: "儘管如此，維護成本極低（因為零摩擦）、卓越的安全記錄以及無與倫比的乘客舒適度，繼續推動著相關研究。" },
+            { en: "As environmental concerns prompt nations to seek alternatives to short-haul airline flights, maglev technology remains one of the most promising, sustainable, and revolutionary solutions for the transportation needs of the twenty-first century.", zh: "隨著對環境的擔憂促使各國尋找替代短途航班的方案，磁浮技術仍然是二十一世紀交通運輸需求中最具前景、可永續且具革命性的解決方案之一。" }
+        ];
+
+        const quizData = [
+            {
+                id: 'q1',
+                q: "1. What is the primary purpose of the article's first paragraph?",
+                options: {
+                    A: "To explain the historical development of modern railways.", 
+                    B: "To introduce the core concept and speed of maglev trains.", 
+                    C: "To argue that commercial airplanes are no longer necessary.", 
+                    D: "To criticize the noise pollution caused by traditional trains."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 1 introduces maglev technology, explaining that it hovers without friction and reaches extreme speeds.<br><br><strong>Chi:</strong> 第一段介紹了磁浮技術，解釋它無摩擦懸浮並達到極高速度。"
+            },
+            {
+                id: 'q2',
+                q: "2. According to Paragraph 2, what is the key difference between a permanent magnet and an electromagnet?",
+                options: {
+                    A: "An electromagnet can only be found naturally in deep caves.", 
+                    B: "An electromagnet is always significantly weaker in strength.", 
+                    C: "An electromagnet's field is controlled by electrical current.", 
+                    D: "An electromagnet permanently retains its north and south poles."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 2 states that an electromagnet's magnetic field \"is generated by an electric current\" and can be rapidly adjusted.<br><br><strong>Chi:</strong> 第二段指出電磁鐵的磁場「由電流產生」，並且可以快速調整。"
+            },
+            {
+                id: 'q3',
+                q: "3. How does the Electromagnetic Suspension (EMS) system primarily lift the train?",
+                options: {
+                    A: "By utilizing powerful jet engines placed under the vehicle.", 
+                    B: "By pushing the train away from the tracks with repulsion.", 
+                    C: "By pulling the train upward toward the tracks with attraction.", 
+                    D: "By filling the interior compartments with lighter-than-air gas."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 3 explains EMS relies on \"magnetic attraction\" where electromagnets \"pull upward toward the steel track.\"<br><br><strong>Chi:</strong> 第三段解釋 EMS 依賴「磁力吸引」，電磁鐵「向上拉向鋼製軌道」。"
+            },
+            {
+                id: 'q4',
+                q: "4. Why do EDS maglev trains need to use rubber wheels at certain times?",
+                options: {
+                    A: "Because the tracks are usually too slippery when it rains heavily.", 
+                    B: "Because the magnetic attraction is too powerful at very low speeds.", 
+                    C: "Because the repulsive force is insufficient at speeds under 100 km/h.", 
+                    D: "Because the passengers require a smoother boarding experience."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 3 states the repulsive force \"only becomes strong enough... at higher speeds,\" requiring wheels until past 100 km/h.<br><br><strong>Chi:</strong> 第三段指出排斥力「只有在較高速度時才會強大到足以抬起列車」，因此在超過時速 100 公里前需要輪子。"
+            },
+            {
+                id: 'q5',
+                q: "5. Where is the actual engine (propulsion system) of a maglev train located?",
+                options: {
+                    A: "It is located inside the front passenger compartment.", 
+                    B: "It is entirely built into the walls of the guideway.", 
+                    C: "It is attached to the physical wheels beneath the train.", 
+                    D: "It is positioned on the roof to gather solar energy."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 4 reveals that maglev trains do not have an onboard engine; the propulsion system \"is entirely built into the walls of the guideway.\"<br><br><strong>Chi:</strong> 第四段揭示磁浮列車上沒有搭載引擎；推進系統「完全內建在導軌的牆壁中」。"
+            },
+            {
+                id: 'q6',
+                q: "6. How does the guideway manage to move the hovering train forward?",
+                options: {
+                    A: "By utilizing a physical cable that pulls the train continuously.", 
+                    B: "By creating a strong gust of wind behind the passenger cars.", 
+                    C: "By generating an alternating magnetic field that pulls and pushes.", 
+                    D: "By slightly tilting the tracks downward to use natural gravity."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 4 explains it uses an \"alternating magnetic field\" that \"pulls the front... and pushes the rear.\"<br><br><strong>Chi:</strong> 第四段解釋它使用「交變磁場」，「將前部向前拉……並將後部向前推」。"
+            },
+            {
+                id: 'q7',
+                q: "7. According to the text, how do operators control the speed of the maglev train?",
+                options: {
+                    A: "By altering the frequency of the alternating electrical current.", 
+                    B: "By increasing the physical friction between wheels and tracks.", 
+                    C: "By adding more weight to the front compartment of the train.", 
+                    D: "By communicating with a satellite navigation control system."
+                },
+                ans: 'A',
+                expl: "<strong>Eng:</strong> Paragraph 4 states they control speed \"By simply altering the frequency of the alternating electrical current.\"<br><br><strong>Chi:</strong> 第四段指出他們藉由「改變交變電流的頻率」來控制速度。"
+            },
+            {
+                id: 'q8',
+                q: "8. What is identified as the most prominent obstacle to building maglev trains?",
+                options: {
+                    A: "The intense noise generated during high-speed travel.", 
+                    B: "The exorbitant cost of constructing new, specialized guideways.", 
+                    C: "The extreme danger posed to passengers during acceleration.", 
+                    D: "The lack of engineers who understand basic magnetic theories."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 5 identifies the \"exorbitant cost of construction\" because specialized guideways \"must be built from scratch.\"<br><br><strong>Chi:</strong> 第五段指出「極其高昂的建造成本」是障礙，因為特殊的導軌「必須從頭開始建造」。"
+            },
+            {
+                id: 'q9',
+                q: "9. Why do maglev trains require significantly less maintenance than conventional trains?",
+                options: {
+                    A: "Because they are rarely used by the general civilian population.", 
+                    B: "Because they are constructed entirely from lightweight plastics.", 
+                    C: "Because there is absolutely no mechanical friction during travel.", 
+                    D: "Because they travel at much slower speeds than regular trains."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 5 links minimal maintenance directly to \"zero friction\" since the train hovers above the track.<br><br><strong>Chi:</strong> 第五段將極低的維護成本直接與「零摩擦」連結，因為火車懸浮在軌道上方。"
+            },
+            {
+                id: 'q10',
+                q: "10. Which environmental concern might maglev trains help alleviate in the future?",
+                options: {
+                    A: "The rapid deforestation occurring in tropical rainforest regions.", 
+                    B: "The pollution generated by countless short-haul airline flights.", 
+                    C: "The toxic waste dumped directly into oceans by cargo ships.", 
+                    D: "The depletion of underground freshwater drinking reservoirs."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> Paragraph 5 suggests they are a promising alternative \"as environmental concerns prompt nations to seek alternatives to short-haul airline flights.\"<br><br><strong>Chi:</strong> 第五段暗示，隨著環境擔憂促使各國「尋找替代短途航班的方案」，它們是一個有希望的替代方案。"
+            },
+            {
+                id: 'q11',
+                q: "11. The word \"hover\" in Paragraph 1 is closest in meaning to:",
+                options: {
+                    A: "To crash violently into a solid object.", 
+                    B: "To sink rapidly beneath the water surface.", 
+                    C: "To remain suspended in the air over a place.", 
+                    D: "To roll slowly along a physical pathway."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> \"Hover\" means to remain in one place in the air; to float above a surface.<br><br><strong>Chi:</strong> \"Hover\" 意指停留在空中的某處；漂浮在表面上方。"
+            },
+            {
+                id: 'q12',
+                q: "12. What does the term \"exorbitant\" imply in Paragraph 5?",
+                options: {
+                    A: "Something that is remarkably efficient and fast.", 
+                    B: "Something that is unreasonably high in price.", 
+                    C: "Something that is completely invisible to the eye.", 
+                    D: "Something that is extremely dangerous to touch."
+                },
+                ans: 'B',
+                expl: "<strong>Eng:</strong> \"Exorbitant\" means unreasonably high, especially referring to a price or amount charged.<br><br><strong>Chi:</strong> \"Exorbitant\" 意指（價格或收費）過高的、不合理的。"
+            },
+            {
+                id: 'q13',
+                q: "13. Based on the passage, what would likely happen if two north poles of electromagnets were brought together?",
+                options: {
+                    A: "They would aggressively push each other away.", 
+                    B: "They would firmly pull toward each other instantly.", 
+                    C: "They would completely lose their magnetic properties.", 
+                    D: "They would begin to generate intense physical heat."
+                },
+                ans: 'A',
+                expl: "<strong>Eng:</strong> Paragraph 2 states the fundamental rule that \"identical poles repel each other (north pushes away from north).\"<br><br><strong>Chi:</strong> 第二段說明了基本規則：「同性相斥（北極推開北極）」。"
+            },
+            {
+                id: 'q14',
+                q: "14. Which of the following best describes the author's tone toward maglev technology?",
+                options: {
+                    A: "Highly pessimistic and extremely critical of its flaws.", 
+                    B: "Completely objective and showing no personal interest.", 
+                    C: "Very enthusiastic and optimistic about its potential.", 
+                    D: "Nostalgic and longing for older steam-powered trains."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> The author uses words like \"marvels,\" \"magic,\" \"promising,\" and \"revolutionary,\" indicating a highly enthusiastic and optimistic tone.<br><br><strong>Chi:</strong> 作者使用了「奇蹟」、「魔力」、「具前景的」和「革命性的」等詞彙，表示非常熱情和樂觀的語氣。"
+            },
+            {
+                id: 'q15',
+                q: "15. What can be inferred about existing railway infrastructure?",
+                options: {
+                    A: "It can easily be modified to accommodate modern maglev trains.", 
+                    B: "It is entirely useless and must be immediately dismantled everywhere.", 
+                    C: "It is completely incompatible with the operation of maglev trains.", 
+                    D: "It provides a faster travel alternative than the new maglev tracks."
+                },
+                ans: 'C',
+                expl: "<strong>Eng:</strong> Paragraph 5 states that \"maglev trains cannot operate on existing conventional railway networks,\" implying total incompatibility.<br><br><strong>Chi:</strong> 第五段指出「磁浮列車無法在現有的傳統鐵路網絡上運行」，暗示完全不相容。"
+            }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic - Insert BEFORE the paragraph starts
+                // Indices correspond to the first sentence of each paragraph in the flattened array
+                if (index === 0) insertImage(displayArea, 'p1.jpg', 'The Illusion of Flying');
+                else if (index === 5) insertImage(displayArea, 'p2.jpg', 'The Magic of Electromagnetism');
+                else if (index === 10) insertImage(displayArea, 'p3.jpg', 'Two Approaches to Levitation');
+                else if (index === 17) insertImage(displayArea, 'p4.jpg', 'Riding the Magnetic Wave');
+                else if (index === 24) insertImage(displayArea, 'p5.jpg', 'Challenges and Future Prospects');
+                
+                // Create a new paragraph container at the start of each section
+                if (index === 0 || index === 5 || index === 10 || index === 17 || index === 24) {
+                    p = document.createElement('p');
+                    p.className = "mb-10 text-gray-800 leading-relaxed"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-yellow-100 rounded transition duration-200 leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                // Use SPAN instead of DIV to allow valid nesting inside P, but style it as block
+                const spanZh = document.createElement('span');
+                spanZh.className = 'translation-text hidden';
+                spanZh.innerText = item.zh;
+                p.appendChild(spanZh);
+            });
+        }
+
+        function insertImage(container, filename, altText) {
+             const img = document.createElement('img');
+             img.src = `English-Reading-129-images/${filename}`; 
+             img.alt = altText;
+             img.width = 1300;
+             img.height = 576;
+             img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-lg hover:shadow-2xl transition duration-500 border border-gray-100";
+             img.onerror = function() { this.style.display = 'none'; };
+             container.appendChild(img);
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                // Keep the original punctuation for display
+                const originalWord = word;
+                // Remove punctuation for lookup
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                const wordMapping = {
+                    "marvels": "marvel",
+                    "hovers": "hover",
+                    "hovering": "hover",
+                    "magnifies": "magnify",
+                    "guideways": "guideway",
+                    "championed": "champion",
+                    "coils": "coil",
+                    "altering": "alter",
+                    "hurdles": "hurdle",
+                    "prospects": "prospect",
+                    "obstacles": "obstacle",
+                    "investments": "investment",
+                    "repels": "repel",
+                    "repelling": "repel",
+                    "propels": "propel",
+                    "propelling": "propel",
+                    "mechanisms": "mechanism",
+                    "frequencies": "frequency",
+                    "halts": "halt"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                // Check for singular/plural or simple verb forms if not mapped
+                if (!vocabulary[targetKey]) {
+                    if (targetKey.endsWith('s') && vocabulary[targetKey.slice(0, -1)]) {
+                        targetKey = targetKey.slice(0, -1);
+                    } else if (targetKey.endsWith('ed') && vocabulary[targetKey.slice(0, -2)]) {
+                        targetKey = targetKey.slice(0, -2);
+                    } else if (targetKey.endsWith('ing') && vocabulary[targetKey.slice(0, -3)]) {
+                        targetKey = targetKey.slice(0, -3);
+                    }
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1 text-gray-500 hover:text-pink-500" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-blue-800 text-2xl mb-2">${targetKey}</div>
+                        <div class="mb-3 text-lg font-medium text-gray-800">${data.trans}</div>
+                        <div class="text-lg text-gray-600 italic border-t border-gray-200 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        window.speakAndShowDef = function(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.speakWord = function(word) {
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.toggleFavorite = function(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#ec4899', '#f43f5e']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+
+            window.saveUserData();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            tableIcons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+        }
+
+        window.openVocabModal = function() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        window.openStudyModal = function() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p class="text-lg">您的學習清單是空的。</p><p class="text-sm text-gray-400 mt-2">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        window.openMistakeModal = function() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-500"></i><p class="text-lg font-bold">太棒了！</p><p class="text-sm text-gray-400 mt-2">您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-50 border-b border-red-100 text-red-800">
+                                <th class="p-4 font-bold w-4/12 rounded-tl-lg">題目 (Question)</th>
+                                <th class="p-4 font-bold w-2/12">您的答案</th>
+                                <th class="p-4 font-bold w-2/12">正確答案</th>
+                                <th class="p-4 font-bold w-4/12 rounded-tr-lg">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-red-50/50 transition">
+                            <td class="p-4 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-4 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-4 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-4 text-gray-600 text-sm leading-relaxed">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse text-gray-800">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200 text-gray-700">
+                            <th class="p-4 font-bold w-1/12 text-lg rounded-tl-lg">收藏</th>
+                            <th class="p-4 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-4 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-4 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-4 font-bold w-5/12 text-lg rounded-tr-lg">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-blue-50/50 transition duration-150">
+                        <td class="p-4 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition text-gray-400 hover:text-pink-500"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        
+                        <td class="p-4 font-bold text-blue-700 text-xl md:text-2xl cursor-pointer hover:text-blue-900 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition text-blue-400"></i>
+                        </td>
+
+                        <td class="p-4 text-base md:text-lg"><span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-4 text-gray-700 text-lg md:text-xl font-medium">${data.trans}</td>
+                        <td class="p-4 text-gray-500 text-lg md:text-xl italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        window.printList = function(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: Maglev Trains</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        window.toggleTranslation = function() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.remove('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.add('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        window.togglePlay = function() {
+            if (isPlaying) {
+                window.pauseAudio();
+            } else {
+                window.playAudio();
+            }
+        }
+
+        window.playAudio = function() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            window.speakSentence(currentSentenceIndex);
+        }
+
+        window.speakSentence = function(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    window.highlightSentence(-1);
+                    currentSentenceIndex = 0;
+                    window.saveUserData();
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            window.highlightSentence(index);
+            window.updateProgressBar();
+            window.saveUserData();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        window.speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        window.pauseAudio = function() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        window.restartAudio = function() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            window.updateProgressBar();
+            window.highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => window.speakSentence(0), 100);
+            }
+        }
+        
+        window.playFromSentence = function(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            window.speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        window.highlightSentence = function(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        window.updateProgressBar = function() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        window.toggleText = function() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.remove('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.add('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md hover:border-blue-300';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-800 mb-6 text-2xl md:text-3xl leading-relaxed">${item.q}</p>
+                    <div class="space-y-4" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-4 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
+                                <div class="w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-700 font-medium text-xl md:text-2xl leading-normal">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box mt-6 bg-gray-50 p-6 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
+                        <p class="font-bold mb-2 text-xl" id="${item.id}-status"></p>
+                        <p class="leading-relaxed">${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            userAnswers[questionId] = selectedKey;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                if(!isRestoring) window.playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                if(!isRestoring) userScore += (100 / 15); 
+            } else {
+                if(!isRestoring) window.playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-600', 'bg-red-100');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#16a34a';
+                explBox.style.backgroundColor = '#f0fdf4';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-700";
+            } else {
+                explBox.style.borderLeftColor = '#dc2626';
+                explBox.style.backgroundColor = '#fef2f2';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-700";
+            }
+
+            if(!isRestoring) window.saveUserData();
+        }
+
+        window.showFinalScore = function() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Maverick level! You are a true ace pilot!";
+                } else {
+                    feedback.innerText = "Great job! You're ready for TOPGUN.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Keep training, wingman.";
+            } else {
+                feedback.innerText = "You crashed and burned. Try listening again.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                renderArticle();
+                renderQuiz();
+                initVoice();
+            });
+        } else {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        }
+    </script>
+</body>
+</html>
