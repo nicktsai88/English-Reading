@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擬真語音互動測驗：Top Gun: The Reality of Fighter Jets (Firebase Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+            background-color: #f9fafb; /* Light background */
+            color: #111827; /* Dark text */
+        }
+        
+        /* Smooth Highlighting for Karaoke Mode */
+        .highlight-text {
+            background-color: #fef08a; /* yellow-200 */
+            color: #854d0e; /* yellow-800 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(234, 179, 8, 0.5);
+            transition: all 0.3s ease;
+            font-weight: 700;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option {
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff; 
+        }
+        .quiz-option:hover:not(.disabled) {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7 !important; /* green-100 */
+            border-color: #16a34a !important;
+            color: #166534;
+        }
+        .quiz-option.wrong {
+            background-color: #fee2e2 !important; /* red-100 */
+            border-color: #dc2626 !important;
+            color: #991b1b;
+            opacity: 0.9;
+        }
+        .quiz-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .explanation-box {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            font-size: 1.05em;
+            color: #374151;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb; /* Blue border */
+            animation: slideDown 0.3s ease-out;
+            line-height: 1.6;
+            border: 1px solid #e5e7eb;
+            border-left-width: 4px;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Interactive Vocabulary Styles */
+        .vocab-word {
+            border-bottom: 2px dotted #2563eb;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        .vocab-word:hover {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
+        .vocab-word:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip Style - Enhanced for interactivity */
+        .vocab-tooltip {
+            visibility: hidden;
+            width: max-content;
+            min-width: 240px; 
+            max-width: 320px;
+            background-color: #ffffff; 
+            color: #1f2937;
+            text-align: left;
+            border-radius: 8px;
+            padding: 16px; 
+            position: absolute;
+            z-index: 100;
+            bottom: 140%; 
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            font-size: 1.1rem; 
+            pointer-events: none; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            line-height: 1.5;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .vocab-word:hover .vocab-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+            pointer-events: auto; 
+        }
+
+        .vocab-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
+            filter: drop-shadow(0 2px 1px rgba(0,0,0,0.05));
+        }
+        
+        .pos-tag {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            background-color: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-weight: bold;
+            color: #3730a3;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* Translation Text Style */
+        .translation-text {
+            display: block;
+            font-size: 0.95em;
+            color: #4b5563;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            padding-left: 10px;
+            border-left: 3px solid #9ca3af;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .translation-text.hidden {
+            display: none;
+        }
+        
+        /* Audio Wave Animation */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 2px;
+        }
+        .bar {
+            width: 4px;
+            background: #60a5fa;
+            animation: bounce 0ms infinite ease-in-out alternate;
+        }
+        .playing .bar {
+            animation-duration: 400ms;
+        }
+        .playing .bar:nth-child(1) { animation-delay: -0.2s; }
+        .playing .bar:nth-child(2) { animation-delay: -0.4s; }
+        .playing .bar:nth-child(3) { animation-delay: -0.6s; }
+        .playing .bar:nth-child(4) { animation-delay: -0.8s; }
+        @keyframes bounce {
+            0% { height: 3px; opacity: 0.5; }
+            100% { height: 20px; opacity: 1; }
+        }
+        
+        .hidden-content {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            position: relative;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Login Modal Specific */
+        #login-modal {
+            display: flex; /* Initially visible */
+            z-index: 2000;
+        }
+        #login-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Status Dot Styles */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 0;
+            transition: all 0.3s ease; 
+        }
+        /* Dynamic Border Colors for Container */
+        .status-container.loading {
+            border-color: #fbbf24;
+            box-shadow: 0 0 5px rgba(251, 191, 36, 0.4);
+        }
+        .status-container.success {
+            border-color: #34d399;
+            box-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+        }
+        .status-container.error {
+            border-color: #f87171;
+            box-shadow: 0 0 5px rgba(248, 113, 113, 0.4);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-dot.loading { background-color: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1.5s infinite; }
+        .status-dot.success { background-color: #34d399; box-shadow: 0 0 8px #34d399; }
+        .status-dot.error { background-color: #f87171; box-shadow: 0 0 8px #f87171; }
+        .status-text { font-size: 0.75rem; color: #e5e7eb; font-weight: 500; }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            background-color: #ffffff;
+            color: #2563eb; 
+            border: 1px solid #2563eb;
+            transition: all 0.2s ease-in-out;
+            font-weight: bold;
+        }
+        .action-btn:hover {
+            background-color: #2563eb;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+                color: black;
+                background: white;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+                color: black;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 2cm;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-12 text-gray-900">
+
+    <!-- Navbar / Audio Player Sticky Header (Keep dark for contrast) -->
+    <div class="sticky top-0 z-50 bg-slate-900 text-white shadow-lg transition-all duration-300 no-print" id="audio-player-bar">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                <!-- Left: Title, User, Badges -->
+                <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                    <!-- Icon -->
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                            <i class="fas fa-fighter-jet text-lg"></i>
+                        </div>
+                        
+                        <!-- Info Column -->
+                        <div class="flex flex-col gap-1">
+                            
+                            <!-- Top Row: User Name & Status -->
+                            <div class="flex items-center gap-3">
+                                <!-- User Name -->
+                                <div id="header-username" class="text-sm font-bold text-blue-200 flex items-center gap-2">
+                                    <i class="fas fa-user-circle"></i> <span>Guest</span>
+                                </div>
+                                <!-- Firebase Status Indicator -->
+                                <div class="status-container" id="cloud-status">
+                                    <span class="status-dot loading"></span>
+                                    <span class="status-text">連線中...</span>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Row: Badges -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Level Badge -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500/50 text-yellow-300 text-[10px] md:text-xs font-bold bg-yellow-900/30 whitespace-nowrap">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Level: CEFR B2</span>
+                                </div>
+                                <!-- Word Count Badge -->
+                                <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-cyan-500/50 text-cyan-300 text-[10px] md:text-xs font-bold bg-cyan-900/30 whitespace-nowrap">
+                                    <i class="fas fa-file-word"></i>
+                                    <span>Words: ~750</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Play Button (Right aligned on mobile) -->
+                    <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-500 transition shrink-0 ml-auto">
+                        <i class="fas fa-play" id="mobile-play-icon"></i>
+                    </button>
+                </div>
+
+                <!-- Center: Controls -->
+                <div class="flex items-center gap-4 hidden md:flex">
+                    <!-- Rewind -->
+                    <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-slate-600 text-slate-300 hover:bg-slate-700 flex items-center justify-center transition" title="Restart">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    
+                    <!-- Main Play Button -->
+                    <button onclick="window.togglePlay()" class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition hover:bg-blue-500">
+                        <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
+                    </button>
+
+                    <!-- Visualizer -->
+                    <div class="equalizer" id="visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings -->
+                <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t border-slate-700 md:border-t-0 pt-2 md:pt-0 mt-2 md:mt-0">
+                    
+                    <!-- Translation Toggle -->
+                    <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-green-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-language"></i> <span>翻譯</span>
+                    </button>
+
+                    <!-- Toggle Text -->
+                    <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition border border-slate-600">
+                        <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
+                    </button>
+                    
+                    <!-- Logout -->
+                    <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500/50 text-red-400 hover:bg-red-900/20 flex items-center justify-center transition ml-1">
+                        <i class="fas fa-sign-out-alt text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-800 h-1.5 no-print">
+            <div id="progress-bar" class="h-full bg-blue-500 w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto p-4 md:p-6 space-y-8 no-print">
+        
+        <!-- Image Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+             <!-- Image with fallback -->
+             <div class="w-full h-64 md:h-96 bg-gray-100 relative overflow-hidden group">
+                <img 
+                    src="English-Reading-130-images/p0.jpg" 
+                    alt="Top Gun: The Reality of Fighter Jets" 
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1559494498-8f98cbc450d8?q=80&w=1200&auto=format&fit=crop';"
+                >
+                
+                <!-- Gradient Overlay -->
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center gap-2 text-sm font-medium bg-black/60 w-fit px-4 py-2 rounded-full backdrop-blur-sm border border-white/20">
+                        <i class="fas fa-crosshairs"></i> Listening Focus: Military Aviation, Pop Culture & Technology
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vocabulary Tools Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button onclick="window.openVocabModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-blue-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">完整單字表 (Vocabulary)</h3>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-blue-500"></i>
+            </button>
+
+            <button onclick="window.openStudyModal()" class="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:border-pink-500 hover:shadow-lg transition flex items-center justify-between group">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-bold text-gray-900 text-lg">我的學習清單 (Favorites)</h3>
+                        <p class="text-sm text-gray-500" id="study-list-count">目前收藏: 0 個單字</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-400 group-hover:text-pink-500"></i>
+            </button>
+        </div>
+
+        <!-- Text Content Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">Top Gun: The Reality of Fighter Jets</h2>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 text-sm text-gray-700 rounded-r-lg">
+                <i class="fas fa-mouse-pointer mr-1 text-blue-600"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+            </div>
+
+            <!-- Hidden Message Overlay -->
+            <div id="hidden-overlay" class="hidden absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
+                <div class="bg-white p-6 rounded-full mb-4 border border-gray-200 shadow-xl">
+                    <i class="fas fa-ear-listen text-4xl text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Listen Carefully</h3>
+                <p class="text-gray-500 mb-6 text-center max-w-sm">The text is hidden to challenge your listening skills. Try to answer the questions by listening only!</p>
+                <button onclick="window.toggleText()" class="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition shadow-lg font-bold">
+                    Show Text
+                </button>
+            </div>
+
+            <!-- Article Container -->
+            <div id="article-display" class="prose max-w-none text-gray-700 text-lg md:text-xl leading-loose tracking-wide space-y-8 font-serif md:font-sans">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+
+        <!-- Quiz Area -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200 relative">
+            
+            <!-- Quiz Header with Restart Button -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-gray-200 pb-4">
+                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <span class="bg-blue-100 text-blue-600 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-base">
+                        <i class="fas fa-pen"></i>
+                    </span>
+                    Reading Comprehension Quiz (15 Questions)
+                </h3>
+                
+                <!-- Restart Button -->
+                <button onclick="window.resetQuiz()" class="action-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
+                </button>
+            </div>
+            
+            <form id="quizForm" class="space-y-10">
+                <!-- Questions will be generated here -->
+            </form>
+
+            <div class="mt-10 pt-8 border-t border-gray-200 flex flex-col items-center gap-4">
+                <button type="button" onclick="window.showFinalScore()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 px-12 rounded-full shadow-xl transition transform hover:-translate-y-1 active:scale-95">
+                    Show Final Score
+                </button>
+                
+                <div id="score-card" class="hidden mt-6 text-center w-full bg-slate-50 p-8 rounded-2xl border border-slate-200 animate-fade-in relative shadow-inner">
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-6xl font-extrabold text-blue-600 my-4" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-6 text-lg"></p>
+                    
+                    <button id="mistake-review-btn" onclick="window.openMistakeModal()" class="hidden w-full md:w-auto bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2 mx-auto">
+                        <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (New) -->
+    <div id="login-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col items-center justify-center gap-6 shadow-2xl border-0">
+            <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                <i class="fas fa-user-astronaut text-4xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">歡迎來到英語閱讀挑戰</h2>
+            <p class="text-gray-500 text-base mb-2">請輸入名字以儲存您的學習進度</p>
+            
+            <div class="w-full space-y-4 max-w-xs">
+                <input type="text" id="username-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-center text-lg transition" placeholder="輸入您的名字 (Enter Name)">
+                <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    開始閱讀 (Start)
+                </button>
+            </div>
+
+            <div class="w-full border-t border-gray-200 pt-6 mt-4">
+                <p class="text-xs text-gray-400 uppercase font-bold mb-4 tracking-wider">快速登入 (Quick Login)</p>
+                <div id="quick-login-area" class="flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-400">載入挑戰者名單中...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocab-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <button onclick="window.closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="vocab-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('vocab')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
+                </button>
+                <button onclick="window.closeModal('vocab-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study List Modal -->
+    <div id="study-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-gray-900"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <button onclick="window.closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="study-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('study')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
+                </button>
+                <button onclick="window.closeModal('study-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mistake Review Modal -->
+    <div id="mistake-modal" class="modal-backdrop">
+        <div class="modal-content flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-red-50 rounded-t-2xl">
+                <h3 class="text-2xl font-bold text-red-700"><i class="fas fa-times-circle text-red-500 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <button onclick="window.closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition p-2 rounded-full hover:bg-red-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow bg-white" id="mistake-table-container"></div>
+            <div class="p-5 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+                <button onclick="window.printList('mistakes')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
+                </button>
+                <button onclick="window.closeModal('mistake-modal')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Print Area -->
+    <div id="print-area"></div>
+
+    <!-- Firebase & App Logic Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Configuration ---
+        const COLLECTION_NAME = 'English-Reading-130';
+        const DOC_GLOBAL = 'global';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCan2_Rc26HsLkOPr0i5QrgdjAYyqcigJ0",
+            authDomain: "english-reading-6b506.firebaseapp.com",
+            projectId: "english-reading-6b506",
+            storageBucket: "english-reading-6b506.firebasestorage.app",
+            messagingSenderId: "494747176273",
+            appId: "1:494747176273:web:585487fadb29b2e5e2d770",
+            measurementId: "G-4JD6R9MRPQ"
+        };
+
+        let app, db, auth;
+        let isFirebaseReady = false;
+        let currentUser = null; // Store current user info {name: string}
+        let unsubscribeUser = null; // Listener for specific user data
+
+        // --- Firebase Initialization ---
+        async function initFirebase() {
+            try {
+                updateConnectionStatus('loading', '讀取資料中...');
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                
+                isFirebaseReady = true;
+                console.log("Firebase Connected");
+                
+                // Listen to Global Users List for Quick Login
+                onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { users: [] };
+                    renderQuickLogin(data.users || []);
+                }, (error) => {
+                    console.error("Global listener error:", error);
+                    updateConnectionStatus('error', '雲端同步失敗');
+                });
+
+            } catch (e) {
+                console.error("Firebase init error:", e);
+                updateConnectionStatus('error', '連線錯誤');
+            }
+        }
+
+        // --- User Logic ---
+        window.startLogin = async (name) => {
+            if (!name || !isFirebaseReady) return;
+            const cleanName = name.trim();
+            if (cleanName.length === 0) return;
+
+            currentUser = { name: cleanName };
+            document.getElementById('login-modal').style.display = 'none';
+            
+            // Update Header Name
+            document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
+
+            // Register user in Global List (if new)
+            try {
+                const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
+                await setDoc(globalRef, {
+                    users: arrayUnion({ name: cleanName })
+                }, { merge: true });
+
+                subscribeToUserData(cleanName);
+            } catch (e) {
+                console.error("Login save error:", e);
+            }
+        };
+
+        function subscribeToUserData(userName) {
+            if (unsubscribeUser) unsubscribeUser();
+            
+            const userDocRef = doc(db, COLLECTION_NAME, `user_${userName}`);
+            
+            unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+                updateConnectionStatus('success', '已同步');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // 1. Restore Favorites
+                    if (data.favorites) {
+                        favoriteWords = new Set(data.favorites);
+                        document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+                        // Re-render open modals if needed
+                        if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+                        if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+                    }
+
+                    // 2. Restore Progress
+                    if (data.progressIndex !== undefined && data.progressIndex > 0) {
+                        // Only update if playing is false to avoid jumping while listening
+                        if (!isPlaying && data.progressIndex > currentSentenceIndex) {
+                            currentSentenceIndex = data.progressIndex;
+                            window.updateProgressBar();
+                            window.highlightSentence(currentSentenceIndex);
+                        }
+                    }
+
+                    // 3. Restore Quiz Answers & State
+                    if (data.quizAnswers) {
+                         const serverAnswers = data.quizAnswers;
+                         
+                         // Reset local quiz state before rebuilding
+                         userScore = 0;
+                         wrongAnswers = [];
+                         userAnswers = serverAnswers;
+                         
+                         Object.keys(serverAnswers).forEach(qid => {
+                             const ans = serverAnswers[qid];
+                             const qObj = quizData.find(q => q.id === qid);
+                             
+                             if(qObj) {
+                                 if(ans === qObj.ans) userScore += (100/15);
+                                 else wrongAnswers.push({q: qObj, yourAns: ans});
+                             }
+
+                             const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
+                             if (!alreadyAnswered) {
+                                 window.checkAnswer(qid, ans, true); // true = isRestoring
+                             }
+                         });
+                    }
+                }
+            }, (error) => {
+                console.error("User listener error:", error);
+                updateConnectionStatus('error', '同步失敗');
+            });
+        }
+
+        // Exposed function to save data
+        window.saveUserData = async () => {
+            if (!currentUser || !isFirebaseReady) return;
+            updateConnectionStatus('loading', '同步中...');
+            
+            try {
+                const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                await setDoc(userDocRef, {
+                    favorites: Array.from(favoriteWords),
+                    mistakes: wrongAnswers,
+                    progressIndex: currentSentenceIndex,
+                    quizAnswers: userAnswers, // Save the map of answers
+                    lastUpdated: new Date()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Save error:", e);
+                updateConnectionStatus('error', '存檔失敗');
+            }
+        };
+
+        // Reset Quiz Data
+        window.resetQuiz = async () => {
+            if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
+            
+            userScore = 0;
+            wrongAnswers = [];
+            userAnswers = {};
+            
+            document.querySelectorAll('.quiz-option').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'disabled');
+            });
+            document.querySelectorAll('.quiz-option input').forEach(el => {
+                el.disabled = false;
+                el.checked = false;
+            });
+            document.querySelectorAll('.quiz-option div').forEach(el => {
+                const key = el.id.split('-').pop(); // get A, B, C...
+                el.className = "w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-3 font-bold text-gray-500 transition-colors";
+                el.innerHTML = key;
+            });
+            document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
+            document.getElementById('final-score').innerText = "0";
+            document.getElementById('score-card').classList.add('hidden');
+
+            if (currentUser && isFirebaseReady) {
+                 const userDocRef = doc(db, COLLECTION_NAME, `user_${currentUser.name}`);
+                 await updateDoc(userDocRef, {
+                     quizAnswers: deleteField(),
+                     mistakes: deleteField()
+                 });
+            }
+            
+            window.scrollTo({ top: document.getElementById('quizForm').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function renderQuickLogin(users) {
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = '';
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-400 py-2">尚無挑戰者紀錄，歡迎加入！</span>';
+                return;
+            }
+
+            const recentUsers = users.slice().reverse().slice(0, 5); 
+            
+            recentUsers.forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 px-4 py-2 rounded-full text-sm transition shadow-sm";
+                btn.innerText = u.name;
+                btn.onclick = () => {
+                    document.getElementById('username-input').value = u.name;
+                    window.startLogin(u.name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function updateConnectionStatus(status, text) {
+            const container = document.getElementById('cloud-status');
+            const dot = container.querySelector('.status-dot');
+            const label = container.querySelector('.status-text');
+            
+            dot.className = 'status-dot'; // reset
+            dot.classList.add(status); // loading, success, error
+            label.innerText = text;
+
+            container.className = 'status-container'; // reset
+            container.classList.add(status);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            const name = document.getElementById('username-input').value;
+            window.startLogin(name);
+        };
+        
+        initFirebase();
+
+
+        // ---------------------------------------------------------
+        // --- Existing App Logic (Attached to Window) ---
+        // ---------------------------------------------------------
+        
+        let synth = window.speechSynthesis;
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let isPlaying = false;
+        let textHidden = false;
+        let showTranslation = false;
+        let selectedVoice = null;
+        let userScore = 0;
+        let favoriteWords = new Set();
+        let wrongAnswers = []; 
+        let userAnswers = {}; // Store { qID: "Answer" }
+        let audioCtx;
+
+        const vocabulary = {
+            "aviation": { pos: "n.", trans: "航空", example: "He decided to pursue a career in military aviation." },
+            "dominate": { pos: "v.", trans: "支配；稱霸", example: "The team dominated the game from start to finish." },
+            "prestigious": { pos: "adj.", trans: "有聲望的", example: "Harvard is a prestigious university." },
+            "elite": { pos: "adj.", trans: "精英的", example: "Only elite athletes can compete in the Olympics." },
+            "recruitment": { pos: "n.", trans: "招募", example: "The company began a recruitment drive for new engineers." },
+            "distinctive": { pos: "adj.", trans: "獨特的", example: "The bird has a distinctive red mark on its wings." },
+            "interception": { pos: "n.", trans: "攔截", example: "The fighter jet was sent for the interception of the enemy plane." },
+            "agile": { pos: "adj.", trans: "靈活的；敏捷的", example: "The gymnast is very agile and flexible." },
+            "decommission": { pos: "v.", trans: "使退役", example: "The old warship was decommissioned last year." },
+            "backbone": { pos: "n.", trans: "骨幹；支柱", example: "Small businesses are the backbone of the economy." },
+            "multirole": { pos: "adj.", trans: "多用途的", example: "The multirole aircraft can fight in air and attack ground targets." },
+            "reliability": { pos: "n.", trans: "可靠性", example: "Toyota cars are known for their reliability." },
+            "avionics": { pos: "n.", trans: "航空電子設備", example: "Modern jets have advanced avionics systems." },
+            "authenticity": { pos: "n.", trans: "真實性", example: "The authenticity of the painting was confirmed by experts." },
+            "brutal": { pos: "adj.", trans: "殘酷的；嚴酷的", example: "The winter weather was brutal this year." },
+            "centrifugal": { pos: "adj.", trans: "離心的", example: "Centrifugal force pushes you outward when turning." },
+            "maneuver": { pos: "n.", trans: "機動動作；策略", example: "The pilot performed a difficult maneuver." },
+            "consciousness": { pos: "n.", trans: "意識", example: "He lost consciousness after hitting his head." },
+            "endurance": { pos: "n.", trans: "耐力", example: "Marathon runners need great endurance." },
+            "obsolete": { pos: "adj.", trans: "過時的；被淘汰的", example: "Typewriters are largely obsolete now." },
+            "stealth": { pos: "n.", trans: "隱形；潛行", example: "The bomber uses stealth technology to avoid radar." },
+            "notion": { pos: "n.", trans: "概念；想法", example: "The notion that the earth is flat is incorrect." },
+            "autonomous": { pos: "adj.", trans: "自主的；自動的", example: "Autonomous cars can drive without human input." },
+            "instinct": { pos: "n.", trans: "直覺；本能", example: "Her survival instinct helped her escape the fire." },
+            "mythology": { pos: "n.", trans: "神話", example: "Greek mythology is full of fascinating stories." },
+            "tactic": { pos: "n.", trans: "戰術", example: "They used a clever tactic to win the game." },
+            "arrogant": { pos: "adj.", trans: "傲慢的", example: "The arrogant man refused to listen to advice." },
+            "combat": { pos: "n.", trans: "戰鬥", example: "The soldiers were trained for close combat." },
+            "marvel": { pos: "n.", trans: "奇蹟", example: "The Great Wall is a marvel of engineering." },
+            "capability": { pos: "n.", trans: "能力", example: "This computer has the capability to process huge data." },
+            "variant": { pos: "n.", trans: "變體；型號", example: "The 'F' model is a two-seat variant of the jet." },
+            "gravitational": { pos: "adj.", trans: "引力的；重力的", example: "The moon's gravitational pull causes tides." },
+            "effortless": { pos: "adj.", trans: "毫不費力的", example: "She made the difficult dance look effortless." },
+            "inflate": { pos: "v.", trans: "充氣；膨脹", example: "The airbag will inflate instantly in a crash." },
+            "technique": { pos: "n.", trans: "技巧", example: "He learned a new painting technique." },
+            "engage": { pos: "v.", trans: "交戰；參與", example: "The pilot was ordered to engage the enemy." },
+            "radar": { pos: "n.", trans: "雷達", example: "The ship appeared on our radar screen." },
+            "unmanned": { pos: "adj.", trans: "無人的", example: "Unmanned drones are used for surveillance." },
+            "aerial": { pos: "adj.", trans: "空中的", example: "We took some aerial photos of the city." },
+            "soar": { pos: "v.", trans: "飆升；翱翔", example: "The eagle soared high above the mountains." }
+        };
+
+        const articleData = [
+            // Paragraph 1
+            { en: "When the movie Top Gun was released in 1986, it did more than just dominate the box office; it fundamentally changed how the public viewed military aviation.", zh: "當電影《捍衛戰士》於 1986 年上映時，它不僅稱霸了票房，更從根本上改變了大眾對軍事航空的看法。" },
+            { en: "Suddenly, becoming a fighter pilot was the coolest job in the world, and recruitment numbers for the US Navy soared.", zh: "突然間，成為戰鬥機飛行員變成了世界上最酷的工作，美國海軍的招募人數也隨之飆升。" },
+            { en: "The film centered on a prestigious training school known as \"TOPGUN.\"", zh: "這部電影以一所著名的訓練學校「TOPGUN」為中心。" },
+            { en: "While the movie added plenty of Hollywood drama and romance, the school itself is very real.", zh: "雖然電影增添了許多好萊塢式的戲劇性和浪漫色彩，但这所學校本身是真實存在的。" },
+            { en: "Officially named the United States Navy Strike Fighter Tactics Instructor program, it was founded in 1969 during the Vietnam War.", zh: "它的正式名稱是「美國海軍打擊戰鬥機戰術教官計畫」，成立於 1969 年越戰期間。" },
+            { en: "Its purpose was not to stroke the egos of arrogant pilots, but to solve a serious problem: the Navy was losing too many jets in combat.", zh: "其目的不是為了滿足傲慢飛行員的自尊心，而是為了解決一個嚴重的問題：海軍在戰鬥中損失了太多戰機。" },
+            { en: "The school was designed to teach the art of \"dogfighting\" (close-range aerial combat) to a select group of elite pilots, who would then return to their units to teach others.", zh: "這所學校的宗旨在於將「狗鬥」（近距離空中格鬥）的藝術傳授給一群精選的精英飛行員，然後由他們回到各自的部隊去教導其他人。" },
+            
+            // Paragraph 2
+            { en: "The true star of the original film was undoubtedly the Grumman F-14 Tomcat.", zh: "原版電影中真正的明星無疑是格魯曼 F-14 雄貓式戰鬥機。" },
+            { en: "With its distinctive variable-sweep wings, which could spread out for better lift at low speeds or sweep back for supersonic interception, the F-14 was an engineering marvel.", zh: "憑藉其獨特的可變後掠翼——可以在低速時展開以獲得更好的升力，或在超音速攔截時向後收攏——F-14 是一個工程奇蹟。" },
+            { en: "It was designed primarily as a fleet defender, built to carry massive long-range missiles to destroy enemy bombers before they could threaten US aircraft carriers.", zh: "它的設計主要是作為艦隊防禦者，用來攜帶巨大的長程飛彈，在敵方轟炸機威脅到美國航空母艦之前將其摧毀。" },
+            { en: "In the movie, the F-14 is portrayed as an agile fighter capable of tangled, close-quarters battles.", zh: "在電影中，F-14 被描繪成一種靈活的戰鬥機，能夠進行纏鬥和近距離戰鬥。" },
+            { en: "In reality, while it was powerful, the Tomcat was a large and heavy beast, famously difficult to maintain.", zh: "在現實中，雖然它威力強大，但雄貓是一隻巨大而沉重的野獸，以維護困難著稱。" },
+            { en: "For every hour of flight, it required dozens of hours of maintenance.", zh: "每飛行一小時，它就需要數十小時的維修。" },
+            { en: "Despite its legendary status and popularity among fans, the F-14 was decommissioned in 2006, replaced by more modern, reliable, and cost-effective aircraft.", zh: "儘管擁有傳奇地位且深受粉絲喜愛，F-14 仍於 2006 年退役，取而代之的是更現代、更可靠且更具成本效益的飛機。" },
+            
+            // Paragraph 3
+            { en: "In the 2022 sequel, Top Gun: Maverick, the hero trades his old Tomcat for the Boeing F/A-18E/F Super Hornet.", zh: "在 2022 年的續集《捍衛戰士：獨行俠》中，英雄將他的老雄貓換成了波音 F/A-18E/F 超級大黃蜂。" },
+            { en: "This aircraft is the current backbone of the US Navy's carrier air wing.", zh: "這款飛機是目前美國海軍艦載機聯隊的骨幹。" },
+            { en: "Unlike the specialized F-14, the Super Hornet is a \"multirole\" fighter.", zh: "與專用的 F-14 不同，超級大黃蜂是一種「多用途」戰鬥機。" },
+            { en: "This means it is designed to do everything: attack targets on the ground, fight enemy planes in the air, and even refuel other aircraft.", zh: "這意味著它的設計是為了做任何事：攻擊地面目標、在空中與敵機戰鬥，甚至為其他飛機加油。" },
+            { en: "While it lacks the sheer top speed and long-range missile capabilities of the F-14, the Super Hornet makes up for it with incredible reliability and advanced avionics.", zh: "雖然它缺乏 F-14 那樣純粹的極速和長程飛彈能力，但超級大黃蜂以驚人的可靠性和先進的航空電子設備彌補了這一點。" },
+            { en: "It is a digital warrior in an analog world.", zh: "它是類比世界中的數位戰士。" },
+            { en: "Crucially for the filmmakers, the Super Hornet is a two-seat aircraft (in the \"F\" variant), allowing the actors to sit in the back seat and be filmed experiencing real gravitational forces, adding a layer of authenticity that computer-generated effects could never match.", zh: "對電影製作人來說至關重要的是，超級大黃蜂是一種雙座飛機（在 F 型號中），允許演員坐在後座，拍攝他們承受真實重力的畫面，增添了電腦特效永遠無法比擬的真實感。" },
+            
+            // Paragraph 4
+            { en: "Movies often make flying look effortless, but the reality is physically brutal.", zh: "電影通常讓飛行看起來毫不費力，但現實卻是身體上的殘酷考驗。" },
+            { en: "The most intense challenge a fighter pilot faces is \"G-force.\"", zh: "戰鬥機飛行員面臨的最劇烈挑戰是「G 力」（重力）。" },
+            { en: "When a jet turns sharply at high speeds, the centrifugal force pushes the pilot into their seat, making their body feel several times heavier than normal.", zh: "當噴射機在高速下急轉彎時，離心力會將飛行員壓入座椅，使他們的身體感覺比正常重好幾倍。" },
+            { en: "In a high-G maneuver (such as pulling 9Gs), a pilot who weighs 80 kilograms will feel as if they weigh 720 kilograms.", zh: "在高 G 力機動中（例如拉 9 個 G），一名體重 80 公斤的飛行員會感覺自己重達 720 公斤。" },
+            { en: "This force drains blood away from the brain and towards the feet, which can cause \"G-LOC\" (G-induced Loss Of Consciousness).", zh: "這種力量會將血液從大腦抽離流向腳部，可能導致「G 力昏迷」（G-LOC）。" },
+            { en: "To combat this, pilots wear special G-suits that inflate to squeeze their legs, keeping blood in the upper body.", zh: "為了對抗這種情況，飛行員穿著特殊的抗荷服，它會充氣擠壓腿部，將血液保持在上半身。" },
+            { en: "They also perform a specific breathing technique called the \"Hook Maneuver\" to maintain blood pressure.", zh: "他們還執行一種稱為「鉤狀呼吸法」的特殊呼吸技術來維持血壓。" },
+            { en: "It is not just about skill; it is an athletic endurance test where passing out means crashing.", zh: "這不僅僅是技巧問題；這是一場運動耐力測試，一旦昏過去就意味著墜機。" },
+            
+            // Paragraph 5
+            { en: "As thrilling as Top Gun is, it depicts a style of warfare that is rapidly becoming obsolete.", zh: "儘管《捍衛戰士》令人興奮，但它描繪的戰爭風格正迅速過時。" },
+            { en: "The future of air combat lies in \"Beyond Visual Range\" (BVR) engagements and stealth technology.", zh: "空戰的未來在於「視距外」（BVR）交戰和隱形技術。" },
+            { en: "Fifth-generation fighters like the F-35 Lightning II are designed to be invisible to radar, allowing them to destroy enemies from tens of miles away without ever being seen.", zh: "像 F-35 閃電 II 這樣的第五代戰鬥機被設計成對雷達隱形，使它們能夠在數十英里外摧毀敵人而不被發現。" },
+            { en: "The romantic notion of pilots looking each other in the eye during a dogfight is largely a thing of the past.", zh: "飛行員在狗鬥中相互對視的浪漫概念很大程度上已成為過去。" },
+            { en: "Furthermore, the rise of unmanned combat aerial vehicles (drones) controlled by Artificial Intelligence raises the question of whether human pilots will eventually be replaced entirely.", zh: "此外，由人工智慧控制的無人戰鬥航空載具（無人機）的興起，引發了人類飛行員最終是否會被完全取代的問題。" },
+            { en: "While machines may react faster and endure higher G-forces, the Top Gun movies remind us that the human spirit—the instinct, creativity, and courage of the pilot—remains the heart of aviation mythology.", zh: "雖然機器可能反應更快並承受更高的 G 力，但《捍衛戰士》電影提醒我們，人類的精神——飛行員的直覺、創造力和勇氣——仍然是航空神話的核心。" }
+        ];
+
+        const quizData = [
+            { 
+                id: 'q1', 
+                q: "1. What was the primary reason for the establishment of the real TOPGUN school?", 
+                options: {A: "To create a movie set for Hollywood productions.", B: "To address the high loss of Navy jets in combat.", C: "To recruit more pilots from the general public.", D: "To demonstrate the speed of the F-14 Tomcat."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 1 states the purpose was \"to solve a serious problem: the Navy was losing too many jets in combat.\"<br><br><strong>Chi:</strong> 第一段指出其目的是「解決一個嚴重的問題：海軍在戰鬥中損失了太多戰機」。" 
+            },
+            { 
+                id: 'q2', 
+                q: "2. How did the release of the 1986 movie affect the US Navy?", 
+                options: {A: "It caused a shortage of available aircraft.", B: "It led to a significant increase in recruitment.", C: "It forced the Navy to close the TOPGUN school.", D: "It made the public dislike military aviation."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 1 mentions that after the movie, \"recruitment numbers for the US Navy soared.\"<br><br><strong>Chi:</strong> 第一段提到電影上映後，「美國海軍的招募人數飆升」。" 
+            },
+            { 
+                id: 'q3', 
+                q: "3. What was the distinct engineering feature of the F-14 Tomcat mentioned in the text?", 
+                options: {A: "It had wings that could change their position.", B: "It was the first plane to fly without a pilot.", C: "It used a special type of invisible paint.", D: "It could travel underwater like a submarine."}, 
+                ans: 'A', 
+                expl: "<strong>Eng:</strong> Paragraph 2 describes its \"distinctive variable-sweep wings, which could spread out... or sweep back.\"<br><br><strong>Chi:</strong> 第二段描述了其「獨特的可變後掠翼，可以展開……或向後收攏」。" 
+            },
+            { 
+                id: 'q4', 
+                q: "4. Why was the F-14 Tomcat eventually retired in 2006?", 
+                options: {A: "It was too slow compared to enemy jets.", B: "It was too small to carry modern missiles.", C: "It was difficult and expensive to maintain.", D: "It crashed more often than other planes."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 2 explains it was a \"heavy beast, famously difficult to maintain\" and required dozens of hours of repair per flight hour.<br><br><strong>Chi:</strong> 第二段解釋它是一隻「沉重的野獸，以維護困難著稱」，每飛行一小時需要數十小時的維修。" 
+            },
+            { 
+                id: 'q5', 
+                q: "5. What is the main advantage of the F/A-18 Super Hornet described in Paragraph 3?", 
+                options: {A: "It is the fastest aircraft ever built.", B: "It is a multirole fighter with high reliability.", C: "It can fly into space and return safely.", D: "It carries larger missiles than the F-14."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> The text states it is a \"multirole fighter... designed to do everything\" and has \"incredible reliability.\"<br><br><strong>Chi:</strong> 文中指出它是一種「多用途戰鬥機……設計來做任何事」且具有「驚人的可靠性」。" 
+            },
+            { 
+                id: 'q6', 
+                q: "6. Why did the filmmakers choose the F/A-18F for the sequel Top Gun: Maverick?", 
+                options: {A: "It was the cheapest plane to rent.", B: "It is a two-seat aircraft allowing actors to be filmed inside.", C: "It looks more futuristic than the F-35.", D: "It is the only plane that can perform the Cobra maneuver."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 3 explains it is a \"two-seat aircraft... allowing the actors to sit in the back seat and be filmed.\"<br><br><strong>Chi:</strong> 第三段解釋它是一種「雙座飛機……允許演員坐在後座被拍攝」。" 
+            },
+            { 
+                id: 'q7', 
+                q: "7. What physical effect does \"G-force\" have on a pilot?", 
+                options: {A: "It makes them feel lighter than air.", B: "It pushes blood from the brain to the feet.", C: "It causes their vision to become sharper.", D: "It increases their body temperature rapidly."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 4 states the force \"drains blood away from the brain and towards the feet.\"<br><br><strong>Chi:</strong> 第四段指出這種力量「將血液從大腦抽離流向腳部」。" 
+            },
+            { 
+                id: 'q8', 
+                q: "8. What is the purpose of the \"Hook Maneuver\"?", 
+                options: {A: "To help the pilot steer the aircraft.", B: "To communicate with the control tower.", C: "To maintain blood pressure and prevent passing out.", D: "To release the missiles at the right time."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 4 says it is a breathing technique \"to maintain blood pressure\" and combat G-LOC.<br><br><strong>Chi:</strong> 第四段說這是一種呼吸技術，用來「維持血壓」並對抗 G 力昏迷。" 
+            },
+            { 
+                id: 'q9', 
+                q: "9. What does \"BVR\" stand for in the context of modern air combat?", 
+                options: {A: "Best Visual Range", B: "Beyond Visual Range", C: "Before Vertical Rotation", D: "Basic Velocity Ratio."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> Paragraph 5 defines it as \"'Beyond Visual Range' (BVR) engagements.\"<br><br><strong>Chi:</strong> 第五段將其定義為「視距外 (BVR) 交戰」。" 
+            },
+            { 
+                id: 'q10', 
+                q: "10. How are fifth-generation fighters like the F-35 different from older jets?", 
+                options: {A: "They are designed to be invisible to radar.", B: "They are much slower but carry more bombs.", C: "They must be flown by two pilots at all times.", D: "They use propellers instead of jet engines."}, 
+                ans: 'A', 
+                expl: "<strong>Eng:</strong> Paragraph 5 states they are \"designed to be invisible to radar.\"<br><br><strong>Chi:</strong> 第五段指出它們「被設計成對雷達隱形」。" 
+            },
+            { 
+                id: 'q11', 
+                q: "11. The word \"prestigious\" in Paragraph 1 is closest in meaning to:", 
+                options: {A: "Secretive and hidden", B: "Respected and admired", C: "Dangerous and deadly", D: "Large and crowded"}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> \"Prestigious\" means having a high reputation; respected and admired.<br><br><strong>Chi:</strong> \"Prestigious\" 意指享有很高聲譽的；受尊敬和欽佩的。" 
+            },
+            { 
+                id: 'q12', 
+                q: "12. What does the author imply about the future of dogfighting?", 
+                options: {A: "It will become more common due to drones.", B: "It will remain the primary way to fight wars.", C: "It is largely becoming a thing of the past.", D: "It will be performed only by F-14 Tomcats."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 5 says the romantic notion of dogfighting is \"largely a thing of the past.\"<br><br><strong>Chi:</strong> 第五段說狗鬥的浪漫概念「很大程度上已成為過去」。" 
+            },
+            { 
+                id: 'q13', 
+                q: "13. What is the function of a \"G-suit\"?", 
+                options: {A: "To protect the pilot from enemy fire.", B: "To keep the pilot warm at high altitudes.", C: "To squeeze the legs to keep blood in the upper body.", D: "To provide extra oxygen during the flight."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> Paragraph 4 mentions G-suits \"inflate to squeeze their legs, keeping blood in the upper body.\"<br><br><strong>Chi:</strong> 第四段提到抗荷服「會充氣擠壓腿部，將血液保持在上半身」。" 
+            },
+            { 
+                id: 'q14', 
+                q: "14. Why is the Super Hornet described as a \"workhorse\"?", 
+                options: {A: "It is slow and steady like a horse.", B: "It is reliable and performs many different tasks.", C: "It is used primarily for training horses.", D: "It is an old-fashioned aircraft."}, 
+                ans: 'B', 
+                expl: "<strong>Eng:</strong> \"Workhorse\" implies reliability and versatility. The text calls it the \"backbone\" and \"multirole.\"<br><br><strong>Chi:</strong> \"Workhorse\" 暗示可靠性和多功能性。文中稱其為「骨幹」和「多用途」。" 
+            },
+            { 
+                id: 'q15', 
+                q: "15. What is the main theme of the conclusion (Paragraph 5)?", 
+                options: {A: "Computers are better than humans in every way.", B: "The F-14 should be brought back into service.", C: "Human spirit remains central despite technological changes.", D: "War is becoming safer for everyone involved."}, 
+                ans: 'C', 
+                expl: "<strong>Eng:</strong> The conclusion states that \"the human spirit... remains the heart of aviation mythology.\"<br><br><strong>Chi:</strong> 結論指出「人類的精神……仍然是航空神話的核心」。" 
+            }
+        ];
+
+        window.initAudioContext = function() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        window.playCorrectSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        window.playFailSound = function() {
+            window.initAudioContext();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime); 
+            osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function initVoice() {
+            const loadVoices = () => {
+                const voices = synth.getVoices();
+                if (voices.length > 0) {
+                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
+                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
+                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
+                                    voices.find(v => v.name === 'Samantha') || 
+                                    voices.find(v => v.lang === 'en-US');
+                }
+            };
+            loadVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        function renderArticle() {
+            const displayArea = document.getElementById('article-display');
+            if (!displayArea) return;
+            displayArea.innerHTML = '';
+            
+            let p;
+            sentences = []; 
+            
+            articleData.forEach((item, index) => {
+                // Image insertion logic
+                if (index === 0) insertImage(displayArea, 'p1.jpg', 'The School of Excellence');
+                else if (index === 7) insertImage(displayArea, 'p2.jpg', 'The Legend of the Tomcat');
+                else if (index === 14) insertImage(displayArea, 'p3.jpg', 'The Workhorse: The Super Hornet');
+                else if (index === 21) insertImage(displayArea, 'p4.jpg', 'The Physical Toll');
+                else if (index === 29) insertImage(displayArea, 'p5.jpg', 'The Future of Air Combat');
+                
+                if (index === 0 || index === 7 || index === 14 || index === 21 || index === 29) {
+                    p = document.createElement('p');
+                    p.className = "mb-10 text-gray-800 leading-relaxed"; 
+                    displayArea.appendChild(p);
+                }
+                
+                const spanEn = document.createElement('span');
+                spanEn.innerHTML = processWords(item.en);
+                spanEn.id = `sent-${index}`;
+                spanEn.className = 'cursor-pointer hover:bg-yellow-100 rounded transition duration-200 leading-loose mr-1';
+                spanEn.onclick = (e) => {
+                    if (e.target.classList.contains('vocab-word') || e.target.parentElement.classList.contains('vocab-word') || e.target.tagName === 'BUTTON' || e.target.tagName === 'I') return;
+                    window.playFromSentence(index);
+                };
+                
+                p.appendChild(spanEn);
+                sentences.push({ text: item.en, id: `sent-${index}` });
+
+                const divZh = document.createElement('div');
+                divZh.className = 'translation-text hidden';
+                divZh.innerText = item.zh;
+                p.appendChild(divZh);
+            });
+        }
+
+        function insertImage(container, filename, altText) {
+             const img = document.createElement('img');
+             img.src = `English-Reading-130-images/${filename}`; 
+             img.alt = altText;
+             img.width = 1300;
+             img.height = 576;
+             img.className = "w-full md:w-5/6 h-auto object-cover rounded-xl mb-8 mx-auto shadow-lg hover:shadow-2xl transition duration-500 border border-gray-100";
+             img.onerror = function() { this.style.display = 'none'; };
+             container.appendChild(img);
+        }
+
+        function processWords(text) {
+            const words = text.split(' ');
+            return words.map(word => {
+                // Keep the original punctuation for display
+                const originalWord = word;
+                // Remove punctuation for lookup
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                
+                // --- Smart Lookup Logic: Word Mapping for Variations ---
+                const wordMapping = {
+                    "aviations": "aviation",
+                    "dominated": "dominate",
+                    "dominating": "dominate",
+                    "recruiting": "recruitment",
+                    "recruitments": "recruitment",
+                    "intercepting": "interception",
+                    "interceptions": "interception",
+                    "agiles": "agile",
+                    "decommissioned": "decommission",
+                    "decommissioning": "decommission",
+                    "backbones": "backbone",
+                    "reliabilities": "reliability",
+                    "authenticities": "authenticity",
+                    "maneuvers": "maneuver",
+                    "maneuvering": "maneuver",
+                    "consciousnesses": "consciousness",
+                    "endurances": "endurance",
+                    "obsoletes": "obsolete",
+                    "stealths": "stealth",
+                    "notions": "notion",
+                    "instincts": "instinct",
+                    "mythologies": "mythology",
+                    "tactics": "tactic",
+                    "combats": "combat",
+                    "marvels": "marvel",
+                    "capabilities": "capability",
+                    "variants": "variant",
+                    "inflates": "inflate",
+                    "inflated": "inflate",
+                    "techniques": "technique",
+                    "engages": "engage",
+                    "engaged": "engage",
+                    "radars": "radar",
+                    "aerials": "aerial",
+                    "soars": "soar",
+                    "soared": "soar"
+                };
+
+                let targetKey = cleanWord;
+                if (wordMapping[cleanWord]) {
+                    targetKey = wordMapping[cleanWord];
+                }
+
+                if (vocabulary[targetKey]) {
+                    const data = vocabulary[targetKey];
+                    const isFav = favoriteWords.has(targetKey);
+                    const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                    
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="pos-tag text-sm">${data.pos}</span>
+                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1 text-gray-500 hover:text-pink-500" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            </button>
+                        </div>
+                        <div class="font-bold text-blue-800 text-2xl mb-2">${targetKey}</div>
+                        <div class="mb-3 text-lg font-medium text-gray-800">${data.trans}</div>
+                        <div class="text-lg text-gray-600 italic border-t border-gray-200 pt-3 leading-relaxed">"${data.example}"</div>
+                    </span></span>`;
+                }
+                return originalWord;
+            }).join(' ');
+        }
+        
+        window.speakAndShowDef = function(e, word) {
+            e.stopPropagation(); 
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.speakWord = function(word) {
+            synth.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(word);
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 0.9; 
+            synth.speak(utterance);
+        }
+
+        window.toggleFavorite = function(e, word) {
+            if(e) e.stopPropagation();
+            if (favoriteWords.has(word)) {
+                favoriteWords.delete(word);
+                updateHeartIcon(word, false);
+            } else {
+                favoriteWords.add(word);
+                updateHeartIcon(word, true);
+                confetti({
+                    particleCount: 30,
+                    spread: 40,
+                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
+                    colors: ['#ec4899', '#f43f5e']
+                });
+            }
+            document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
+            if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
+            if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
+
+            window.saveUserData();
+        }
+
+        function updateHeartIcon(word, isFav) {
+            const icons = document.querySelectorAll(`#heart-${word}`);
+            icons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            tableIcons.forEach(icon => {
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+            });
+        }
+
+        window.openVocabModal = function() {
+            const container = document.getElementById('vocab-table-container');
+            container.innerHTML = generateTableHTML(Object.keys(vocabulary), 'vocab');
+            document.getElementById('vocab-modal').style.display = 'flex';
+        }
+
+        window.openStudyModal = function() {
+            const container = document.getElementById('study-table-container');
+            if (favoriteWords.size === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p class="text-lg">您的學習清單是空的。</p><p class="text-sm text-gray-400 mt-2">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+            } else {
+                container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
+            }
+            document.getElementById('study-modal').style.display = 'flex';
+        }
+
+        window.openMistakeModal = function() {
+            const container = document.getElementById('mistake-table-container');
+            if (wrongAnswers.length === 0) {
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-500"></i><p class="text-lg font-bold">太棒了！</p><p class="text-sm text-gray-400 mt-2">您沒有答錯任何題目。</p></div>`;
+            } else {
+                 let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-red-50 border-b border-red-100 text-red-800">
+                                <th class="p-4 font-bold w-4/12 rounded-tl-lg">題目 (Question)</th>
+                                <th class="p-4 font-bold w-2/12">您的答案</th>
+                                <th class="p-4 font-bold w-2/12">正確答案</th>
+                                <th class="p-4 font-bold w-4/12 rounded-tr-lg">詳解 (Explanation)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                `;
+                wrongAnswers.forEach(item => {
+                    html += `
+                        <tr class="hover:bg-red-50/50 transition">
+                            <td class="p-4 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-4 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-4 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-4 text-gray-600 text-sm leading-relaxed">${item.q.expl}</td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+            document.getElementById('mistake-modal').style.display = 'flex';
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function generateTableHTML(wordList, type) {
+            if (!wordList || wordList.length === 0) return '';
+            wordList.sort();
+            let html = `
+                <table class="w-full text-left border-collapse text-gray-800">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200 text-gray-700">
+                            <th class="p-4 font-bold w-1/12 text-lg rounded-tl-lg">收藏</th>
+                            <th class="p-4 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-4 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-4 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-4 font-bold w-5/12 text-lg rounded-tr-lg">例句 (Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+            `;
+            wordList.forEach(word => {
+                const data = vocabulary[word];
+                if(!data) return;
+                const isFav = favoriteWords.has(word);
+                const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
+                html += `
+                    <tr class="hover:bg-blue-50/50 transition duration-150">
+                        <td class="p-4 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition text-gray-400 hover:text-pink-500"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        
+                        <td class="p-4 font-bold text-blue-700 text-xl md:text-2xl cursor-pointer hover:text-blue-900 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition text-blue-400"></i>
+                        </td>
+
+                        <td class="p-4 text-base md:text-lg"><span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-4 text-gray-700 text-lg md:text-xl font-medium">${data.trans}</td>
+                        <td class="p-4 text-gray-500 text-lg md:text-xl italic">"${data.example}"</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        window.printList = function(type) {
+            const printArea = document.getElementById('print-area');
+            let content = '';
+            
+            if (type === 'mistakes') {
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            錯題本 (Review Mistakes)
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wrongAnswers.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
+                } else {
+                    wrongAnswers.forEach(item => {
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            } else {
+                let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
+                let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
+                wordList.sort();
+
+                content = `
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                            ${title}
+                        </h1>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                if (wordList.length === 0) {
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                } else {
+                    wordList.forEach(word => {
+                        const data = vocabulary[word];
+                        content += `
+                            <tr>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                content += `</tbody></table></div>`;
+            }
+            
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: Top Gun Fighter Jets</div>`;
+            printArea.innerHTML = content;
+            window.print();
+        }
+
+        window.toggleTranslation = function() {
+            showTranslation = !showTranslation;
+            const transElements = document.querySelectorAll('.translation-text');
+            const btn = document.getElementById('toggle-trans-btn');
+            
+            transElements.forEach(el => {
+                if(showTranslation) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            if(showTranslation) {
+                btn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.remove('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-check"></i> <span>隱藏翻譯</span>';
+            } else {
+                btn.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+                btn.classList.add('bg-slate-800', 'text-green-400', 'border-slate-600', 'hover:bg-slate-700');
+                btn.innerHTML = '<i class="fas fa-language"></i> <span>顯示翻譯</span>';
+            }
+        }
+
+        window.togglePlay = function() {
+            if (isPlaying) {
+                window.pauseAudio();
+            } else {
+                window.playAudio();
+            }
+        }
+
+        window.playAudio = function() {
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            if (currentSentenceIndex >= sentences.length) {
+                currentSentenceIndex = 0;
+            }
+            window.speakSentence(currentSentenceIndex);
+        }
+
+        window.speakSentence = function(index) {
+            if (!isPlaying || index >= sentences.length) {
+                if (index >= sentences.length) {
+                    isPlaying = false;
+                    updatePlayBtn(false);
+                    document.getElementById('visualizer').classList.remove('playing');
+                    currentSentenceIndex = 0;
+                    window.highlightSentence(-1);
+                    currentSentenceIndex = 0;
+                    window.saveUserData();
+                }
+                return;
+            }
+
+            currentSentenceIndex = index;
+            window.highlightSentence(index);
+            window.updateProgressBar();
+            window.saveUserData();
+
+            synth.cancel();
+
+            const text = sentences[index].text;
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.rate = 1.0; 
+            utterance.pitch = 1.0; 
+            
+            utterance.onend = function() {
+                if (isPlaying) {
+                    setTimeout(() => {
+                        window.speakSentence(index + 1);
+                    }, 400); 
+                }
+            };
+            
+            utterance.onerror = function(e) {
+                console.error("Speech error", e);
+                isPlaying = false;
+                updatePlayBtn(false);
+            };
+
+            synth.speak(utterance);
+        }
+
+        window.pauseAudio = function() {
+            isPlaying = false;
+            synth.cancel();
+            updatePlayBtn(false);
+            document.getElementById('visualizer').classList.remove('playing');
+        }
+
+        window.restartAudio = function() {
+            synth.cancel();
+            currentSentenceIndex = 0;
+            window.updateProgressBar();
+            window.highlightSentence(-1);
+            if (isPlaying) {
+                setTimeout(() => window.speakSentence(0), 100);
+            }
+        }
+        
+        window.playFromSentence = function(index) {
+            currentSentenceIndex = index;
+            isPlaying = true;
+            updatePlayBtn(true);
+            document.getElementById('visualizer').classList.add('playing');
+            window.speakSentence(index);
+        }
+
+        function updatePlayBtn(isPlay) {
+            const icons = [document.getElementById('main-play-icon'), document.getElementById('mobile-play-icon')];
+            icons.forEach(icon => {
+                if (isPlay) {
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                } else {
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                }
+            });
+        }
+
+        window.highlightSentence = function(index) {
+            document.querySelectorAll('.highlight-text').forEach(el => el.classList.remove('highlight-text'));
+            
+            if (index >= 0 && index < sentences.length) {
+                const el = document.getElementById(sentences[index].id);
+                if (el) {
+                    el.classList.add('highlight-text');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        window.updateProgressBar = function() {
+             const progress = ((currentSentenceIndex + 1) / sentences.length) * 100;
+             document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        window.toggleText = function() {
+            textHidden = !textHidden;
+            const overlay = document.getElementById('hidden-overlay');
+            const btn = document.getElementById('toggle-text-btn');
+            if (textHidden) {
+                overlay.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-eye"></i> <span>Show Text</span>';
+                btn.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.remove('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            } else {
+                overlay.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> <span>Hide Text</span>';
+                btn.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                btn.classList.add('bg-slate-800', 'text-amber-400', 'border-slate-600', 'hover:bg-slate-700');
+            }
+        }
+
+        function renderQuiz() {
+            const form = document.getElementById('quizForm');
+            if (!form) return;
+            form.innerHTML = '';
+            
+            quizData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md hover:border-blue-300';
+                div.innerHTML = `
+                    <p class="font-bold text-gray-800 mb-4 text-xl">${item.q}</p>
+                    <div class="space-y-3" id="${item.id}-options">
+                        ${Object.keys(item.options).map(key => `
+                            <label class="quiz-option flex items-center p-4 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
+                                <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white" id="${item.id}-icon-${key}">
+                                    ${key}
+                                </div>
+                                <span class="text-gray-700 font-medium text-lg">${item.options[key]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="${item.id}-expl" class="explanation-box mt-4 bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
+                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p>${item.expl}</p>
+                    </div>
+                `;
+                form.appendChild(div);
+            });
+        }
+
+        window.checkAnswer = function(questionId, selectedKey, isRestoring = false) {
+            const questionObj = quizData.find(q => q.id === questionId);
+            if (!questionObj) return;
+
+            userAnswers[questionId] = selectedKey;
+
+            const isCorrect = selectedKey === questionObj.ans;
+            
+            const selectedLabel = document.getElementById(`${questionId}-label-${selectedKey}`);
+            const selectedIcon = document.getElementById(`${questionId}-icon-${selectedKey}`);
+            
+            if (isCorrect) {
+                if(!isRestoring) window.playCorrectSound(); 
+                selectedLabel.classList.add('correct');
+                selectedIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                selectedIcon.innerHTML = '<i class="fas fa-check"></i>';
+                if(!isRestoring) userScore += (100 / 15); 
+            } else {
+                if(!isRestoring) window.playFailSound(); 
+                selectedLabel.classList.add('wrong');
+                selectedIcon.classList.add('border-red-500', 'text-red-600', 'bg-red-100');
+                selectedIcon.innerHTML = '<i class="fas fa-times"></i>';
+                
+                const correctLabel = document.getElementById(`${questionId}-label-${questionObj.ans}`);
+                const correctIcon = document.getElementById(`${questionId}-icon-${questionObj.ans}`);
+                correctLabel.classList.add('correct');
+                correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
+                correctIcon.innerHTML = '<i class="fas fa-check"></i>';
+
+                if(!isRestoring) wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
+            }
+
+            const optionsDiv = document.getElementById(`${questionId}-options`);
+            const inputs = optionsDiv.querySelectorAll('input');
+            const labels = optionsDiv.querySelectorAll('label');
+            
+            inputs.forEach(input => input.disabled = true);
+            labels.forEach(label => label.classList.add('disabled'));
+
+            const explBox = document.getElementById(`${questionId}-expl`);
+            const statusText = document.getElementById(`${questionId}-status`);
+            
+            explBox.style.display = 'block';
+            if (isCorrect) {
+                explBox.style.borderLeftColor = '#16a34a';
+                explBox.style.backgroundColor = '#f0fdf4';
+                statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
+                statusText.className = "font-bold mb-1 text-green-700";
+            } else {
+                explBox.style.borderLeftColor = '#dc2626';
+                explBox.style.backgroundColor = '#fef2f2';
+                statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
+                statusText.className = "font-bold mb-1 text-red-700";
+            }
+
+            if(!isRestoring) window.saveUserData();
+        }
+
+        window.showFinalScore = function() {
+            const scoreDisplay = document.getElementById('final-score');
+            const feedback = document.getElementById('feedback-msg');
+            const resultCard = document.getElementById('score-card');
+            const mistakeBtn = document.getElementById('mistake-review-btn');
+            
+            resultCard.classList.remove('hidden');
+            let finalScore = Math.round(userScore);
+            scoreDisplay.innerText = `${finalScore} / 100`;
+            
+            if (wrongAnswers.length > 0) {
+                mistakeBtn.classList.remove('hidden');
+                mistakeBtn.classList.add('flex');
+            }
+
+            if (finalScore >= 80) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b']
+                });
+                
+                if (finalScore >= 95) {
+                    feedback.innerText = "Maverick level! You are a true ace pilot!";
+                } else {
+                    feedback.innerText = "Great job! You're ready for TOPGUN.";
+                }
+            } else if (finalScore >= 60) {
+                feedback.innerText = "Good pass. Keep training, wingman.";
+            } else {
+                feedback.innerText = "You crashed and burned. Try listening again.";
+            }
+            
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', () => {
+                renderArticle();
+                renderQuiz();
+                initVoice();
+            });
+        } else {
+            renderArticle();
+            renderQuiz();
+            initVoice();
+        }
+    </script>
+</body>
+</html>
