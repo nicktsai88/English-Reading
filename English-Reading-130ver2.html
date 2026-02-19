@@ -57,7 +57,7 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.1em; /* Increased slightly for better readability */
+            font-size: 1.05em;
             color: #374151;
             background: #f9fafb;
             padding: 20px;
@@ -804,7 +804,7 @@
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
                 const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-8 h-8 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white";
+                el.className = "w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-3 font-bold text-gray-500 transition-colors";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
