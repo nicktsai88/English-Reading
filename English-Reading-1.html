@@ -1107,7 +1107,14 @@
                 html += `
                     <tr class="hover:bg-gray-50">
                         <td class="p-4 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none"><i class="${heartClass} heart-icon-${word}"></i></button></td>
-                        <td class="p-4 font-bold text-indigo-700 text-xl">${word}</td>
+                        <td class="p-4 font-bold text-indigo-700 text-xl">
+                            <div class="flex items-center gap-2">
+                                ${word}
+                                <button onclick="speakAndShowDef(event, '${word}')" class="text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors focus:outline-none no-print" title="聆聽發音">
+                                    <i class="fas fa-volume-up text-lg"></i>
+                                </button>
+                            </div>
+                        </td>
                         <td class="p-4 text-base"><span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded font-bold">${data.pos}</span></td>
                         <td class="p-4 text-gray-800 font-medium">${data.trans}</td>
                         <td class="p-4 text-gray-700 text-base leading-relaxed">
