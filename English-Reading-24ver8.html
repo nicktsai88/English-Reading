@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.75em;
+            font-size: 1.3em;
             color: #d1d5db;
             background: #1f2937;
-            padding: 24px;
-            border-radius: 12px;
-            border-left: 6px solid #6366f1; /* Indigo border */
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #8b5cf6; /* Violet border */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 98%;
-            max-width: 1600px;
+            width: 90%;
+            max-width: 900px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -310,28 +310,14 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 0;
+                padding: 20px;
             }
             @page {
-                size: A4 landscape;
-                margin: 1cm;
+                size: A4 portrait;
+                margin: 2cm;
             }
             .no-print {
                 display: none !important;
-            }
-
-            /* Overriding table font-size and padding for print */
-            table {
-                font-size: 15px !important;
-            }
-            th, td {
-                padding: 8px !important;
-            }
-            h1 {
-                font-size: 26px !important;
-            }
-            h2 {
-                font-size: 18px !important;
             }
         }
     </style>
@@ -518,7 +504,7 @@
             
             <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-2xl font-bold text-gray-100 flex items-center">
+                <h3 class="text-xl font-bold text-gray-100 flex items-center">
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
@@ -826,7 +812,7 @@
             document.querySelectorAll('.quiz-option div').forEach(el => {
                 // Reset icons
                 const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl";
+                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -913,86 +899,48 @@
         let userAnswers = {}; // Store { qID: "Answer" }
         let audioCtx;
 
-        // Smart Lookup Feature mapping
-        const smartLookupMap = {
-            "approaches": "approach",
-            "approached": "approach",
-            "believed": "belief",
-            "beliefs": "belief",
-            "chills": "chilling",
-            "consequence": "consequences",
-            "crawling": "crawls",
-            "crawl": "crawls",
-            "descends": "descent",
-            "descended": "descent",
-            "haunt": "haunts",
-            "haunting": "haunts",
-            "patrol": "patrols",
-            "patrolling": "patrols",
-            "pedestrian": "pedestrians",
-            "revealed": "reveal",
-            "reveals": "reveal",
-            "shadow": "shadows",
-            "shadowy": "shadows",
-            "slices": "slice",
-            "sliced": "slice",
-            "staining": "stained",
-            "stain": "stained",
-            "stalls": "stall",
-            "strangling": "strangled",
-            "strangle": "strangled",
-            "summoning": "summon",
-            "summons": "summon",
-            "survived": "survive",
-            "surviving": "survive"
-        };
-
-        function getSmartLookupRoot(word) {
-            return smartLookupMap[word] || word;
-        }
-
-        // Updated Vocabulary Data Definition
+        // Data Definitions (Moved from inline script for module access)
         const vocabulary = {
-            "approach": { pos: "v.", trans: "接近", example: "Do not approach the wild animal.", exampleZh: "(請勿靠近野生動物。)", family: "approachable (adj. 易親近的)", collocation: "approach cautiously (小心接近)<br>right approach (正確的作法)" },
-            "aspect": { pos: "n.", trans: "方面", example: "Culture is an important aspect of society.", exampleZh: "(文化是社會的一個重要方面。)", family: "(無特別常見衍生字)", collocation: "important aspect (重要方面)<br>every aspect (每一個方面)" },
-            "belief": { pos: "n.", trans: "信念；相信", example: "His belief in ghosts is very strong.", exampleZh: "(他對鬼魂的信仰非常強烈。)", family: "believe (v. 相信)<br>believable (adj. 可信的)", collocation: "strong belief (堅定的信念)<br>religious belief (宗教信仰)" },
-            "chilling": { pos: "adj.", trans: "令人恐懼的；寒冷的", example: "She told a chilling story about a murder.", exampleZh: "(她講了一個令人毛骨悚然的謀殺故事。)", family: "chill (n./v. 寒冷/使變冷)<br>chilly (adj. 寒冷的)", collocation: "chilling effect (寒蟬效應)<br>chilling tale (令人不寒而慄的故事)" },
-            "consequences": { pos: "n.", trans: "後果", example: "You must be prepared to face the consequences of your actions.", exampleZh: "(你必須準備好面對你行為的後果。)", family: "consequence (n. 後果/單數形)<br>consequent (adj. 隨之發生的)", collocation: "face the consequences (面對後果)<br>serious consequences (嚴重的後果)" },
-            "courage": { pos: "n.", trans: "勇氣", example: "It takes courage to stand up to a bully.", exampleZh: "(挺身對抗霸凌者需要勇氣。)", family: "courageous (adj. 勇敢的)<br>encourage (v. 鼓勵)", collocation: "take courage (需要勇氣)<br>gather courage (鼓起勇氣)" },
-            "crawls": { pos: "v.", trans: "爬行", example: "The baby learned to crawl before walking.", exampleZh: "(嬰兒在走路前學會了爬行。)", family: "crawl (v. 原形/n. 爬行)<br>crawler (n. 爬蟲/爬行者)", collocation: "crawl space (狹窄的爬行空間)<br>crawl along (緩慢行進)" },
-            "descent": { pos: "n.", trans: "下降；墮落", example: "The plane began its descent into the airport.", exampleZh: "(飛機開始下降準備進入機場。)", family: "descend (v. 下降)<br>descendant (n. 後裔)", collocation: "steep descent (陡降)<br>make a descent (進行下降)" },
-            "faint": { pos: "adj.", trans: "微弱的", example: "I heard a faint noise in the distance.", exampleZh: "(我聽到遠處傳來微弱的聲音。)", family: "faint (v. 暈倒)<br>faintly (adv. 微弱地)", collocation: "faint sound (微弱的聲音)<br>faint hope (渺茫的希望)" },
-            "fiery": { pos: "adj.", trans: "火熱的；激烈的", example: "She has a fiery temper.", exampleZh: "(她脾氣很火爆。)", family: "fire (n./v. 火/開火)", collocation: "fiery temper (火爆脾氣)<br>fiery debate (激烈的辯論)" },
-            "folklore": { pos: "n.", trans: "民間傳說", example: "Japanese folklore is full of spirits and monsters.", exampleZh: "(日本民間傳說充滿了神靈和妖怪。)", family: "folk (n. 人們/adj. 民間的)", collocation: "traditional folklore (傳統民間傳說)<br>local folklore (當地民間傳說)" },
-            "gruesome": { pos: "adj.", trans: "可怕的；血腥的", example: "The details of the crime were too gruesome to report.", exampleZh: "(犯罪細節太過血腥，無法報導。)", family: "gruesomely (adv. 可怕地/血腥地)", collocation: "gruesome murder (駭人聽聞的謀殺)<br>gruesome details (血腥細節)" },
-            "haunts": { pos: "v.", trans: "出沒；鬧鬼", example: "Ghosts are said to haunt this old castle.", exampleZh: "(據說鬼魂在這座古堡裡出沒。)", family: "haunt (v. 原形)<br>haunted (adj. 鬧鬼的)", collocation: "haunted house (鬼屋)<br>come back to haunt (日後帶來麻煩)" },
-            "imagery": { pos: "n.", trans: "意象；圖像", example: "The poem is full of dark nature imagery.", exampleZh: "(這首詩充滿了黑暗的自然意象。)", family: "image (n. 圖像/形象)<br>imagine (v. 想像)", collocation: "vivid imagery (生動的意象)<br>visual imagery (視覺意象)" },
-            "mischievous": { pos: "adj.", trans: "惡作劇的；淘氣的", example: "The mischievous puppy stole my shoe.", exampleZh: "(淘氣的小狗偷了我的鞋子。)", family: "mischief (n. 惡作劇/調皮)<br>mischievously (adv. 淘氣地)", collocation: "mischievous smile (調皮的微笑)<br>mischievous child (淘氣的孩子)" },
-            "mysterious": { pos: "adj.", trans: "神秘的", example: "A mysterious stranger arrived in the small town.", exampleZh: "(一位神秘的陌生人來到了這個小鎮。)", family: "mystery (n. 神秘事物/謎)<br>mysteriously (adv. 神秘地)", collocation: "mysterious circumstances (神秘的情況)<br>mysterious disappearance (離奇失蹤)" },
-            "patrols": { pos: "n.", trans: "巡邏", example: "Police increased patrols at night to keep the area safe.", exampleZh: "(警方增加了夜間巡邏以保持該地區的安全。)", family: "patrol (v. 巡邏)", collocation: "police patrol (警察巡邏)<br>on patrol (巡邏中)" },
-            "pedestrians": { pos: "n.", trans: "行人", example: "Cars must stop for pedestrians at the crosswalk.", exampleZh: "(汽車必須在斑馬線前停下來讓行人通行。)", family: "pedestrian (adj. 平凡的/步行的)", collocation: "pedestrian crossing (行人穿越道)<br>innocent pedestrians (無辜的行人)" },
-            "polite": { pos: "adj.", trans: "有禮貌的", example: "It is polite to bow when greeting someone in Japan.", exampleZh: "(在日本，打招呼時鞠躬是有禮貌的。)", family: "politely (adv. 有禮貌地)<br>politeness (n. 禮貌)<br>impolite (adj. 沒禮貌的)", collocation: "polite conversation (客氣的交談)<br>be polite to (對...有禮貌)" },
-            "potent": { pos: "adj.", trans: "強效的；有力的", example: "The medicine is very potent.", exampleZh: "(這藥效非常強。)", family: "potency (n. 效力/力量)", collocation: "potent weapon (強而有力的武器)<br>highly potent (極度強效的)" },
-            "psychological": { pos: "adj.", trans: "心理的", example: "The trauma caused long-term psychological damage.", exampleZh: "(創傷造成了長期的心理傷害。)", family: "psychology (n. 心理學)<br>psychologist (n. 心理學家)", collocation: "psychological effect (心理影響)<br>psychological trauma (心理創傷)" },
-            "reveal": { pos: "v.", trans: "揭露；顯示", example: "He laughed and revealed his secret plan.", exampleZh: "(他大笑著揭露了他的秘密計畫。)", family: "revelation (n. 揭露/啟示)<br>revealing (adj. 透露真情的/暴露的)", collocation: "reveal a secret (洩漏秘密)<br>reveal the truth (揭開真相)" },
-            "scythe": { pos: "n.", trans: "大鐮刀", example: "The Grim Reaper is often depicted carrying a scythe.", exampleZh: "(死神常被描繪成拿著一把大鐮刀。)", family: "(無特別常見衍生字)", collocation: "sharp scythe (鋒利的大鐮刀)<br>carry a scythe (拿著大鐮刀)" },
-            "shadows": { pos: "n.", trans: "陰影", example: "Something was moving in the shadows of the alley.", exampleZh: "(巷子的陰影裡有東西在移動。)", family: "shadow (n. 單數/v. 尾隨)<br>shadowy (adj. 幽暗的)", collocation: "cast a shadow (投下陰影)<br>in the shadows (在陰影中)" },
-            "slice": { pos: "v.", trans: "切開；割", example: "He used a sharp knife to slice the bread.", exampleZh: "(他用一把鋒利的刀切麵包。)", family: "slice (n. 切片)<br>slicer (n. 切片機)", collocation: "slice of pizza (一片披薩)<br>slice through (切開/劃過)" },
-            "stained": { pos: "adj.", trans: "沾汙的；染色的", example: "His shirt was stained with coffee.", exampleZh: "(他的襯衫沾到了咖啡漬。)", family: "stain (v./n. 弄髒/污漬)<br>stainless (adj. 無瑕疵的/不鏽的)", collocation: "blood-stained (沾滿血跡的)<br>stained glass (彩繪玻璃)" },
-            "stall": { pos: "n.", trans: "(廁所)隔間", example: "The last bathroom stall was locked from the inside.", exampleZh: "(最後一間廁所隔間從裡面鎖上了。)", family: "stall (v. 拖延/引擎熄火)", collocation: "bathroom stall (廁所隔間)<br>food stall (小吃攤)" },
-            "strangled": { pos: "v.", trans: "勒死", example: "The victim was strangled with a rope.", exampleZh: "(受害者被繩子勒死。)", family: "strangle (v. 原形)<br>strangulation (n. 勒斃)", collocation: "strangle to death (勒死)<br>strangled cry (壓抑的哭喊聲)" },
-            "summon": { pos: "v.", trans: "召喚", example: "They tried to summon a ghost using a Ouija board.", exampleZh: "(他們試圖用通靈板召喚鬼魂。)", family: "summons (n. 傳票/召喚)", collocation: "summon courage (鼓起勇氣)<br>summon a meeting (召開會議)" },
-            "supernatural": { pos: "adj.", trans: "超自然的", example: "Vampires and ghosts are supernatural creatures.", exampleZh: "(吸血鬼和鬼魂是超自然生物。)", family: "supernaturally (adv. 超自然地)", collocation: "supernatural power (超自然力量)<br>supernatural phenomenon (超自然現象)" },
-            "surface": { pos: "n.", trans: "表面", example: "The surface of the lake was calm and still.", exampleZh: "(湖面平靜無波。)", family: "surface (v. 浮出水面/顯露)", collocation: "on the surface (表面上)<br>scratch the surface (觸及皮毛)" },
-            "surgical": { pos: "adj.", trans: "外科的", example: "Doctors wear surgical masks during operations.", exampleZh: "(醫生在手術期間戴著外科口罩。)", family: "surgery (n. 外科手術)<br>surgeon (n. 外科醫生)", collocation: "surgical mask (外科口罩)<br>surgical strike (精準打擊)" },
-            "survive": { pos: "v.", trans: "存活；倖存", example: "Only a few people survived the crash.", exampleZh: "(只有少數人在墜機事故中倖存。)", family: "survival (n. 存活)<br>survivor (n. 倖存者)", collocation: "survive a disaster (在災難中倖存)<br>struggle to survive (努力求生)" },
-            "torso": { pos: "n.", trans: "軀幹", example: "The statue was missing its head and legs, only the torso remained.", exampleZh: "(這座雕像沒了頭和腿，只剩下軀幹。)", family: "(無特別常見衍生字)", collocation: "human torso (人體軀幹)<br>upper torso (上半身)" },
-            "tragedy": { pos: "n.", trans: "悲劇", example: "The sudden accident was a great tragedy for the family.", exampleZh: "(這場突如其來的意外對這個家庭來說是個巨大的悲劇。)", family: "tragic (adj. 悲劇的)<br>tragically (adv. 悲劇性地)", collocation: "terrible tragedy (可怕的悲劇)<br>personal tragedy (個人悲劇)" },
-            "tragic": { adj: "adj.", trans: "悲劇的", example: "It was a tragic accident.", exampleZh: "(那是一場悲慘的意外。)", family: "tragedy (n. 悲劇)<br>tragically (adv. 悲慘地)", collocation: "tragic event (悲慘的事件)<br>tragic end (悲慘的結局)" },
-            "unsettling": { pos: "adj.", trans: "令人不安的", example: "The movie had an unsettling ending that kept me awake.", exampleZh: "(這部電影有一個令人不安的結局，讓我睡不著覺。)", family: "unsettle (v. 使不安)<br>unsettled (adj. 不穩定的/未解決的)", collocation: "highly unsettling (非常令人不安的)<br>unsettling feeling (不安的感覺)" },
-            "vengeful": { pos: "adj.", trans: "復仇心重的", example: "The vengeful spirit haunted the old house.", exampleZh: "(復仇心切的幽靈在這座老房子裡出沒。)", family: "revenge (n./v. 報復)<br>vengeance (n. 復仇)", collocation: "vengeful spirit (復仇怨靈)<br>vengeful god (報復心重的神)" },
-            "violent": { pos: "adj.", trans: "暴力的", example: "The movie was too violent for children.", exampleZh: "(這部電影對兒童來說太暴力了。)", family: "violence (n. 暴力)<br>violently (adv. 猛烈地/暴力地)", collocation: "violent crime (暴力犯罪)<br>violent storm (狂風暴雨)" },
-            "widespread": { pos: "adj.", trans: "廣泛的；普遍的", example: "Flu is widespread in the winter months.", exampleZh: "(流感在冬季月份非常普遍。)", family: "wide (adj. 寬廣的)<br>spread (v. 傳播)", collocation: "widespread panic (廣泛的恐慌)<br>widespread support (廣泛的支持)" }
+            "folklore": { pos: "n.", trans: "民間傳說", example: "Japanese folklore is full of spirits and monsters." },
+            "unsettling": { pos: "adj.", trans: "令人不安的", example: "The movie had an unsettling ending that kept me awake." },
+            "surgical": { pos: "adj.", trans: "外科的", example: "Doctors wear surgical masks during operations." },
+            "gruesome": { pos: "adj.", trans: "可怕的；血腥的", example: "The details of the crime were too gruesome to report." },
+            "patrols": { pos: "n.", trans: "巡邏", example: "Police increased patrols at night to keep the area safe." },
+            "vengeful": { pos: "adj.", trans: "復仇心重的", example: "The vengeful spirit haunted the old house." },
+            "torso": { pos: "n.", trans: "軀幹", example: "The statue was missing its head and legs, only the torso remained." },
+            "scythe": { pos: "n.", trans: "大鐮刀", example: "The Grim Reaper is often depicted carrying a scythe." },
+            "stall": { pos: "n.", trans: "(廁所)隔間", example: "The last bathroom stall was locked from the inside." },
+            "mysterious": { pos: "adj.", trans: "神秘的", example: "A mysterious stranger arrived in the small town." },
+            "strangled": { pos: "v.", trans: "勒死", example: "The victim was strangled with a rope." },
+            "mischievous": { pos: "adj.", trans: "惡作劇的；淘氣的", example: "The mischievous puppy stole my shoe." },
+            "summon": { pos: "v.", trans: "召喚", example: "They tried to summon a ghost using a Ouija board." },
+            "faint": { pos: "adj.", trans: "微弱的", example: "I heard a faint noise in the distance." },
+            "tragedy": { pos: "n.", trans: "悲劇", example: "The sudden accident was a great tragedy for the family." },
+            "consequences": { pos: "n.", trans: "後果", example: "You must be prepared to face the consequences of your actions." },
+            "psychological": { pos: "adj.", trans: "心理的", example: "The trauma caused long-term psychological damage." },
+            "supernatural": { pos: "adj.", trans: "超自然的", example: "Vampires and ghosts are supernatural creatures." },
+            "shadows": { pos: "n.", trans: "陰影", example: "Something was moving in the shadows of the alley." },
+            "polite": { pos: "adj.", trans: "有禮貌的", example: "It is polite to bow when greeting someone in Japan." },
+            "surface": { pos: "n.", trans: "表面", example: "The surface of the lake was calm and still." },
+            "approach": { pos: "v.", trans: "接近", example: "Do not approach the wild animal." },
+            "reveal": { pos: "v.", trans: "揭露；顯示", example: "He laughed and revealed his secret plan." },
+            "widespread": { pos: "adj.", trans: "廣泛的；普遍的", example: "Flu is widespread in the winter months." },
+            "pedestrians": { pos: "n.", trans: "行人", example: "Cars must stop for pedestrians at the crosswalk." },
+            "haunts": { pos: "v.", trans: "出沒；鬧鬼", example: "Ghosts are said to haunt this old castle." },
+            "chilling": { pos: "adj.", trans: "令人恐懼的；寒冷的", example: "She told a chilling story about a murder." },
+            "crawls": { pos: "v.", trans: "爬行", example: "The baby learned to crawl before walking." },
+            "slice": { pos: "v.", trans: "切開；割", example: "He used a sharp knife to slice the bread." },
+            "stained": { pos: "adj.", trans: "沾汙的；染色的", example: "His shirt was stained with coffee." },
+            "survive": { pos: "v.", trans: "存活；倖存", example: "Only a few people survived the crash." },
+            "violent": { pos: "adj.", trans: "暴力的", example: "The movie was too violent for children." },
+            "courage": { pos: "n.", trans: "勇氣", example: "It takes courage to stand up to a bully." },
+            "descent": { pos: "n.", trans: "下降；墮落", example: "The plane began its descent into the airport." },
+            "imagery": { pos: "n.", trans: "意象；圖像", example: "The poem is full of dark nature imagery." },
+            "potent": { pos: "adj.", trans: "強效的；有力的", example: "The medicine is very potent." },
+            "aspect": { pos: "n.", trans: "方面", example: "Culture is an important aspect of society." },
+            "belief": { pos: "n.", trans: "信念；相信", example: "His belief in ghosts is very strong." },
+            "tragic": { pos: "adj.", trans: "悲劇的", example: "It was a tragic accident." },
+            "fiery": { pos: "adj.", trans: "火熱的；激烈的", example: "She has a fiery temper." }
         };
 
         const articleData = [
@@ -1166,26 +1114,23 @@
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                // 更精準的去標點邏輯（保留連字號）
-                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 const originalWord = word;
-                const rootWord = getSmartLookupRoot(cleanWord);
-                
-                if (vocabulary[rootWord]) {
-                    const data = vocabulary[rootWord];
-                    const isFav = favoriteWords.has(rootWord);
+                if (vocabulary[cleanWord]) {
+                    const data = vocabulary[cleanWord];
+                    const isFav = favoriteWords.has(cleanWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
                     return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${rootWord}"></i>
+                            <button onclick="window.toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${cleanWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
-                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"<br><span class="text-sm text-gray-500 mt-1 block not-italic">${data.exampleZh}</span></div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
                 }
                 return originalWord;
@@ -1280,10 +1225,10 @@
                 wrongAnswers.forEach(item => {
                     html += `
                         <tr class="hover:bg-gray-700/50">
-                            <td class="p-3 font-medium text-gray-300 text-lg">${item.q.q}</td>
-                            <td class="p-3 text-red-400 font-bold text-lg"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
-                            <td class="p-3 text-green-400 font-bold text-lg"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
-                            <td class="p-3 text-gray-400 text-base">${item.q.expl}</td>
+                            <td class="p-3 font-medium text-gray-300">${item.q.q}</td>
+                            <td class="p-3 text-red-400 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-400 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-400 text-sm">${item.q.expl}</td>
                         </tr>
                     `;
                 });
@@ -1304,13 +1249,11 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-[5%] text-lg">收藏</th>
-                            <th class="p-3 font-bold w-[12%] text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-[6%] text-lg">詞性</th>
-                            <th class="p-3 font-bold w-[12%] text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-[25%] text-lg">例句與翻譯 (Example)</th>
-                            <th class="p-3 font-bold w-[15%] text-lg">衍生字/家族字</th>
-                            <th class="p-3 font-bold w-[25%] text-lg">常見搭配詞</th>
+                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
+                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
+                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1324,19 +1267,13 @@
                     <tr class="hover:bg-gray-700/50 transition duration-150">
                         <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
                         
-                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl group">
-                            ${word} 
-                            <i class="fas fa-volume-up text-base ml-2 opacity-70 hover:opacity-100 transition cursor-pointer no-print" onclick="window.speakAndShowDef(event, '${word}')" title="點擊發音 (Click to listen)"></i>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
                         </td>
 
                         <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">
-                            "${data.example}"<br>
-                            <span class="text-sm text-gray-500 mt-1 block not-italic">${data.exampleZh}</span>
-                        </td>
-                        <td class="p-3 text-gray-400 text-base md:text-lg leading-relaxed">${data.family}</td>
-                        <td class="p-3 text-gray-400 text-base md:text-lg leading-relaxed">${data.collocation}</td>
+                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1346,22 +1283,20 @@
         window.printList = function(type) {
             const printArea = document.getElementById('print-area');
             let content = '';
-            const articleTitle = "Whispers in the Dark: 5 Creepiest Urban Legends from Japan";
             
             if (type === 'mistakes') {
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${articleTitle}</h2>
-                        <table style="width: 100%; border-collapse: collapse;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; text-align: left; width: 40%;">Question</th>
-                                    <th style="border: 1px solid black; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; text-align: left; width: 40%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1388,39 +1323,31 @@
 
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${articleTitle}</h2>
-                        <table style="width: 100%; border-collapse: collapse;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; text-align: left; width: 12%;">Word</th>
-                                    <th style="border: 1px solid black; text-align: center; width: 6%;">POS</th>
-                                    <th style="border: 1px solid black; text-align: left; width: 12%;">Meaning</th>
-                                    <th style="border: 1px solid black; text-align: left; width: 35%;">Example Sentence & Translation</th>
-                                    <th style="border: 1px solid black; text-align: left; width: 15%;">Word Family</th>
-                                    <th style="border: 1px solid black; text-align: left; width: 20%;">Collocation</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black;">${data.trans}</td>
-                                <td style="border: 1px solid black;">
-                                    <div style="font-style: italic;">"${data.example}"</div>
-                                    <div style="color: #4b5563; font-size: 0.9em; margin-top: 4px;">${data.exampleZh}</div>
-                                </td>
-                                <td style="border: 1px solid black; font-size: 0.95em;">${data.family}</td>
-                                <td style="border: 1px solid black; font-size: 0.95em;">${data.collocation}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
                             </tr>
                         `;
                     });
@@ -1599,15 +1526,15 @@
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-3xl">${item.q}</p>
+                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl" id="${item.id}-icon-${key}">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
@@ -1671,11 +1598,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400 text-2xl";
+                statusText.className = "font-bold mb-1 text-green-400";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400 text-2xl";
+                statusText.className = "font-bold mb-1 text-red-400";
             }
 
             // Auto Save to Firebase (Only if user clicked, preventing write loops during restore)
