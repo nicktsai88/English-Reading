@@ -55,7 +55,7 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 20px;
-            font-size: 1.5em; /* Increased from 1.3em for better readability */
+            font-size: 1.75em; /* Increased from 1.5em for better readability */
             color: #4b5563;
             background: #fff;
             padding: 24px;
@@ -1371,22 +1371,22 @@
             quizData.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transition';
-                // Increased text-2xl for Question, text-xl for Options
+                // Increased text sizes for Question, Options, and explanations
                 div.innerHTML = `
-                    <p class="font-bold text-gray-800 mb-5 text-2xl leading-relaxed">${item.q}</p>
-                    <div class="space-y-4" id="${item.id}-options">
+                    <p class="font-bold text-gray-800 mb-6 text-3xl leading-relaxed">${item.q}</p>
+                    <div class="space-y-5" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-4 rounded-xl cursor-pointer border-2 border-transparent bg-gray-50 hover:bg-gray-100 transition" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-xl cursor-pointer border-2 border-transparent bg-gray-50 hover:bg-gray-100 transition" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="checkAnswer('${item.id}', '${key}')">
-                                <div class="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors text-xl shrink-0" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 rounded-full border-2 border-gray-300 flex items-center justify-center mr-5 font-bold text-gray-500 transition-colors text-2xl shrink-0" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-700 font-medium text-xl leading-relaxed">${item.options[key]}</span>
+                                <span class="text-gray-700 font-medium text-2xl leading-relaxed">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-2 text-xl" id="${item.id}-status"></p>
+                        <p class="font-bold mb-3 text-2xl" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1438,11 +1438,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
-                statusText.className = "font-bold mb-2 text-green-700 text-xl";
+                statusText.className = "font-bold mb-3 text-green-700 text-2xl";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-2 text-red-700 text-xl";
+                statusText.className = "font-bold mb-3 text-red-700 text-2xl";
             }
         }
 
