@@ -54,16 +54,16 @@
 
         .explanation-box {
             display: none; /* Hidden by default */
-            margin-top: 20px;
-            font-size: 1.5em; /* Increased from 1.3em for better readability */
+            margin-top: 15px;
+            font-size: 1.3em; /* Increased for better readability */
             color: #4b5563;
             background: #fff;
-            padding: 24px;
-            border-radius: 12px;
-            border-left: 6px solid #6366f1;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
             background-color: #f8fafc;
             animation: slideDown 0.3s ease-out;
-            line-height: 1.7;
+            line-height: 1.6;
         }
 
         @keyframes slideDown {
@@ -92,8 +92,9 @@
         .vocab-tooltip {
             visibility: hidden;
             width: max-content;
-            min-width: 260px; 
-            max-width: 360px;
+            /* Increased dimensions for larger text */
+            min-width: 220px; 
+            max-width: 320px;
             background-color: #1f2937;
             color: #fff;
             text-align: left;
@@ -207,15 +208,15 @@
         .modal-content {
             background: white;
             border-radius: 16px;
-            width: 95%;
-            max-width: 1200px; /* Increased to accommodate extra columns */
+            width: 90%;
+            max-width: 900px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
-        /* Print Styles Update: Landscape, 1cm margin, 18px base font */
+        /* Print Styles */
         @media print {
             body * {
                 visibility: hidden;
@@ -229,28 +230,15 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 0; /* Remove excess padding */
+                padding: 20px;
             }
             @page {
-                size: A4 landscape; /* Landscape orientation */
-                margin: 1cm; /* Shrink margin to 1cm */
+                size: A4 portrait;
+                margin: 2cm;
             }
             /* Hide non-print elements */
             .no-print {
                 display: none !important;
-            }
-            /* Apply 18px base font to tables */
-            #print-area table {
-                font-size: 18px !important;
-            }
-            #print-area th, #print-area td {
-                padding: 10px !important;
-            }
-            #print-area h1 {
-                font-size: 32px !important;
-            }
-            #print-area h2 {
-                font-size: 24px !important;
             }
         }
     </style>
@@ -367,7 +355,7 @@
                     </div>
                     <div class="text-left">
                         <h3 class="font-bold text-gray-800">完整單字表</h3>
-                        <p class="text-sm text-gray-500">查看所有單字、例句與家族字</p>
+                        <p class="text-sm text-gray-500">查看所有單字與例句</p>
                     </div>
                 </div>
                 <i class="fas fa-chevron-right text-gray-400"></i>
@@ -407,16 +395,17 @@
                 </button>
             </div>
 
-            <!-- Article Container (Font size untouched) -->
+            <!-- Article Container -->
+            <!-- Modified font size: text-lg (mobile) and md:text-xl (desktop) for slightly smaller text -->
             <div id="article-display" class="prose max-w-none text-gray-800 text-xl md:text-2xl leading-loose tracking-wide space-y-8">
                 <!-- Content injected by JS -->
             </div>
         </div>
 
-        <!-- Quiz Area (Font sizes increased) -->
+        <!-- Quiz Area -->
         <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-200">
-            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                <span class="bg-indigo-100 text-indigo-700 w-10 h-10 rounded-full flex items-center justify-center mr-3 text-lg">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <span class="bg-indigo-100 text-indigo-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">
                     <i class="fas fa-pen"></i>
                 </span>
                 Reading Comprehension Quiz
@@ -427,16 +416,16 @@
             </form>
 
             <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center gap-4">
-                <button type="button" onclick="showFinalScore()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95">
+                <button type="button" onclick="showFinalScore()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95">
                     Show Final Score
                 </button>
                 
                 <div id="score-card" class="hidden mt-6 text-center w-full bg-indigo-50 p-6 rounded-xl border border-indigo-100 animate-fade-in relative">
-                    <p class="text-gray-500 text-base uppercase font-bold tracking-wider">Your Result</p>
-                    <div class="text-6xl font-extrabold text-indigo-600 my-3" id="final-score">0</div>
-                    <p id="feedback-msg" class="text-gray-700 text-xl font-medium mb-6"></p>
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-wider">Your Result</p>
+                    <div class="text-5xl font-extrabold text-indigo-600 my-2" id="final-score">0</div>
+                    <p id="feedback-msg" class="text-gray-700 font-medium mb-4"></p>
                     
-                    <button id="mistake-review-btn" onclick="openMistakeModal()" class="hidden w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg text-lg font-bold shadow transition flex items-center justify-center gap-2 mx-auto">
+                    <button id="mistake-review-btn" onclick="openMistakeModal()" class="hidden w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-bold shadow transition flex items-center justify-center gap-2 mx-auto">
                         <i class="fas fa-book-dead"></i> 查看錯題本 (Review Mistakes)
                     </button>
                 </div>
@@ -448,17 +437,17 @@
     <div id="vocab-modal" class="modal-backdrop">
         <div class="modal-content flex flex-col max-h-[90vh]">
             <div class="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
-                <h3 class="text-2xl font-bold text-gray-800"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-book-open text-blue-600 mr-2"></i> 完整單字表</h3>
                 <button onclick="closeModal('vocab-modal')" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="vocab-table-container"></div>
             <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
-                <button onclick="printList('vocab')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg font-bold shadow transition flex items-center gap-2">
-                    <i class="fas fa-print"></i> 橫式列印 (A4)
+                <button onclick="printList('vocab')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印單字表 (A4)
                 </button>
-                <button onclick="closeModal('vocab-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-lg font-bold transition">關閉</button>
+                <button onclick="closeModal('vocab-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
             </div>
         </div>
     </div>
@@ -467,36 +456,36 @@
     <div id="study-modal" class="modal-backdrop">
         <div class="modal-content flex flex-col max-h-[90vh]">
             <div class="p-4 md:p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
-                <h3 class="text-2xl font-bold text-gray-800"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-heart text-pink-500 mr-2"></i> 我的學習清單</h3>
                 <button onclick="closeModal('study-modal')" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="study-table-container"></div>
             <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
-                <button onclick="printList('study')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg font-bold shadow transition flex items-center gap-2">
-                    <i class="fas fa-print"></i> 橫式列印 (A4)
+                <button onclick="printList('study')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印學習清單 (A4)
                 </button>
-                <button onclick="closeModal('study-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-lg font-bold transition">關閉</button>
+                <button onclick="closeModal('study-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
             </div>
         </div>
     </div>
 
-    <!-- Mistake Review Modal -->
+    <!-- Mistake Review Modal (New) -->
     <div id="mistake-modal" class="modal-backdrop">
         <div class="modal-content flex flex-col max-h-[90vh]">
             <div class="p-4 md:p-6 border-b flex justify-between items-center bg-red-50 rounded-t-2xl">
-                <h3 class="text-2xl font-bold text-red-800"><i class="fas fa-times-circle text-red-600 mr-2"></i> 錯題本 (Mistakes Review)</h3>
+                <h3 class="text-xl font-bold text-red-800"><i class="fas fa-times-circle text-red-600 mr-2"></i> 錯題本 (Mistakes Review)</h3>
                 <button onclick="closeModal('mistake-modal')" class="text-gray-400 hover:text-gray-600 transition">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div class="p-4 md:p-6 overflow-y-auto flex-grow" id="mistake-table-container"></div>
             <div class="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-3">
-                <button onclick="printList('mistakes')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg font-bold shadow transition flex items-center gap-2">
-                    <i class="fas fa-print"></i> 橫式列印 (A4)
+                <button onclick="printList('mistakes')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> 列印錯題本 (A4)
                 </button>
-                <button onclick="closeModal('mistake-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg text-lg font-bold transition">關閉</button>
+                <button onclick="closeModal('mistake-modal')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg font-bold transition">關閉</button>
             </div>
         </div>
     </div>
@@ -507,202 +496,29 @@
     <script>
         // --- Data & State ---
         
-        // Expanded Vocabulary Dictionary with Translation, Family, and Collocation
+        // Extended Vocabulary Dictionary with Examples
         const vocabulary = {
-            "adventure": { 
-                pos: "n.", 
-                trans: "冒險", 
-                example: "They went on an exciting adventure in the jungle.", 
-                exampleZh: "(他們去叢林裡進行了一場刺激的冒險。)", 
-                family: "adventurous (adj. 喜歡冒險的)<br>adventurer (n. 冒險家)", 
-                collocation: "go on an adventure (去冒險)<br>sense of adventure (冒險精神)" 
-            },
-            "analog": { 
-                pos: "adj.", 
-                trans: "類比的", 
-                example: "Analog sticks provide smoother control than directional pads.", 
-                exampleZh: "(類比搖桿提供比方向鍵更平滑的控制。)", 
-                family: "analogy (n. 類比)<br>analogous (adj. 類似的)", 
-                collocation: "analog stick (類比搖桿)<br>analog signal (類比訊號)" 
-            },
-            "carpenter": { 
-                pos: "n.", 
-                trans: "木匠", 
-                example: "The carpenter built a beautiful wooden table.", 
-                exampleZh: "(木匠打造了一張美麗的木桌。)", 
-                family: "carpentry (n. 木工工藝)", 
-                collocation: "skilled carpenter (熟練的木匠)<br>work as a carpenter (擔任木匠)" 
-            },
-            "controller": { 
-                pos: "n.", 
-                trans: "控制器；手把", 
-                example: "Pass me the game controller, it's my turn.", 
-                exampleZh: "(把遊戲手把遞給我，換我了。)", 
-                family: "control (v./n. 控制)<br>controllable (adj. 可控制的)", 
-                collocation: "game controller (遊戲手把)<br>wireless controller (無線控制器)" 
-            },
-            "crash": { 
-                pos: "n.", 
-                trans: "崩盤；撞擊", 
-                example: "The stock market crash caused many people to lose money.", 
-                exampleZh: "(股市崩盤導致許多人賠錢。)", 
-                family: "crash (v. 撞擊；當機)", 
-                collocation: "market crash (市場崩盤)<br>car crash (車禍)<br>computer crash (電腦當機)" 
-            },
-            "cultural": { 
-                pos: "adj.", 
-                trans: "文化的", 
-                example: "The city hosts many cultural events throughout the year.", 
-                exampleZh: "(這座城市全年舉辦許多文化活動。)", 
-                family: "culture (n. 文化)<br>culturally (adv. 在文化上)", 
-                collocation: "cultural differences (文化差異)<br>cultural events (文化活動)" 
-            },
-            "designer": { 
-                pos: "n.", 
-                trans: "設計師", 
-                example: "She is a famous fashion designer in Paris.", 
-                exampleZh: "(她是巴黎著名的服裝設計師。)", 
-                family: "design (v./n. 設計)", 
-                collocation: "fashion designer (服裝設計師)<br>game designer (遊戲設計師)" 
-            },
-            "icon": { 
-                pos: "n.", 
-                trans: "象徵；圖示", 
-                example: "Elvis Presley is a pop culture icon.", 
-                exampleZh: "(貓王是流行文化的象徵。)", 
-                family: "iconic (adj. 具指標性的)", 
-                collocation: "pop icon (流行指標)<br>click on the icon (點擊圖示)" 
-            },
-            "landlord": { 
-                pos: "n.", 
-                trans: "房東", 
-                example: "Our landlord comes to collect rent every month.", 
-                exampleZh: "(我們的房東每個月來收租金。)", 
-                family: "landlady (n. 女房東)", 
-                collocation: "local landlord (當地的房東)<br>pay the landlord (付錢給房東)" 
-            },
-            "legal": { 
-                pos: "adj.", 
-                trans: "法律的；合法的", 
-                example: "You should seek legal advice before signing the contract.", 
-                exampleZh: "(在簽約之前，你應該尋求法律建議。)", 
-                family: "legally (adv. 合法地)<br>illegal (adj. 非法的)<br>legalize (v. 使合法化)", 
-                collocation: "legal advice (法律諮詢/建議)<br>legal action (法律行動)" 
-            },
-            "mushroom": { 
-                pos: "n.", 
-                trans: "蘑菇", 
-                example: "Mario eats a mushroom to grow bigger.", 
-                exampleZh: "(瑪利歐吃蘑菇變大。)", 
-                family: "mushroom (v. 迅速增長/發展)", 
-                collocation: "wild mushroom (野菇)<br>mushroom soup (蘑菇湯)" 
-            },
-            "mustache": { 
-                pos: "n.", 
-                trans: "鬍子 (指八字鬍)", 
-                example: "He grew a thick mustache for the movie role.", 
-                exampleZh: "(為了電影角色，他留了濃密的八字鬍。)", 
-                family: "mustached (adj. 留著八字鬍的)", 
-                collocation: "thick mustache (濃密的八字鬍)<br>grow a mustache (留八字鬍)" 
-            },
-            "overalls": { 
-                pos: "n.", 
-                trans: "吊帶褲；工作服", 
-                example: "The painter wore overalls to protect his clothes.", 
-                exampleZh: "(畫家穿著工作服以保護他的衣服。)", 
-                family: "overall (adj./adv. 整體的/大致上)", 
-                collocation: "a pair of overalls (一件吊帶褲)<br>denim overalls (牛仔吊帶褲)" 
-            },
-            "plumber": { 
-                pos: "n.", 
-                trans: "水管工", 
-                example: "We called a plumber to fix the leaking pipe.", 
-                exampleZh: "(我們叫了水管工來修理漏水的水管。)", 
-                family: "plumbing (n. 水管管線/配管工程)", 
-                collocation: "call a plumber (叫水管工)<br>professional plumber (專業水管工)" 
-            },
-            "side-scrolling": { 
-                pos: "adj.", 
-                trans: "橫向捲軸的", 
-                example: "Super Mario Bros. is a classic side-scrolling game.", 
-                exampleZh: "(《超級瑪利歐兄弟》是一款經典的橫向捲軸遊戲。)", 
-                family: "scroll (v./n. 滾動/卷軸)<br>scroller (n. 捲軸遊戲)", 
-                collocation: "side-scrolling game (橫向捲軸遊戲)<br>side-scrolling platformer (橫向捲軸平台遊戲)" 
-            },
-            "superstar": { 
-                pos: "n.", 
-                trans: "超級巨星", 
-                example: "Michael Jordan is a basketball superstar.", 
-                exampleZh: "(麥可·喬丹是一位籃球超級巨星。)", 
-                family: "star (n./v. 明星/主演)<br>stardom (n. 明星地位)", 
-                collocation: "global superstar (全球巨星)<br>pop superstar (流行巨星)" 
-            },
-            "symbol": { 
-                pos: "n.", 
-                trans: "象徵", 
-                example: "The dove is a universal symbol of peace.", 
-                exampleZh: "(鴿子是世界公認的和平象徵。)", 
-                family: "symbolize (v. 象徵)<br>symbolic (adj. 象徵性的)", 
-                collocation: "universal symbol (普遍的象徵)<br>status symbol (地位的象徵)" 
-            },
-            "theme": { 
-                pos: "n.", 
-                trans: "主題", 
-                example: "Disneyland is a famous theme park.", 
-                exampleZh: "(迪士尼樂園是著名的主題樂園。)", 
-                family: "thematic (adj. 主題的)", 
-                collocation: "theme park (主題樂園)<br>theme song (主題曲)" 
-            },
-            "three-dimensional": { 
-                pos: "adj.", 
-                trans: "三維的；立體的", 
-                example: "3D movies make the images look three-dimensional.", 
-                exampleZh: "(3D電影讓影像看起來很立體。)", 
-                family: "dimension (n. 維度/尺寸)<br>dimensional (adj. 空間的)", 
-                collocation: "three-dimensional space (三維空間)<br>three-dimensional model (3D模型)" 
-            },
-            "warehouse": { 
-                pos: "n.", 
-                trans: "倉庫", 
-                example: "The goods are stored in a large warehouse.", 
-                exampleZh: "(貨物存放在一個大倉庫裡。)", 
-                family: "ware (n. 物品/器皿)", 
-                collocation: "storage warehouse (儲藏倉庫)<br>empty warehouse (空倉庫)" 
-            }
+            "icon": { pos: "n.", trans: "象徵；圖示", example: "Elvis Presley is a pop culture icon." },
+            "overalls": { pos: "n.", trans: "吊帶褲；工作服", example: "The painter wore overalls to protect his clothes." },
+            "mustache": { pos: "n.", trans: "鬍子", example: "He grew a thick mustache for the movie role." },
+            "symbol": { pos: "n.", trans: "象徵", example: "The dove is a universal symbol of peace." },
+            "superstar": { pos: "n.", trans: "超級巨星", example: "Michael Jordan is a basketball superstar." },
+            "designer": { pos: "n.", trans: "設計師", example: "She is a famous fashion designer in Paris." },
+            "legal": { pos: "adj.", trans: "法律的；合法的", example: "You should seek legal advice before signing the contract." },
+            "plumber": { pos: "n.", trans: "水管工", example: "We called a plumber to fix the leaking pipe." },
+            "carpenter": { pos: "n.", trans: "木匠", example: "The carpenter built a beautiful wooden table." },
+            "warehouse": { pos: "n.", trans: "倉庫", example: "The goods are stored in a large warehouse." },
+            "landlord": { pos: "n.", trans: "房東", example: "Our landlord comes to collect rent every month." },
+            "side-scrolling": { pos: "adj.", trans: "橫向捲軸的", example: "Super Mario Bros. is a classic side-scrolling game." },
+            "mushroom": { pos: "n.", trans: "蘑菇", example: "Mario eats a mushroom to grow bigger." },
+            "crash": { pos: "n.", trans: "崩盤；撞擊", example: "The stock market crash caused many people to lose money." },
+            "three-dimensional": { pos: "adj.", trans: "三維的；立體的", example: "3D movies make the images look three-dimensional." },
+            "analog": { pos: "adj.", trans: "類比的", example: "Analog sticks provide smoother control than directional pads." },
+            "controller": { pos: "n.", trans: "控制器；手把", example: "Pass me the game controller, it's my turn." },
+            "cultural": { pos: "adj.", trans: "文化的", example: "The city hosts many cultural events throughout the year." },
+            "theme": { pos: "n.", trans: "主題", example: "Disneyland is a famous theme park." },
+            "adventure": { pos: "n.", trans: "冒險", example: "They went on an exciting adventure in the jungle." }
         };
-
-        // --- Smart Lookup 智慧單字查詢映射表 ---
-        // 當文章中出現單字的複數、時態變化或同義縮寫時，自動對應回原始字卡
-        const smartLookupMap = {
-            // Nouns (Plurals / Variations)
-            "icons": "icon", "iconic": "icon",
-            "overalls": "overalls", "overall": "overalls",
-            "mustaches": "mustache", "mustached": "mustache",
-            "symbols": "symbol", "symbolic": "symbol", "symbolize": "symbol",
-            "superstars": "superstar", "stardom": "superstar",
-            "designers": "designer", "designed": "designer", "designing": "designer", "design": "designer",
-            "plumbers": "plumber", "plumbing": "plumber",
-            "carpenters": "carpenter", "carpentry": "carpenter",
-            "warehouses": "warehouse", 
-            "landlords": "landlord", "landlady": "landlord",
-            "mushrooms": "mushroom",
-            "crashes": "crash", "crashed": "crash", "crashing": "crash",
-            "controllers": "controller", "control": "controller", "controllable": "controller",
-            "themes": "theme", "thematic": "theme",
-            "adventures": "adventure", "adventurous": "adventure", "adventurer": "adventure",
-            
-            // Adjectives / Adverbs
-            "legally": "legal", "illegal": "legal", "legalize": "legal",
-            "cultural": "cultural", "culturally": "cultural", "culture": "cultural",
-            "three-dimensional": "three-dimensional", "3d": "three-dimensional", "dimensional": "three-dimensional", "dimension": "three-dimensional",
-            "analog": "analog", "analogous": "analog", "analogy": "analog",
-            "side-scrolling": "side-scrolling", "scroller": "side-scrolling", "scroll": "side-scrolling"
-        };
-
-        // 智慧找尋單字字根功能
-        function getSmartLookupRoot(word) {
-            return smartLookupMap[word] || word;
-        }
 
         // Article Data (Mario History)
         const articleData = [
@@ -792,7 +608,7 @@
         let selectedVoice = null;
         let userScore = 0;
         let favoriteWords = new Set();
-        let wrongAnswers = []; 
+        let wrongAnswers = []; // New: Track wrong answers
         
         let audioCtx;
 
@@ -805,6 +621,7 @@
             }
         }
         
+        // ... (Sound functions unchanged) ...
         function playCorrectSound() {
             initAudioContext();
             const osc = audioCtx.createOscillator();
@@ -841,6 +658,8 @@
             initVoice();
         };
 
+        // ... (initVoice, renderArticle, processWords, speakAndShowDef, toggleFavorite, updateHeartIcon, openVocabModal, openStudyModal, closeModal, generateTableHTML, printList - UNCHANGED logic but vocabulary updated above) ...
+
         function initVoice() {
             const voiceStatus = document.getElementById('voice-indicator');
             const loadVoices = () => {
@@ -874,7 +693,11 @@
             sentences = []; 
             
             articleData.forEach((item, index) => {
+                // Determine paragraph breaks by sentence index ranges logic or heuristic
+                // Para 1: 0-10, Para 2: 11-21, Para 3: 22-32, Para 4: 33-43, Para 5: 44-51
+                // We'll use specific indices to insert images for correct paragraph structure
                 if (index === 0) {
+                    // Para 1 Image
                     const img = document.createElement('img');
                     img.src = `English-Reading-1-images/p1.jpg`; 
                     img.alt = `Illustration for The Birth of a Legend`;
@@ -888,6 +711,7 @@
                     p.className = "mb-10"; 
                     displayArea.appendChild(p);
                 } else if (index === 11) {
+                    // Para 2 Image
                     const img = document.createElement('img');
                     img.src = `English-Reading-1-images/p2.jpg`; 
                     img.alt = `Illustration for Jumpman to Mario`;
@@ -901,6 +725,7 @@
                     p.className = "mb-10"; 
                     displayArea.appendChild(p);
                 } else if (index === 22) {
+                    // Para 3 Image
                     const img = document.createElement('img');
                     img.src = `English-Reading-1-images/p3.jpg`; 
                     img.alt = `Illustration for Changing the Industry`;
@@ -914,6 +739,7 @@
                     p.className = "mb-10"; 
                     displayArea.appendChild(p);
                 } else if (index === 33) {
+                    // Para 4 Image
                     const img = document.createElement('img');
                     img.src = `English-Reading-1-images/p4.jpg`; 
                     img.alt = `Illustration for Moving into 3D`;
@@ -927,6 +753,7 @@
                     p.className = "mb-10"; 
                     displayArea.appendChild(p);
                 } else if (index === 44) {
+                    // Para 5 Image
                     const img = document.createElement('img');
                     img.src = `English-Reading-1-images/p5.jpg`; 
                     img.alt = `Illustration for A Modern Hero`;
@@ -963,28 +790,24 @@
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                // 智慧去標點符號：僅去除字首字尾的標點，保留單字內的連接號 (如 side-scrolling)
-                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
+                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 const originalWord = word;
-                
-                // 透過 Smart Lookup 取出字根
-                const rootWord = getSmartLookupRoot(cleanWord);
-
-                if (vocabulary[rootWord]) {
-                    const data = vocabulary[rootWord];
-                    const isFav = favoriteWords.has(rootWord);
+                if (vocabulary[cleanWord]) {
+                    const data = vocabulary[cleanWord];
+                    const isFav = favoriteWords.has(cleanWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    // 注意：點擊時會念出「文章中的單字」(cleanWord)，但字卡展示「原始字根」(rootWord)
+                    // Modified HTML structure for larger text
                     return `<span class="vocab-word" onclick="speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass} heart-icon-${rootWord}"></i>
+                            <button onclick="toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-yellow-300 text-2xl mb-2">${rootWord}</div>
+                        <div class="font-bold text-yellow-300 text-2xl mb-2">${cleanWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
+                        <!-- Increased example text size from text-base to text-lg -->
                         <div class="text-lg text-gray-300 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
                 }
@@ -992,10 +815,10 @@
             }).join(' ');
         }
         
-        function speakAndShowDef(e, wordToSpeak) {
+        function speakAndShowDef(e, word) {
             e.stopPropagation(); 
             synth.cancel(); 
-            const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+            const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
             utterance.rate = 0.9; 
             synth.speak(utterance);
@@ -1022,9 +845,9 @@
         }
 
         function updateHeartIcon(word, isFav) {
-            const icons = document.querySelectorAll(`.heart-icon-${word}`);
+            const icons = document.querySelectorAll(`#heart-${word}`);
             icons.forEach(icon => {
-                icon.className = isFav ? `fas fa-heart text-pink-500 heart-icon-${word}` : `far fa-heart text-gray-400 heart-icon-${word}`;
+                icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
             });
         }
 
@@ -1037,7 +860,7 @@
         function openStudyModal() {
             const container = document.getElementById('study-table-container');
             if (favoriteWords.size === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-5xl mb-4 text-gray-300"></i><p class="text-xl">您的學習清單是空的。</p><p class="text-base mt-2">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
+                container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="far fa-heart text-4xl mb-4 text-gray-300"></i><p>您的學習清單是空的。</p><p class="text-sm">在閱讀時點擊單字上的愛心圖示即可加入。</p></div>`;
             } else {
                 container.innerHTML = generateTableHTML(Array.from(favoriteWords), 'study');
             }
@@ -1047,10 +870,10 @@
         function openMistakeModal() {
             const container = document.getElementById('mistake-table-container');
             if (wrongAnswers.length === 0) {
-                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-5xl mb-4 text-green-300"></i><p class="text-xl font-bold">太棒了！您沒有答錯任何題目。</p></div>`;
+                 container.innerHTML = `<div class="text-center py-12 text-gray-500"><i class="fas fa-check-circle text-4xl mb-4 text-green-300"></i><p>太棒了！您沒有答錯任何題目。</p></div>`;
             } else {
                  let html = `
-                    <table class="w-full text-left border-collapse text-lg">
+                    <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-red-50 border-b border-red-200">
                                 <th class="p-3 font-bold text-gray-700 w-4/12">題目 (Question)</th>
@@ -1064,10 +887,10 @@
                 wrongAnswers.forEach(item => {
                     html += `
                         <tr class="hover:bg-red-50">
-                            <td class="p-4 font-medium text-gray-800 leading-relaxed">${item.q.q}</td>
-                            <td class="p-4 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
-                            <td class="p-4 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
-                            <td class="p-4 text-gray-700 text-base leading-relaxed">${item.q.expl}</td>
+                            <td class="p-3 font-medium text-gray-800">${item.q.q}</td>
+                            <td class="p-3 text-red-600 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-600 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-600 text-sm">${item.q.expl}</td>
                         </tr>
                     `;
                 });
@@ -1085,16 +908,14 @@
             if (!wordList || wordList.length === 0) return '';
             wordList.sort();
             let html = `
-                <table class="w-full text-left border-collapse text-lg">
+                <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-100 border-b border-gray-300">
-                            <th class="p-3 font-bold text-gray-700 w-1/12 text-center">收藏</th>
-                            <th class="p-3 font-bold text-gray-700 w-2/12">單字</th>
+                            <th class="p-3 font-bold text-gray-700 w-1/12">收藏</th>
+                            <th class="p-3 font-bold text-gray-700 w-2/12">單字 (Word)</th>
                             <th class="p-3 font-bold text-gray-700 w-1/12">詞性</th>
-                            <th class="p-3 font-bold text-gray-700 w-2/12">中文意思</th>
-                            <th class="p-3 font-bold text-gray-700 w-3/12">例句與翻譯</th>
-                            <th class="p-3 font-bold text-gray-700 w-2/12">衍生字/家族字</th>
-                            <th class="p-3 font-bold text-gray-700 w-2/12">常見搭配詞</th>
+                            <th class="p-3 font-bold text-gray-700 w-3/12">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold text-gray-700 w-5/12">例句 (Example)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -1106,16 +927,11 @@
                 const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                 html += `
                     <tr class="hover:bg-gray-50">
-                        <td class="p-4 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none"><i class="${heartClass} heart-icon-${word}"></i></button></td>
-                        <td class="p-4 font-bold text-indigo-700 text-xl">${word}</td>
-                        <td class="p-4 text-base"><span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded font-bold">${data.pos}</span></td>
-                        <td class="p-4 text-gray-800 font-medium">${data.trans}</td>
-                        <td class="p-4 text-gray-700 text-base leading-relaxed">
-                            <span class="italic">"${data.example}"</span><br>
-                            <span class="text-gray-500">${data.exampleZh}</span>
-                        </td>
-                        <td class="p-4 text-gray-600 text-base leading-relaxed">${data.family || '-'}</td>
-                        <td class="p-4 text-gray-600 text-base leading-relaxed">${data.collocation || '-'}</td>
+                        <td class="p-3 text-center"><button onclick="toggleFavorite(null, '${word}')" class="text-lg focus:outline-none"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-3 font-bold text-indigo-700">${word}</td>
+                        <td class="p-3 text-sm"><span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-gray-800">${data.trans}</td>
+                        <td class="p-3 text-gray-600 text-sm italic">"${data.example}"</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1126,81 +942,71 @@
             const printArea = document.getElementById('print-area');
             let content = '';
             
-            const mainTitleHtml = `<h2 style="text-align: center; color: #6b7280; font-size: 20px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">The Evolution of an Icon: The History of Mario</h2>`;
-
             if (type === 'mistakes') {
                 content = `
-                    <div style="font-family: 'Times New Roman', 'Noto Sans TC', serif; color: #111827;">
-                        <h1 style="text-align: center; font-size: 32px; margin-bottom: 15px; border-bottom: 2px solid #374151; padding-bottom: 10px;">
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        ${mainTitleHtml}
-                        <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 40%;">Question</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 40%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wrongAnswers.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 30px;">No mistakes found. Good job!</td></tr>`;
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No mistakes found. Good job!</td></tr>`;
                 } else {
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; line-height: 1.5;">${item.q.q}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center; color: #dc2626; font-weight: bold;">${item.yourAns}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center; color: #16a34a; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; line-height: 1.5;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
                 }
                 content += `</tbody></table></div>`;
             } else {
+                // Vocabulary or Study List Print Logic
                 let title = type === 'vocab' ? "完整單字表 (Vocabulary List)" : "我的學習清單 (My Study List)";
                 let wordList = type === 'vocab' ? Object.keys(vocabulary) : Array.from(favoriteWords);
                 wordList.sort();
 
                 content = `
-                    <div style="font-family: 'Times New Roman', 'Noto Sans TC', serif; color: #111827;">
-                        <h1 style="text-align: center; font-size: 32px; margin-bottom: 15px; border-bottom: 2px solid #374151; padding-bottom: 10px;">
+                    <div style="font-family: 'Times New Roman', serif; color: black;">
+                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        ${mainTitleHtml}
-                        <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 12%;">Word</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: center; width: 6%;">POS</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 12%;">Meaning</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 30%;">Example Sentence & Translation</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 20%;">Word Family</th>
-                                    <th style="border: 1px solid #d1d5db; padding: 12px; text-align: left; width: 20%;">Collocation</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="6" style="text-align: center; padding: 30px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; font-weight: bold; color: #4338ca;">${word}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; font-weight: bold;">${data.trans}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; line-height: 1.5;">
-                                    <span style="font-style: italic;">"${data.example}"</span><br>
-                                    <span style="color: #6b7280;">${data.exampleZh}</span>
-                                </td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; line-height: 1.5; color: #4b5563;">${data.family || '-'}</td>
-                                <td style="border: 1px solid #d1d5db; padding: 12px; line-height: 1.5; color: #4b5563;">${data.collocation || '-'}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
                             </tr>
                         `;
                     });
@@ -1208,11 +1014,12 @@
                 content += `</tbody></table></div>`;
             }
             
-            content += `<div style="margin-top: 20px; text-align: center; font-size: 14px; color: #6b7280;">Generated by Listening Quiz: The Evolution of Mario</div>`;
+            content += `<div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">Generated by Listening Quiz: The Evolution of Mario</div>`;
             printArea.innerHTML = content;
             window.print();
         }
 
+        // ... (toggleTranslation, togglePlay, playAudio, speakSentence, pauseAudio, restartAudio, playFromSentence, updatePlayBtn, highlightSentence, updateProgressBar, toggleText - UNCHANGED) ...
         function toggleTranslation() {
             showTranslation = !showTranslation;
             const transElements = document.querySelectorAll('.translation-text');
@@ -1370,23 +1177,22 @@
             
             quizData.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = 'bg-white p-6 rounded-2xl border border-gray-200 shadow-sm transition';
-                // Increased text-2xl for Question, text-xl for Options
+                div.className = 'bg-white p-5 rounded-xl border border-gray-200 shadow-sm transition';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-800 mb-5 text-2xl leading-relaxed">${item.q}</p>
-                    <div class="space-y-4" id="${item.id}-options">
+                    <p class="font-bold text-gray-800 mb-4 text-xl">${item.q}</p>
+                    <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-4 rounded-xl cursor-pointer border-2 border-transparent bg-gray-50 hover:bg-gray-100 transition" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-200" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="checkAnswer('${item.id}', '${key}')">
-                                <div class="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors text-xl shrink-0" id="${item.id}-icon-${key}">
+                                <div class="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center mr-3 font-bold text-gray-500 transition-colors" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-700 font-medium text-xl leading-relaxed">${item.options[key]}</span>
+                                <span class="text-gray-700 font-medium text-lg">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-2 text-xl" id="${item.id}-status"></p>
+                        <p class="font-bold mb-1" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1421,6 +1227,7 @@
                 correctIcon.classList.add('border-green-500', 'text-green-600', 'bg-green-100');
                 correctIcon.innerHTML = '<i class="fas fa-check"></i>';
 
+                // Add to mistakes list
                 wrongAnswers.push({ q: questionObj, yourAns: selectedKey });
             }
 
@@ -1429,7 +1236,7 @@
             const labels = optionsDiv.querySelectorAll('label');
             
             inputs.forEach(input => input.disabled = true);
-            labels.forEach(label => label.classList.add('disabled', 'cursor-not-allowed'));
+            labels.forEach(label => label.classList.add('disabled'));
 
             const explBox = document.getElementById(`${questionId}-expl`);
             const statusText = document.getElementById(`${questionId}-status`);
@@ -1438,11 +1245,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
-                statusText.className = "font-bold mb-2 text-green-700 text-xl";
+                statusText.className = "font-bold mb-1 text-green-700";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-2 text-red-700 text-xl";
+                statusText.className = "font-bold mb-1 text-red-700";
             }
         }
 
