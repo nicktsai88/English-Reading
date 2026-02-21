@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em;
+            font-size: 1.75em; /* Updated font-size */
             color: #d1d5db;
             background: #1f2937;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #8b5cf6; /* Violet border */
+            padding: 24px; /* Updated padding */
+            border-radius: 12px; /* Updated border-radius */
+            border-left: 6px solid #6366f1; /* Updated border */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
+            width: 98%; /* Updated width */
+            max-width: 1600px; /* Updated max-width */
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -226,6 +226,7 @@
             max-width: 500px;
             text-align: center;
             padding: 40px;
+            width: 90%;
         }
 
         /* Status Dot Styles */
@@ -293,7 +294,7 @@
             transform: scale(0.98);
         }
 
-        /* Print Styles */
+        /* Print Styles - Fully Upgraded */
         @media print {
             body * {
                 visibility: hidden;
@@ -310,14 +311,28 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 20px;
+                padding: 0 !important; /* Maximized viewing area */
             }
             @page {
-                size: A4 portrait;
-                margin: 2cm;
+                size: A4 landscape; /* Landscape orientation */
+                margin: 1cm; /* 1cm margin */
             }
             .no-print {
                 display: none !important;
+            }
+            
+            /* Enhanced Table Print Styles */
+            #print-area table {
+                font-size: 15px !important;
+            }
+            #print-area th, #print-area td {
+                padding: 8px !important;
+            }
+            #print-area h1 {
+                font-size: 26px !important;
+            }
+            #print-area h2 {
+                font-size: 18px !important;
             }
         }
     </style>
@@ -353,7 +368,7 @@
                                 </div>
                             </div>
 
-                            <!-- Bottom Row: Neon Badges (Replaces old Title & Voice) -->
+                            <!-- Bottom Row: Neon Badges -->
                             <div class="flex items-center gap-2 flex-wrap">
                                 <!-- Level Badge (Neon Yellow) -->
                                 <div class="flex items-center gap-1 px-2 py-0.5 rounded border border-yellow-500 text-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.4)] text-[10px] md:text-xs font-bold bg-yellow-900/20 whitespace-nowrap">
@@ -369,7 +384,7 @@
                         </div>
                     </div>
 
-                    <!-- Mobile Play Button (Right aligned on mobile) -->
+                    <!-- Mobile Play Button -->
                     <button onclick="window.togglePlay()" class="md:hidden w-10 h-10 bg-violet-600 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition shrink-0 ml-auto border border-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)]">
                         <i class="fas fa-play" id="mobile-play-icon"></i>
                     </button>
@@ -377,12 +392,12 @@
 
                 <!-- Center: Controls -->
                 <div class="flex items-center gap-4 hidden md:flex">
-                    <!-- Rewind (Blue Neon) -->
+                    <!-- Rewind -->
                     <button onclick="window.restartAudio()" class="w-10 h-10 rounded-full border border-sky-500 text-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.5)] flex items-center justify-center hover:bg-sky-900/30 transition hover:scale-105" title="Restart">
                         <i class="fas fa-step-backward"></i>
                     </button>
                     
-                    <!-- Main Play Button (Purple/Pink Neon) -->
+                    <!-- Main Play Button -->
                     <button onclick="window.togglePlay()" class="w-12 h-12 bg-violet-600 text-white rounded-full shadow-[0_0_15px_rgba(217,70,239,0.6)] flex items-center justify-center hover:scale-105 transition border-2 border-fuchsia-500">
                         <i class="fas fa-play text-xl ml-1" id="main-play-icon"></i>
                     </button>
@@ -396,17 +411,17 @@
                 <!-- Right: Settings -->
                 <div class="flex items-center gap-3 text-sm w-full md:w-auto justify-center md:justify-end border-t md:border-gray-700 border-t-0 md:pt-0 mt-2 md:mt-0">
                     
-                    <!-- Translation Toggle (Green Neon) -->
+                    <!-- Translation Toggle -->
                     <button onclick="window.toggleTranslation()" id="toggle-trans-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-green-900/20 text-green-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(74,222,128,0.4)] border border-green-500">
                         <i class="fas fa-language"></i> <span>翻譯</span>
                     </button>
 
-                    <!-- Toggle Text (Amber Neon) -->
+                    <!-- Toggle Text -->
                     <button onclick="window.toggleText()" id="toggle-text-btn" class="flex items-center gap-2 bg-gray-900 hover:bg-amber-900/20 text-amber-400 px-3 py-1.5 rounded-lg font-bold transition shadow-[0_0_8px_rgba(251,191,36,0.4)] border border-amber-500">
                         <i class="fas fa-eye-slash"></i> <span>Hide Text</span>
                     </button>
                     
-                    <!-- Logout (Red Neon - Enlarged) -->
+                    <!-- Logout -->
                     <button onclick="window.location.reload()" title="登出 / 切換使用者" class="w-10 h-10 rounded-lg border border-red-500 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)] flex items-center justify-center hover:bg-red-900/30 transition hover:scale-105 ml-1">
                         <i class="fas fa-sign-out-alt text-lg"></i>
                     </button>
@@ -424,7 +439,6 @@
         
         <!-- Image Card -->
         <div class="bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-700">
-             <!-- Image with fallback -->
              <div class="w-full h-64 md:h-80 bg-gray-900 relative overflow-hidden group">
                 <img 
                     src="English-Reading-14-images/p0.jpg" 
@@ -432,8 +446,6 @@
                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80"
                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1559067096-49ebca3406aa?q=80&w=1200&auto=format&fit=crop';"
                 >
-                
-                <!-- Dark Gradient Overlay for better text readability -->
                 <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none"></div>
 
                 <div class="absolute bottom-4 left-4 right-4 text-white">
@@ -481,7 +493,6 @@
                 <i class="fas fa-mouse-pointer mr-1 text-violet-400"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
             </div>
 
-            <!-- Hidden Message Overlay -->
             <div id="hidden-overlay" class="hidden absolute inset-0 bg-gray-900/95 z-10 flex flex-col items-center justify-center rounded-2xl backdrop-blur-sm transition-all">
                 <div class="bg-gray-800 p-6 rounded-full mb-4 border border-gray-700 shadow-lg shadow-violet-900/20">
                     <i class="fas fa-ear-listen text-4xl text-violet-500"></i>
@@ -493,7 +504,7 @@
                 </button>
             </div>
 
-            <!-- Article Container -->
+            <!-- Article Container: Maintained text-xl md:text-2xl leading-loose tracking-wide -->
             <div id="article-display" class="prose max-w-none text-gray-300 text-xl md:text-2xl leading-loose tracking-wide space-y-8">
                 <!-- Content injected by JS -->
             </div>
@@ -502,16 +513,14 @@
         <!-- Quiz Area -->
         <div class="bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-700 relative">
             
-            <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                <h3 class="text-2xl font-bold text-gray-100 flex items-center"> <!-- Updated to text-2xl -->
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
                     Reading Comprehension Quiz (15 Questions)
                 </h3>
                 
-                <!-- Restart Button (Fluorescent Style) -->
                 <button onclick="window.resetQuiz()" class="neon-btn px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                     <i class="fas fa-redo-alt"></i> 重新開始 (Restart)
                 </button>
@@ -539,7 +548,7 @@
         </div>
     </div>
 
-    <!-- Login Modal (New) -->
+    <!-- Login Modal -->
     <div id="login-modal" class="modal-backdrop">
         <div class="modal-content flex flex-col items-center justify-center gap-6">
             <div class="w-16 h-16 rounded-full bg-violet-900 flex items-center justify-center text-violet-300 mb-2 border border-violet-500 shadow-lg shadow-violet-500/30">
@@ -647,8 +656,8 @@
 
         let app, db, auth;
         let isFirebaseReady = false;
-        let currentUser = null; // Store current user info {name: string}
-        let unsubscribeUser = null; // Listener for specific user data
+        let currentUser = null; 
+        let unsubscribeUser = null; 
 
         // --- Firebase Initialization ---
         async function initFirebase() {
@@ -663,7 +672,6 @@
                 isFirebaseReady = true;
                 console.log("Firebase Connected");
                 
-                // Listen to Global Users List for Quick Login
                 onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
                     const data = docSnap.exists() ? docSnap.data() : { users: [] };
                     renderQuickLogin(data.users || []);
@@ -687,10 +695,8 @@
             currentUser = { name: cleanName };
             document.getElementById('login-modal').style.display = 'none';
             
-            // Update Header Name (Neon Style)
             document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
 
-            // Register user in Global List (if new)
             try {
                 const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
                 await setDoc(globalRef, {
@@ -714,18 +720,14 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // 1. Restore Favorites
                     if (data.favorites) {
                         favoriteWords = new Set(data.favorites);
                         document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
-                        // Re-render open modals if needed
                         if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
                         if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
                     }
 
-                    // 2. Restore Progress
                     if (data.progressIndex !== undefined && data.progressIndex > 0) {
-                        // Only update if playing is false to avoid jumping while listening
                         if (!isPlaying && data.progressIndex > currentSentenceIndex) {
                             currentSentenceIndex = data.progressIndex;
                             window.updateProgressBar();
@@ -733,11 +735,8 @@
                         }
                     }
 
-                    // 3. Restore Quiz Answers & State
                     if (data.quizAnswers) {
                          const serverAnswers = data.quizAnswers;
-                         
-                         // Reset local quiz state before rebuilding
                          userScore = 0;
                          wrongAnswers = [];
                          userAnswers = serverAnswers;
@@ -753,7 +752,7 @@
 
                              const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
                              if (!alreadyAnswered) {
-                                 window.checkAnswer(qid, ans, true); // true = isRestoring
+                                 window.checkAnswer(qid, ans, true); 
                              }
                          });
                     }
@@ -764,7 +763,6 @@
             });
         }
 
-        // Exposed function to save data
         window.saveUserData = async () => {
             if (!currentUser || !isFirebaseReady) return;
             updateConnectionStatus('loading', '同步中...');
@@ -775,7 +773,7 @@
                     favorites: Array.from(favoriteWords),
                     mistakes: wrongAnswers,
                     progressIndex: currentSentenceIndex,
-                    quizAnswers: userAnswers, // Save the map of answers
+                    quizAnswers: userAnswers,
                     lastUpdated: new Date()
                 }, { merge: true });
             } catch (e) {
@@ -784,7 +782,6 @@
             }
         };
 
-        // Reset Quiz Data
         window.resetQuiz = async () => {
             if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
             
@@ -800,8 +797,8 @@
                 el.checked = false;
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
-                const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                const key = el.id.split('-').pop(); 
+                el.className = "w-12 h-12 text-2xl rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -847,11 +844,11 @@
             const dot = container.querySelector('.status-dot');
             const label = container.querySelector('.status-text');
             
-            dot.className = 'status-dot'; // reset
-            dot.classList.add(status); // loading, success, error
+            dot.className = 'status-dot'; 
+            dot.classList.add(status); 
             label.innerText = text;
 
-            container.className = 'status-container'; // reset
+            container.className = 'status-container'; 
             container.classList.add(status);
         }
 
@@ -864,7 +861,7 @@
 
 
         // ---------------------------------------------------------
-        // --- Existing App Logic (Attached to Window) ---
+        // --- App Logic & Enhanced Vocabulary ---
         // ---------------------------------------------------------
         
         let synth = window.speechSynthesis;
@@ -877,51 +874,76 @@
         let userScore = 0;
         let favoriteWords = new Set();
         let wrongAnswers = []; 
-        let userAnswers = {}; // Store { qID: "Answer" }
+        let userAnswers = {}; 
         let audioCtx;
 
+        // Expanded Vocabulary with Families & Collocations
         const vocabulary = {
-            "predict": { pos: "v.", trans: "預測", example: "Experts predict that the economy will grow next year." },
-            "decade": { pos: "n.", trans: "十年", example: "He has worked at the company for over a decade." },
-            "ultimate": { pos: "adj.", trans: "終極的；最終的", example: "Climbing Mount Everest was his ultimate goal." },
-            "asphalt": { pos: "n.", trans: "瀝青；柏油", example: "The workers are laying fresh asphalt on the road." },
-            "complex": { pos: "adj.", trans: "複雜的", example: "The math problem was too complex for me to solve." },
-            "vertical": { pos: "adj.", trans: "垂直的", example: "The rocket took off in a vertical direction." },
-            "runway": { pos: "n.", trans: "跑道", example: "The plane taxied down the runway before taking off." },
-            "manufacture": { pos: "v.", trans: "製造", example: "This factory can manufacture thousands of cars a year." },
-            "commute": { pos: "n./v.", trans: "通勤", example: "My daily commute to work takes 45 minutes." },
-            "obstacle": { pos: "n.", trans: "障礙", example: "Fear is often the biggest obstacle to success." },
-            "consequence": { pos: "n.", trans: "後果", example: "Every action has a consequence." },
-            "deadly": { pos: "adj.", trans: "致命的", example: "Snake venom can be deadly if not treated." },
-            "authority": { pos: "n.", trans: "當局；權威", example: "The police have the authority to arrest criminals." },
-            "certify": { pos: "v.", trans: "認證；證明", example: "The inspector must certify that the building is safe." },
-            "collision": { pos: "n.", trans: "碰撞", example: "The accident was a head-on collision between two cars." },
-            "chaotic": { pos: "adj.", trans: "混亂的", example: "The scene after the earthquake was chaotic." },
-            "autonomous": { pos: "adj.", trans: "自動的；自主的", example: "Autonomous cars can drive without a human pilot." },
-            "infrastructure": { pos: "n.", trans: "基礎設施", example: "The country needs to improve its infrastructure, like roads and bridges." },
-            "resident": { pos: "n.", trans: "居民", example: "The residents of the building complained about the noise." },
-            "limitation": { pos: "n.", trans: "限制", example: "Every technology has its limitation." },
-            "recharge": { pos: "v.", trans: "充電", example: "I need to recharge my phone battery." },
-            "urban": { pos: "adj.", trans: "城市的", example: "Pollution is a major problem in urban areas." },
-            "mobility": { pos: "n.", trans: "流動性；移動能力", example: "The injury affected his mobility." },
-            "function": { pos: "v.", trans: "運作；功能", example: "This machine does not function properly." },
-            "revolution": { pos: "n.", trans: "革命", example: "The internet caused a revolution in communication." },
-            "transportation": { pos: "n.", trans: "交通運輸", example: "Public transportation includes buses and trains." },
-            "vehicle": { pos: "n.", trans: "車輛；載具", example: "A bicycle is a type of vehicle." },
-            "aircraft": { pos: "n.", trans: "飛機；飛行器", example: "The pilot landed the aircraft safely." },
-            "rotor": { pos: "n.", trans: "旋翼", example: "The helicopter's rotor spun faster and faster." },
-            "efficient": { pos: "adj.", trans: "有效率的", example: "LED lights are more efficient than old light bulbs." },
-            "regulation": { pos: "n.", trans: "法規；規則", example: "We must follow the safety regulations." },
-            "aviation": { pos: "n.", trans: "航空", example: "He is studying to work in the aviation industry." },
-            "theoretically": { pos: "adv.", trans: "理論上地", example: "Theoretically, we could live on the moon, but it's difficult." },
-            "annoying": { pos: "adj.", trans: "煩人的", example: "The loud music from the neighbor is very annoying." },
-            "capacity": { pos: "n.", trans: "容量；能力", example: "The stadium has a capacity of 50,000 people." },
-            "imagine": { pos: "v.", trans: "想像", example: "Can you imagine a world without the internet?" },
-            "reality": { pos: "n.", trans: "現實", example: "Virtual reality is becoming more popular." },
-            "concept": { pos: "n.", trans: "概念", example: "The concept of flying cars is exciting." },
-            "advance": { pos: "v.", trans: "進步；前進", example: "Technology advances very quickly these days." },
-            "soar": { pos: "v.", trans: "翱翔；高飛", example: "The eagle soared high above the mountains." }
+            "advance": { pos: "v.", trans: "進步；前進", example: "Technology advances very quickly these days.", exampleZh: "現今科技進步得非常快。", family: "advancement (n. 晉升/進展)<br>advanced (adj. 先進的)", collocation: "advance rapidly (快速進步)<br>in advance (事先/提前)" },
+            "aircraft": { pos: "n.", trans: "飛機；飛行器", example: "The pilot landed the aircraft safely.", exampleZh: "飛行員安全地降落了這架飛機。", family: "(無特別常見衍生字)", collocation: "military aircraft (軍用飛機)<br>board an aircraft (登機)" },
+            "annoying": { pos: "adj.", trans: "煩人的", example: "The loud music from the neighbor is very annoying.", exampleZh: "鄰居傳來的嘈雜音樂非常煩人。", family: "annoy (v. 惹惱)<br>annoyance (n. 煩惱)<br>annoyed (adj. 感到煩躁的)", collocation: "highly annoying (非常煩人的)<br>find it annoying (覺得它很煩)" },
+            "asphalt": { pos: "n.", trans: "瀝青；柏油", example: "The workers are laying fresh asphalt on the road.", exampleZh: "工人們正在路上鋪設新的柏油。", family: "(無特別常見衍生字)", collocation: "lay asphalt (鋪設柏油)<br>asphalt road (柏油路)" },
+            "authority": { pos: "n.", trans: "當局；權威", example: "The police have the authority to arrest criminals.", exampleZh: "警察有逮捕罪犯的權力。", family: "authorize (v. 授權)<br>authoritative (adj. 權威的/官方的)", collocation: "local authority (地方當局)<br>have the authority to (有權力去...)" },
+            "autonomous": { pos: "adj.", trans: "自動的；自主的", example: "Autonomous cars can drive without a human pilot.", exampleZh: "自動駕駛汽車可以在沒有人類駕駛的情況下行駛。", family: "autonomy (n. 自治/自主權)<br>autonomously (adv. 獨立自主地)", collocation: "autonomous vehicle (自動駕駛車輛)<br>fully autonomous (全自動的)" },
+            "aviation": { pos: "n.", trans: "航空", example: "He is studying to work in the aviation industry.", exampleZh: "他正在學習以便未來在航空業工作。", family: "aviator (n. 飛行員)", collocation: "aviation industry (航空業)<br>civil aviation (民航)" },
+            "capacity": { pos: "n.", trans: "容量；能力", example: "The stadium has a capacity of 50,000 people.", exampleZh: "這座體育場可容納五萬人。", family: "capacious (adj. 寬敞的)", collocation: "full capacity (滿載/全能)<br>storage capacity (儲存容量)" },
+            "certify": { pos: "v.", trans: "認證；證明", example: "The inspector must certify that the building is safe.", exampleZh: "檢查員必須證明這棟建築是安全的。", family: "certificate (n. 證書)<br>certification (n. 認證)<br>certified (adj. 經過認證的)", collocation: "officially certify (官方認證)<br>board certified (獲得委員會認證的)" },
+            "chaotic": { pos: "adj.", trans: "混亂的", example: "The scene after the earthquake was chaotic.", exampleZh: "地震後的現場一片混亂。", family: "chaos (n. 混亂)<br>chaotically (adv. 混亂地)", collocation: "chaotic situation (混亂的局勢)<br>completely chaotic (完全混亂的)" },
+            "collision": { pos: "n.", trans: "碰撞", example: "The accident was a head-on collision between two cars.", exampleZh: "這起事故是兩輛車的迎面相撞。", family: "collide (v. 碰撞)", collocation: "avoid a collision (避免碰撞)<br>head-on collision (迎面相撞)" },
+            "commute": { pos: "n./v.", trans: "通勤", example: "My daily commute to work takes 45 minutes.", exampleZh: "我每天上班的通勤時間需要45分鐘。", family: "commuter (n. 通勤者)", collocation: "daily commute (每日通勤)<br>long commute (漫長的通勤)" },
+            "complex": { pos: "adj.", trans: "複雜的", example: "The math problem was too complex for me to solve.", exampleZh: "這道數學題太複雜了，我解不出來。", family: "complexity (n. 複雜性)", collocation: "complex problem (複雜的問題)<br>highly complex (高度複雜的)" },
+            "concept": { pos: "n.", trans: "概念", example: "The concept of flying cars is exciting.", exampleZh: "飛行汽車的概念令人興奮。", family: "conceptual (adj. 概念上的)<br>conceptualize (v. 構想出)", collocation: "basic concept (基本概念)<br>grasp the concept (掌握概念)" },
+            "consequence": { pos: "n.", trans: "後果", example: "Every action has a consequence.", exampleZh: "每一個行動都會產生後果。", family: "consequent (adj. 隨之發生的)<br>consequently (adv. 因此)", collocation: "serious consequence (嚴重的後果)<br>suffer the consequences (承擔後果)" },
+            "deadly": { pos: "adj.", trans: "致命的", example: "Snake venom can be deadly if not treated.", exampleZh: "如果不治療，蛇毒可能是致命的。", family: "dead (adj. 死的)<br>death (n. 死亡)", collocation: "deadly weapon (致命武器)<br>deadly disease (致命疾病)" },
+            "decade": { pos: "n.", trans: "十年", example: "He has worked at the company for over a decade.", exampleZh: "他在這家公司工作了十多年。", family: "decadal (adj. 十年的)", collocation: "for a decade (十年來)<br>over the past decade (在過去十年裡)" },
+            "efficient": { pos: "adj.", trans: "有效率的", example: "LED lights are more efficient than old light bulbs.", exampleZh: "LED燈比舊燈泡更有效率。", family: "efficiency (n. 效率)<br>efficiently (adv. 有效率地)", collocation: "highly efficient (高效率的)<br>energy-efficient (節能的)" },
+            "function": { pos: "v.", trans: "運作；功能", example: "This machine does not function properly.", exampleZh: "這台機器無法正常運作。", family: "functional (adj. 實用的/起作用的)<br>malfunction (n./v. 故障)", collocation: "function properly (正常運作)<br>vital function (重要的功能)" },
+            "imagine": { v: "v.", trans: "想像", example: "Can you imagine a world without the internet?", exampleZh: "你能想像一個沒有網路的世界嗎？", family: "imagination (n. 想像力)<br>imaginative (adj. 富有想像力的)<br>imaginary (adj. 虛構的)", collocation: "hard to imagine (很難想像)<br>try to imagine (試著想像)" },
+            "infrastructure": { pos: "n.", trans: "基礎設施", example: "The country needs to improve its infrastructure, like roads and bridges.", exampleZh: "這個國家需要改善其基礎設施，如道路和橋樑。", family: "structural (adj. 結構的)", collocation: "critical infrastructure (關鍵基礎設施)<br>build infrastructure (建設基礎設施)" },
+            "limitation": { pos: "n.", trans: "限制", example: "Every technology has its limitation.", exampleZh: "每種科技都有其限制。", family: "limit (v./n. 限制)<br>limited (adj. 有限的)", collocation: "severe limitation (嚴重的限制)<br>overcome limitations (克服限制)" },
+            "manufacture": { pos: "v.", trans: "製造", example: "This factory can manufacture thousands of cars a year.", exampleZh: "這家工廠每年可以製造數千輛汽車。", family: "manufacturer (n. 製造商)<br>manufacturing (n. 製造業)", collocation: "manufacture goods (製造商品)<br>locally manufactured (本地製造的)" },
+            "mobility": { pos: "n.", trans: "流動性；移動能力", example: "The injury affected his mobility.", exampleZh: "受傷影響了他的移動能力。", family: "mobile (adj. 可移動的)<br>mobilize (v. 動員)", collocation: "upward mobility (向上流動)<br>limited mobility (行動不便)" },
+            "obstacle": { pos: "n.", trans: "障礙", example: "Fear is often the biggest obstacle to success.", exampleZh: "恐懼通常是成功最大的障礙。", family: "(無特別常見衍生字)", collocation: "overcome an obstacle (克服障礙)<br>major obstacle (主要障礙)" },
+            "predict": { pos: "v.", trans: "預測", example: "Experts predict that the economy will grow next year.", exampleZh: "專家預測明年經濟將會成長。", family: "prediction (n. 預測)<br>predictable (adj. 可預測的)", collocation: "accurately predict (準確預測)<br>predict the future (預測未來)" },
+            "reality": { pos: "n.", trans: "現實", example: "Virtual reality is becoming more popular.", exampleZh: "虛擬實境變得越來越受歡迎。", family: "real (adj. 真實的)<br>realize (v. 了解/實現)<br>realistic (adj. 寫實的)", collocation: "face reality (面對現實)<br>virtual reality (VR/虛擬實境)" },
+            "recharge": { pos: "v.", trans: "充電", example: "I need to recharge my phone battery.", exampleZh: "我需要給手機電池充電。", family: "charge (v./n. 充電/收費)<br>rechargeable (adj. 可充電的)", collocation: "recharge fully (充滿電)<br>rechargeable battery (充電電池)" },
+            "regulation": { pos: "n.", trans: "法規；規則", example: "We must follow the safety regulations.", exampleZh: "我們必須遵守安全法規。", family: "regulate (v. 管制/調節)<br>regulatory (adj. 監管的)", collocation: "safety regulation (安全法規)<br>strict regulation (嚴格的法規)" },
+            "resident": { pos: "n.", trans: "居民", example: "The residents of the building complained about the noise.", exampleZh: "這棟建築的居民抱怨噪音。", family: "reside (v. 居住)<br>residential (adj. 住宅的)<br>residence (n. 住所)", collocation: "local resident (當地居民)<br>long-term resident (長期居民)" },
+            "revolution": { pos: "n.", trans: "革命", example: "The internet caused a revolution in communication.", exampleZh: "網際網路引發了通訊領域的革命。", family: "revolutionary (adj. 革命性的)<br>revolutionize (v. 使發生革命性劇變)", collocation: "industrial revolution (工業革命)<br>technological revolution (科技革命)" },
+            "rotor": { pos: "n.", trans: "旋翼", example: "The helicopter's rotor spun faster and faster.", exampleZh: "直升機的旋翼轉得越來越快。", family: "rotate (v. 旋轉)<br>rotation (n. 旋轉)", collocation: "helicopter rotor (直升機旋翼)<br>tail rotor (尾旋翼)" },
+            "runway": { pos: "n.", trans: "跑道", example: "The plane taxied down the runway before taking off.", exampleZh: "飛機起飛前在跑道上滑行。", family: "run (v. 跑)<br>way (n. 道路)", collocation: "airport runway (機場跑道)<br>fashion runway (時尚伸展台)" },
+            "soar": { pos: "v.", trans: "翱翔；高飛", example: "The eagle soared high above the mountains.", exampleZh: "老鷹在群山之上高高翱翔。", family: "soaring (adj. 猛增的/高聳的)", collocation: "prices soar (物價飛漲)<br>soar into the sky (沖向雲霄)" },
+            "theoretically": { pos: "adv.", trans: "理論上地", example: "Theoretically, we could live on the moon, but it's difficult.", exampleZh: "理論上，我們可以在月球上生活，但這很困難。", family: "theory (n. 理論)<br>theoretical (adj. 理論上的)", collocation: "theoretically possible (理論上可行)<br>theoretically speaking (理論上來說)" },
+            "transportation": { pos: "n.", trans: "交通運輸", example: "Public transportation includes buses and trains.", exampleZh: "大眾運輸包括公車和火車。", family: "transport (v./n. 運輸/交通工具)", collocation: "public transportation (大眾運輸)<br>mode of transportation (交通方式)" },
+            "ultimate": { pos: "adj.", trans: "終極的；最終的", example: "Climbing Mount Everest was his ultimate goal.", exampleZh: "攀登聖母峰是他的終極目標。", family: "ultimately (adv. 最終)<br>ultimatum (n. 最後通牒)", collocation: "ultimate goal (終極目標)<br>ultimate choice (最終選擇)" },
+            "urban": { pos: "adj.", trans: "城市的", example: "Pollution is a major problem in urban areas.", exampleZh: "污染是都會區的一大問題。", family: "urbanize (v. 使都市化)<br>urbanization (n. 都市化)<br>suburb (n. 郊區)", collocation: "urban area (市區/都會區)<br>urban development (都市發展)" },
+            "vehicle": { pos: "n.", trans: "車輛；載具", example: "A bicycle is a type of vehicle.", exampleZh: "腳踏車是一種交通工具。", family: "vehicular (adj. 車輛的)", collocation: "motor vehicle (機動車輛)<br>autonomous vehicle (自動駕駛車輛)" },
+            "vertical": { pos: "adj.", trans: "垂直的", example: "The rocket took off in a vertical direction.", exampleZh: "火箭沿垂直方向起飛。", family: "vertically (adv. 垂直地)", collocation: "vertical drop (垂直落差)<br>vertical line (垂直線)" }
         };
+
+        // Smart Lookup Feature
+        const smartLookupMap = {
+            "decades": "decade",
+            "predicted": "predict",
+            "vehicles": "vehicle",
+            "rotors": "rotor",
+            "advancing": "advance",
+            "advances": "advance",
+            "consequences": "consequence",
+            "authorities": "authority",
+            "regulations": "regulation",
+            "certifying": "certify",
+            "collisions": "collision",
+            "residents": "resident",
+            "imagined": "imagine",
+            "soaring": "soar",
+            "batteries": "battery", // Example extension if needed
+            "promised": "promise"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
 
         const articleData = [
             { en: "For decades, science fiction movies and books have promised us a future where cars fly.", zh: "幾十年來，科幻電影和書籍一直向我們承諾一個汽車會飛的未來。" },
@@ -1187,65 +1209,36 @@
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                // Smart Lookup Regex Logic
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
                 const originalWord = word;
-                
-                // --- Smart Lookup Logic: Word Mapping for Variations ---
-                // Map text variations (e.g. plurals, tenses) to base vocabulary keys
-                const wordMapping = {
-                    "decades": "decade",
-                    "predicted": "predict",
-                    "vehicles": "vehicle",
-                    "rotors": "rotor",
-                    "advancing": "advance",
-                    "consequences": "consequence",
-                    "authorities": "authority",
-                    "regulations": "regulation",
-                    "certifying": "certify",
-                    "collisions": "collision",
-                    "residents": "resident",
-                    "imagined": "imagine",
-                    "soaring": "soar"
-                };
+                const rootWord = getSmartLookupRoot(cleanWord);
 
-                let targetKey = cleanWord;
-                if (wordMapping[cleanWord]) {
-                    targetKey = wordMapping[cleanWord];
-                }
-
-                if (vocabulary[targetKey]) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
-                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"<br><span class="text-sm text-gray-500 not-italic">${data.exampleZh}</span></div>
                     </span></span>`;
                 }
                 return originalWord;
             }).join(' ');
         }
         
-        window.speakAndShowDef = function(e, word) {
-            e.stopPropagation(); 
+        window.speakAndShowDef = function(e, wordToSpeak) {
+            if(e) e.stopPropagation(); 
             synth.cancel(); 
-            const utterance = new SpeechSynthesisUtterance(word);
-            if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.rate = 0.9; 
-            synth.speak(utterance);
-        }
-
-        window.speakWord = function(word) {
-            synth.cancel(); 
-            const utterance = new SpeechSynthesisUtterance(word);
+            const utterance = new SpeechSynthesisUtterance(wordToSpeak);
             if (selectedVoice) utterance.voice = selectedVoice;
             utterance.rate = 0.9; 
             synth.speak(utterance);
@@ -1309,10 +1302,10 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-red-900/40 border-b border-red-800">
-                                <th class="p-3 font-bold text-gray-300 w-4/12">題目 (Question)</th>
-                                <th class="p-3 font-bold text-gray-300 w-2/12">您的答案</th>
-                                <th class="p-3 font-bold text-gray-300 w-2/12">正確答案</th>
-                                <th class="p-3 font-bold text-gray-300 w-4/12">詳解 (Explanation)</th>
+                                <th class="p-3 font-bold text-gray-300 w-[40%] text-xl">題目 (Question)</th>
+                                <th class="p-3 font-bold text-gray-300 w-[10%] text-xl text-center">您的答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-[10%] text-xl text-center">正確答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-[40%] text-xl">詳解 (Explanation)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700">
@@ -1320,10 +1313,10 @@
                 wrongAnswers.forEach(item => {
                     html += `
                         <tr class="hover:bg-gray-700/50">
-                            <td class="p-3 font-medium text-gray-300">${item.q.q}</td>
-                            <td class="p-3 text-red-400 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
-                            <td class="p-3 text-green-400 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
-                            <td class="p-3 text-gray-400 text-sm">${item.q.expl}</td>
+                            <td class="p-3 font-medium text-gray-300 text-lg">${item.q.q}</td>
+                            <td class="p-3 text-red-400 font-bold text-center text-lg"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-400 font-bold text-center text-lg"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-400 text-base">${item.q.expl}</td>
                         </tr>
                     `;
                 });
@@ -1344,11 +1337,13 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
-                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                            <th class="p-3 font-bold w-[5%] text-lg text-center">收藏</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-[6%] text-lg">詞性</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">中文意思</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">例句與翻譯 (Example)</th>
+                            <th class="p-3 font-bold w-[15%] text-lg">衍生字/家族字</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">常見搭配詞</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1362,13 +1357,15 @@
                     <tr class="hover:bg-gray-700/50 transition duration-150">
                         <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
                         
-                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl group">
+                            ${word} <button onclick="window.speakAndShowDef(event, '${word}')" class="focus:outline-none no-print" title="點擊發音"><i class="fas fa-volume-up text-base ml-2 opacity-50 hover:opacity-100 transition text-violet-300"></i></button>
                         </td>
 
                         <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"<br><span class="text-sm text-gray-500 not-italic">${data.exampleZh}</span></td>
+                        <td class="p-3 text-gray-400 text-base md:text-lg leading-relaxed">${data.family}</td>
+                        <td class="p-3 text-gray-400 text-base md:text-lg leading-relaxed">${data.collocation}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1377,21 +1374,24 @@
 
         window.printList = function(type) {
             const printArea = document.getElementById('print-area');
+            const articleTitle = "Flying Cars: Are We There Yet?";
+            const dynamicSubtitle = `<h2 style="text-align: center; color: #6b7280; font-size: 18px !important; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${articleTitle}</h2>`;
             let content = '';
             
             if (type === 'mistakes') {
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px !important; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        ${dynamicSubtitle}
+                        <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1402,10 +1402,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1418,31 +1418,36 @@
 
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px !important; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        ${dynamicSubtitle}
+                        <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;"><span style="font-style: italic;">${data.example}</span><br><span style="color: #4b5563; font-size: 0.9em;">${data.exampleZh}</span></td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.family}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.collocation}</td>
                             </tr>
                         `;
                     });
@@ -1618,15 +1623,15 @@
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <p class="font-bold text-gray-200 mb-4 text-3xl">${item.q}</p> <!-- Updated text-3xl -->
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}"> <!-- Updated p-5 -->
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 text-2xl rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}"> <!-- Updated w-12 h-12 text-2xl -->
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span> <!-- Updated text-2xl -->
                             </label>
                         `).join('')}
                     </div>
@@ -1685,11 +1690,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400";
+                statusText.className = "font-bold mb-1 text-green-400 text-2xl"; // Added text-2xl
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400";
+                statusText.className = "font-bold mb-1 text-red-400 text-2xl"; // Added text-2xl
             }
 
             if(!isRestoring) window.saveUserData();
