@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em;
+            font-size: 1.75em;
             color: #d1d5db;
             background: #1f2937;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #8b5cf6; /* Violet border */
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 6px solid #6366f1; /* Indigo border */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
+            width: 98%;
+            max-width: 1600px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -310,11 +310,11 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 20px;
+                padding: 0;
             }
             @page {
-                size: A4 portrait;
-                margin: 2cm;
+                size: A4 landscape;
+                margin: 1cm;
             }
             .no-print {
                 display: none !important;
@@ -504,7 +504,7 @@
             
             <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                <h3 class="text-2xl font-bold text-gray-100 flex items-center">
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
@@ -647,8 +647,8 @@
 
         let app, db, auth;
         let isFirebaseReady = false;
-        let currentUser = null; // Store current user info {name: string}
-        let unsubscribeUser = null; // Listener for specific user data
+        let currentUser = null; 
+        let unsubscribeUser = null; 
 
         // --- Firebase Initialization ---
         async function initFirebase() {
@@ -663,7 +663,6 @@
                 isFirebaseReady = true;
                 console.log("Firebase Connected");
                 
-                // Listen to Global Users List for Quick Login
                 onSnapshot(doc(db, COLLECTION_NAME, DOC_GLOBAL), (docSnap) => {
                     const data = docSnap.exists() ? docSnap.data() : { users: [] };
                     renderQuickLogin(data.users || []);
@@ -687,10 +686,8 @@
             currentUser = { name: cleanName };
             document.getElementById('login-modal').style.display = 'none';
             
-            // Update Header Name (Neon Style)
             document.getElementById('header-username').innerHTML = `<i class="fas fa-user-circle"></i> <span>${cleanName}</span>`;
 
-            // Register user in Global List (if new)
             try {
                 const globalRef = doc(db, COLLECTION_NAME, DOC_GLOBAL);
                 await setDoc(globalRef, {
@@ -714,18 +711,14 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // 1. Restore Favorites
                     if (data.favorites) {
                         favoriteWords = new Set(data.favorites);
                         document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
-                        // Re-render open modals if needed
                         if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
                         if(document.getElementById('vocab-modal').style.display === 'flex') window.openVocabModal();
                     }
 
-                    // 2. Restore Progress
                     if (data.progressIndex !== undefined && data.progressIndex > 0) {
-                        // Only update if playing is false to avoid jumping while listening
                         if (!isPlaying && data.progressIndex > currentSentenceIndex) {
                             currentSentenceIndex = data.progressIndex;
                             window.updateProgressBar();
@@ -733,11 +726,9 @@
                         }
                     }
 
-                    // 3. Restore Quiz Answers & State
                     if (data.quizAnswers) {
                          const serverAnswers = data.quizAnswers;
                          
-                         // Reset local quiz state before rebuilding
                          userScore = 0;
                          wrongAnswers = [];
                          userAnswers = serverAnswers;
@@ -753,7 +744,7 @@
 
                              const alreadyAnswered = document.querySelector(`#${qid}-options input:disabled`);
                              if (!alreadyAnswered) {
-                                 window.checkAnswer(qid, ans, true); // true = isRestoring
+                                 window.checkAnswer(qid, ans, true);
                              }
                          });
                     }
@@ -764,7 +755,6 @@
             });
         }
 
-        // Exposed function to save data
         window.saveUserData = async () => {
             if (!currentUser || !isFirebaseReady) return;
             updateConnectionStatus('loading', '同步中...');
@@ -775,7 +765,7 @@
                     favorites: Array.from(favoriteWords),
                     mistakes: wrongAnswers,
                     progressIndex: currentSentenceIndex,
-                    quizAnswers: userAnswers, // Save the map of answers
+                    quizAnswers: userAnswers,
                     lastUpdated: new Date()
                 }, { merge: true });
             } catch (e) {
@@ -784,7 +774,6 @@
             }
         };
 
-        // Reset Quiz Data
         window.resetQuiz = async () => {
             if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
             
@@ -800,8 +789,8 @@
                 el.checked = false;
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
-                const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                const key = el.id.split('-').pop();
+                el.className = "w-12 h-12 text-2xl rounded-full border-2 border-gray-600 flex items-center justify-center mr-4 font-bold text-gray-400 transition-colors";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -847,11 +836,11 @@
             const dot = container.querySelector('.status-dot');
             const label = container.querySelector('.status-text');
             
-            dot.className = 'status-dot'; // reset
-            dot.classList.add(status); // loading, success, error
+            dot.className = 'status-dot';
+            dot.classList.add(status);
             label.innerText = text;
 
-            container.className = 'status-container'; // reset
+            container.className = 'status-container';
             container.classList.add(status);
         }
 
@@ -861,7 +850,6 @@
         };
         
         initFirebase();
-
 
         // ---------------------------------------------------------
         // --- Existing App Logic (Attached to Window) ---
@@ -877,50 +865,378 @@
         let userScore = 0;
         let favoriteWords = new Set();
         let wrongAnswers = []; 
-        let userAnswers = {}; // Store { qID: "Answer" }
+        let userAnswers = {}; 
         let audioCtx;
 
+        // Smart Lookup Map - Maps text variants back to the root dictionary word
+        const smartLookupMap = {
+            "adapted": "adapt", "adapts": "adapt", "adapting": "adapt",
+            "advanced": "advanced",
+            "ancient": "ancient",
+            "apex": "apex",
+            "captures": "capture", "captured": "capture", "capturing": "capture",
+            "cartilage": "cartilage",
+            "climates": "climate",
+            "coastal": "coastal",
+            "common": "common",
+            "competition": "competition",
+            "creatures": "creature",
+            "crushes": "crush", "crushed": "crush", "crushing": "crush",
+            "depths": "depth",
+            "detects": "detect", "detected": "detect", "detecting": "detect",
+            "discovers": "discover", "discovered": "discover", "discovering": "discover",
+            "estimates": "estimate", "estimated": "estimate", "estimating": "estimate",
+            "evidence": "evidence",
+            "extinct": "extinct",
+            "fossils": "fossil",
+            "imagination": "imagination",
+            "impossible": "impossible",
+            "instant": "instant",
+            "legends": "legend",
+            "massive": "massive",
+            "migrates": "migrate", "migrated": "migrate", "migrating": "migrate",
+            "populations": "population",
+            "predators": "predator",
+            "prehistoric": "prehistoric",
+            "records": "record",
+            "reminds": "remind", "reminded": "remind", "reminding": "remind",
+            "skeletons": "skeleton",
+            "speculates": "speculate", "speculated": "speculate", "speculating": "speculate",
+            "starves": "starve", "starved": "starve", "starving": "starve",
+            "supports": "support", "supported": "support", "supporting": "support",
+            "symbols": "symbol",
+            "temperatures": "temperature",
+            "terrifying": "terrifying",
+            "theories": "theory",
+            "unexplored": "unexplored",
+            "vanishes": "vanish", "vanished": "vanish", "vanishing": "vanish"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
+
         const vocabulary = {
-            "predator": { pos: "n.", trans: "掠食者", example: "The lion is a top predator in the African savanna." },
-            "extinct": { pos: "adj.", trans: "滅絕的", example: "Dinosaurs became extinct millions of years ago." },
-            "massive": { pos: "adj.", trans: "巨大的", example: "The ship hit a massive iceberg and sank." },
-            "estimate": { pos: "v.", trans: "估計", example: "Scientists estimate that the universe is 13.8 billion years old." },
-            "cartilage": { pos: "n.", trans: "軟骨", example: "Sharks have skeletons made of cartilage instead of bone." },
-            "fossil": { pos: "n.", trans: "化石", example: "We found a fossil of a fish in the rock." },
-            "evidence": { pos: "n.", trans: "證據", example: "There is no scientific evidence to support his claim." },
-            "speculate": { pos: "v.", trans: "推測", example: "We can only speculate about what happened, as there were no witnesses." },
-            "migrate": { pos: "v.", trans: "遷徙", example: "Birds migrate south for the winter to find warmer weather." },
-            "adapt": { pos: "v.", trans: "適應", example: "Animals must adapt to their environment to survive." },
-            "detect": { pos: "v.", trans: "偵測", example: "The security camera can detect movement at night." },
-            "legend": { pos: "n.", trans: "傳奇；傳說", example: "The legend of King Arthur is famous around the world." },
-            "vanish": { pos: "v.", trans: "消失", example: "The magician made the rabbit vanish from the hat." },
-            "ancient": { pos: "adj.", trans: "古代的", example: "The Pyramids of Giza are ancient structures in Egypt." },
-            "competition": { pos: "n.", trans: "競爭", example: "There is strong competition between the two companies." },
-            "terrifying": { pos: "adj.", trans: "令人恐懼的", example: "The horror movie was so terrifying that I couldn't sleep." },
-            "skeleton": { pos: "n.", trans: "骨骼", example: "The museum displayed a complete dinosaur skeleton." },
-            "unexplored": { pos: "adj.", trans: "未被探索的", example: "The deep ocean remains largely unexplored." },
-            "prehistoric": { pos: "adj.", trans: "史前的", example: "Cave paintings give us a glimpse into prehistoric life." },
-            "coastal": { pos: "adj.", trans: "沿海的", example: "Many coastal cities are at risk of rising sea levels." },
-            "starve": { pos: "v.", trans: "挨餓；餓死", example: "If the animals cannot find food in winter, they might starve." },
-            "population": { pos: "n.", trans: "族群；人口", example: "The population of the city has grown rapidly in the last ten years." },
-            "advanced": { pos: "adj.", trans: "先進的", example: "This car uses advanced technology to drive itself." },
-            "symbol": { pos: "n.", trans: "象徵", example: "The dove is often used as a symbol of peace." },
-            "creature": { pos: "n.", trans: "生物", example: "The deep sea is home to many strange and wonderful creatures." },
-            "theory": { pos: "n.", trans: "理論", example: "Darwin's theory of evolution changed how we understand biology." },
-            "depth": { pos: "n.", trans: "深度", example: "The submarine can travel to a depth of 3,000 meters." },
-            "apex": { pos: "adj.", trans: "頂級的；頂端的", example: "The eagle is an apex predator, meaning it has no natural enemies." },
-            "crush": { pos: "v.", trans: "壓碎；壓壞", example: "The machine can crush large rocks into small stones." },
-            "imagination": { pos: "n.", trans: "想像力", example: "Reading books can help improve your imagination." },
-            "impossible": { pos: "adj.", trans: "不可能的", example: "It is virtually impossible for humans to breathe underwater without gear." },
-            "climate": { pos: "n.", trans: "氣候", example: "The global climate is changing, causing warmer oceans." },
-            "common": { pos: "adj.", trans: "常見的", example: "Colds are very common in the winter." },
-            "record": { pos: "n.", trans: "紀錄", example: "The athlete set a new world record for running speed." },
-            "support": { pos: "v.", trans: "支持；供養", example: "The bridge is strong enough to support heavy trucks." },
-            "instant": { pos: "adj.", trans: "立即的", example: "He sent an instant message to his friend." },
-            "temperature": { pos: "n.", trans: "溫度", example: "Water freezes when the temperature drops below zero." },
-            "discover": { pos: "v.", trans: "發現", example: "Columbus did not discover America first." },
-            "capture": { pos: "v.", trans: "捕捉", example: "The photographer managed to capture the beautiful sunset." },
-            "remind": { pos: "v.", trans: "提醒", example: "Please remind me to call my mother later." }
+            "adapt": {
+                pos: "v.",
+                trans: "適應",
+                example: "Animals must adapt to their environment to survive.",
+                exampleZh: "(動物必須適應環境才能生存。)",
+                family: "adaptation (n. 適應/改編)<br>adaptable (adj. 適應力強的)",
+                collocation: "adapt to changes (適應變化)<br>adapt well (適應良好)"
+            },
+            "advanced": {
+                pos: "adj.",
+                trans: "先進的",
+                example: "This car uses advanced technology to drive itself.",
+                exampleZh: "(這輛車使用先進技術來自動駕駛。)",
+                family: "advance (v./n. 進步/前進)<br>advancement (n. 進展)",
+                collocation: "advanced technology (先進技術)<br>advanced stage (進階階段)"
+            },
+            "ancient": {
+                pos: "adj.",
+                trans: "古代的",
+                example: "The Pyramids of Giza are ancient structures in Egypt.",
+                exampleZh: "(吉薩金字塔是埃及的古代建築。)",
+                family: "antiquity (n. 古代/古物)<br>anciently (adv. 自古以來)",
+                collocation: "ancient civilization (古代文明)<br>ancient ruins (古代遺跡)"
+            },
+            "apex": {
+                pos: "adj.",
+                trans: "頂級的；頂端的",
+                example: "The eagle is an apex predator, meaning it has no natural enemies.",
+                exampleZh: "(老鷹是頂級掠食者，這意味著它沒有天敵。)",
+                family: "apex (n. 頂點/頂峰)",
+                collocation: "apex predator (頂級掠食者)<br>at the apex of (在...的頂端)"
+            },
+            "capture": {
+                pos: "v.",
+                trans: "捕捉",
+                example: "The photographer managed to capture the beautiful sunset.",
+                exampleZh: "(攝影師成功捕捉到了美麗的日落。)",
+                family: "captive (n. 俘虜)<br>captivity (n. 囚禁/束縛)",
+                collocation: "capture an image (捕捉影像)<br>capture the moment (捕捉瞬間)"
+            },
+            "cartilage": {
+                pos: "n.",
+                trans: "軟骨",
+                example: "Sharks have skeletons made of cartilage instead of bone.",
+                exampleZh: "(鯊魚的骨架是由軟骨而非骨頭組成的。)",
+                family: "cartilaginous (adj. 軟骨的)",
+                collocation: "joint cartilage (關節軟骨)<br>cartilage tissue (軟骨組織)"
+            },
+            "climate": {
+                pos: "n.",
+                trans: "氣候",
+                example: "The global climate is changing, causing warmer oceans.",
+                exampleZh: "(全球氣候正在改變，導致海洋變暖。)",
+                family: "climatic (adj. 氣候的)",
+                collocation: "climate change (氣候變遷)<br>tropical climate (熱帶氣候)"
+            },
+            "coastal": {
+                pos: "adj.",
+                trans: "沿海的",
+                example: "Many coastal cities are at risk of rising sea levels.",
+                exampleZh: "(許多沿海城市正面臨海平面上升的風險。)",
+                family: "coast (n. 海岸)",
+                collocation: "coastal area (沿海地區)<br>coastal city (沿海城市)"
+            },
+            "common": {
+                pos: "adj.",
+                trans: "常見的",
+                example: "Colds are very common in the winter.",
+                exampleZh: "(感冒在冬天非常常見。)",
+                family: "commonly (adv. 通常地)",
+                collocation: "common practice (慣例/常見做法)<br>have in common (有共同點)"
+            },
+            "competition": {
+                pos: "n.",
+                trans: "競爭",
+                example: "There is strong competition between the two companies.",
+                exampleZh: "(這兩家公司之間有強烈的競爭。)",
+                family: "compete (v. 競爭)<br>competitive (adj. 競爭激烈的)<br>competitor (n. 競爭者)",
+                collocation: "fierce competition (激烈的競爭)<br>global competition (全球競爭)"
+            },
+            "creature": {
+                pos: "n.",
+                trans: "生物",
+                example: "The deep sea is home to many strange and wonderful creatures.",
+                exampleZh: "(深海是許多奇怪且奇妙生物的家園。)",
+                family: "create (v. 創造)<br>creation (n. 創作品)",
+                collocation: "living creature (生物)<br>strange creature (奇怪的生物)"
+            },
+            "crush": {
+                pos: "v.",
+                trans: "壓碎；壓壞",
+                example: "The machine can crush large rocks into small stones.",
+                exampleZh: "(這台機器能將大石頭壓碎成小石子。)",
+                family: "crush (n. 擁擠的人群/迷戀)",
+                collocation: "crush into pieces (壓成碎片)<br>crush a rebellion (鎮壓叛亂)"
+            },
+            "depth": {
+                pos: "n.",
+                trans: "深度",
+                example: "The submarine can travel to a depth of 3,000 meters.",
+                exampleZh: "(這艘潛水艇可以航行到三千公尺的深度。)",
+                family: "deep (adj. 深的)<br>deepen (v. 加深)",
+                collocation: "reach a depth (達到...深度)<br>in depth (深入地)"
+            },
+            "detect": {
+                pos: "v.",
+                trans: "偵測",
+                example: "The security camera can detect movement at night.",
+                exampleZh: "(監視器可以在晚上偵測到動作。)",
+                family: "detection (n. 偵測)<br>detector (n. 偵測器)<br>detectable (adj. 可偵測到的)",
+                collocation: "detect a signal (偵測到訊號)<br>detect movement (偵測到移動)"
+            },
+            "discover": {
+                pos: "v.",
+                trans: "發現",
+                example: "Columbus did not discover America first.",
+                exampleZh: "(哥倫布並非第一個發現美洲的人。)",
+                family: "discovery (n. 發現)<br>discoverer (n. 發現者)",
+                collocation: "discover the truth (發現真相)<br>newly discovered (新發現的)"
+            },
+            "estimate": {
+                pos: "v.",
+                trans: "估計",
+                example: "Scientists estimate that the universe is 13.8 billion years old.",
+                exampleZh: "(科學家估計宇宙有 138 億年的歷史。)",
+                family: "estimation (n. 估計/評價)<br>estimate (n. 估計值)",
+                collocation: "roughly estimate (粗略估計)<br>estimate the cost (估計成本)"
+            },
+            "evidence": {
+                pos: "n.",
+                trans: "證據",
+                example: "There is no scientific evidence to support his claim.",
+                exampleZh: "(沒有科學證據能支持他的說法。)",
+                family: "evident (adj. 明顯的)<br>evidently (adv. 顯然地)",
+                collocation: "clear evidence (清楚的證據)<br>piece of evidence (一項證據)"
+            },
+            "extinct": {
+                pos: "adj.",
+                trans: "滅絕的",
+                example: "Dinosaurs became extinct millions of years ago.",
+                exampleZh: "(恐龍在數百萬年前滅絕了。)",
+                family: "extinction (n. 滅絕)",
+                collocation: "go extinct (滅絕)<br>nearly extinct (瀕臨滅絕)"
+            },
+            "fossil": {
+                pos: "n.",
+                trans: "化石",
+                example: "We found a fossil of a fish in the rock.",
+                exampleZh: "(我們在岩石中發現了魚類化石。)",
+                family: "fossilize (v. 變成化石)<br>fossilization (n. 化石化)",
+                collocation: "fossil fuel (化石燃料)<br>dinosaur fossil (恐龍化石)"
+            },
+            "imagination": {
+                pos: "n.",
+                trans: "想像力",
+                example: "Reading books can help improve your imagination.",
+                exampleZh: "(閱讀書籍有助於增進你的想像力。)",
+                family: "imagine (v. 想像)<br>imaginative (adj. 富有想像力的)<br>imaginary (adj. 虛構的)",
+                collocation: "vivid imagination (豐富的想像力)<br>use one's imagination (發揮想像力)"
+            },
+            "impossible": {
+                pos: "adj.",
+                trans: "不可能的",
+                example: "It is virtually impossible for humans to breathe underwater without gear.",
+                exampleZh: "(人類在沒有裝備的情況下幾乎不可能在水下呼吸。)",
+                family: "possibility (n. 可能性)<br>possible (adj. 可能的)",
+                collocation: "almost impossible (幾乎不可能)<br>seem impossible (似乎不可能)"
+            },
+            "instant": {
+                pos: "adj.",
+                trans: "立即的",
+                example: "He sent an instant message to his friend.",
+                exampleZh: "(他給朋友發了一則即時訊息。)",
+                family: "instantly (adv. 立即地)<br>instance (n. 實例)",
+                collocation: "instant coffee (即溶咖啡)<br>instant feedback (即時回饋)"
+            },
+            "legend": {
+                pos: "n.",
+                trans: "傳奇；傳說",
+                example: "The legend of King Arthur is famous around the world.",
+                exampleZh: "(亞瑟王的傳說聞名全球。)",
+                family: "legendary (adj. 傳奇般的)",
+                collocation: "urban legend (都市傳說)<br>local legend (當地的傳奇人物)"
+            },
+            "massive": {
+                pos: "adj.",
+                trans: "巨大的",
+                example: "The ship hit a massive iceberg and sank.",
+                exampleZh: "(這艘船撞上了一座巨大的冰山後沉沒。)",
+                family: "mass (n. 質量/大量)",
+                collocation: "massive scale (大規模)<br>massive amount (大量的)"
+            },
+            "migrate": {
+                pos: "v.",
+                trans: "遷徙",
+                example: "Birds migrate south for the winter to find warmer weather.",
+                exampleZh: "(鳥類在冬天向南遷徙以尋找溫暖的天氣。)",
+                family: "migration (n. 遷徙)<br>migratory (adj. 遷徙的)",
+                collocation: "migrate south (向南遷徙)<br>seasonally migrate (季節性遷徙)"
+            },
+            "population": {
+                pos: "n.",
+                trans: "族群；人口",
+                example: "The population of the city has grown rapidly in the last ten years.",
+                exampleZh: "(這座城市的人口在過去十年迅速成長。)",
+                family: "populate (v. 居住於)<br>populous (adj. 人口稠密的)",
+                collocation: "world population (世界人口)<br>dense population (稠密的人口)"
+            },
+            "predator": {
+                pos: "n.",
+                trans: "掠食者",
+                example: "The lion is a top predator in the African savanna.",
+                exampleZh: "(獅子是非洲大草原上的頂端掠食者。)",
+                family: "predatory (adj. 掠食性的)<br>prey (n./v. 獵物/捕食)",
+                collocation: "natural predator (天敵/自然掠食者)<br>apex predator (頂級掠食者)"
+            },
+            "prehistoric": {
+                pos: "adj.",
+                trans: "史前的",
+                example: "Cave paintings give us a glimpse into prehistoric life.",
+                exampleZh: "(洞穴壁畫讓我們得以一窺史前生活。)",
+                family: "history (n. 歷史)<br>historical (adj. 歷史的)",
+                collocation: "prehistoric animal (史前動物)<br>prehistoric times (史前時代)"
+            },
+            "record": {
+                pos: "n.",
+                trans: "紀錄",
+                example: "The athlete set a new world record for running speed.",
+                exampleZh: "(這位運動員創下了新的跑步速度世界紀錄。)",
+                family: "record (v. 錄音/紀錄)",
+                collocation: "break a record (打破紀錄)<br>set a record (創紀錄)"
+            },
+            "remind": {
+                pos: "v.",
+                trans: "提醒",
+                example: "Please remind me to call my mother later.",
+                exampleZh: "(請提醒我晚點打電話給我母親。)",
+                family: "reminder (n. 提醒物)",
+                collocation: "remind someone of (使某人想起...)<br>serve as a reminder (作為提醒)"
+            },
+            "skeleton": {
+                pos: "n.",
+                trans: "骨骼",
+                example: "The museum displayed a complete dinosaur skeleton.",
+                exampleZh: "(博物館展示了一副完整的恐龍骨骼。)",
+                family: "skeletal (adj. 骨骼的)",
+                collocation: "human skeleton (人體骨骼)<br>skeletal system (骨骼系統)"
+            },
+            "speculate": {
+                pos: "v.",
+                trans: "推測",
+                example: "We can only speculate about what happened, as there were no witnesses.",
+                exampleZh: "(因為沒有目擊者，我們只能推測發生了什麼事。)",
+                family: "speculation (n. 推測/投機)<br>speculative (adj. 推測性的)",
+                collocation: "purely speculate (純粹推測)<br>speculate on (推測/預測)"
+            },
+            "starve": {
+                pos: "v.",
+                trans: "挨餓；餓死",
+                example: "If the animals cannot find food in winter, they might starve.",
+                exampleZh: "(如果動物在冬天找不到食物，牠們可能會餓死。)",
+                family: "starvation (n. 飢餓)<br>starving (adj. 飢餓的)",
+                collocation: "starve to death (餓死)<br>be starving (非常飢餓)"
+            },
+            "support": {
+                pos: "v.",
+                trans: "支持；供養",
+                example: "The bridge is strong enough to support heavy trucks.",
+                exampleZh: "(這座橋強大到足以支撐重型卡車。)",
+                family: "supporter (n. 支持者)<br>supportive (adj. 支持的)",
+                collocation: "financial support (財務支持)<br>technical support (技術支援)"
+            },
+            "symbol": {
+                pos: "n.",
+                trans: "象徵",
+                example: "The dove is often used as a symbol of peace.",
+                exampleZh: "(鴿子常被用作和平的象徵。)",
+                family: "symbolize (v. 象徵)<br>symbolic (adj. 象徵性的)",
+                collocation: "national symbol (國家象徵)<br>status symbol (地位象徵)"
+            },
+            "temperature": {
+                pos: "n.",
+                trans: "溫度",
+                example: "Water freezes when the temperature drops below zero.",
+                exampleZh: "(當溫度降到零度以下時，水會結冰。)",
+                family: "temperate (adj. 溫和的)",
+                collocation: "body temperature (體溫)<br>high temperature (高溫)"
+            },
+            "terrifying": {
+                pos: "adj.",
+                trans: "令人恐懼的",
+                example: "The horror movie was so terrifying that I couldn't sleep.",
+                exampleZh: "(那部恐怖片太嚇人了，害我睡不著。)",
+                family: "terrify (v. 使恐懼)<br>terror (n. 恐怖)",
+                collocation: "terrifying experience (恐懼的經驗)<br>terrifying news (恐怖的消息)"
+            },
+            "theory": {
+                pos: "n.",
+                trans: "理論",
+                example: "Darwin's theory of evolution changed how we understand biology.",
+                exampleZh: "(達爾文的演化論改變了我們對生物學的理解。)",
+                family: "theoretical (adj. 理論上的)<br>theorist (n. 理論家)",
+                collocation: "scientific theory (科學理論)<br>in theory (理論上)"
+            },
+            "unexplored": {
+                pos: "adj.",
+                trans: "未被探索的",
+                example: "The deep ocean remains largely unexplored.",
+                exampleZh: "(深海大部分區域仍未被探索。)",
+                family: "explore (v. 探索)<br>exploration (n. 探索)",
+                collocation: "unexplored region (未開發/探索的地區)<br>largely unexplored (大部分未經探索)"
+            },
+            "vanish": {
+                pos: "v.",
+                trans: "消失",
+                example: "The magician made the rabbit vanish from the hat.",
+                exampleZh: "(魔術師讓兔子從帽子裡消失了。)",
+                family: "vanishing (adj. 正在消失的)",
+                collocation: "vanish without a trace (消失得無影無蹤)<br>suddenly vanish (突然消失)"
+            }
         };
 
         const articleData = [
@@ -1140,7 +1456,6 @@
             sentences = []; 
             
             articleData.forEach((item, index) => {
-                // Image insertion logic
                 if (index === 0) insertImage(displayArea, 'p1.jpg', 'The Monster of the Ancient Seas');
                 else if (index === 7) insertImage(displayArea, 'p2.jpg', 'Clues from the Past');
                 else if (index === 14) insertImage(displayArea, 'p3.jpg', 'The Mystery of the Deep');
@@ -1186,23 +1501,26 @@
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                // Smart Lookup: 去除頭尾標點符號，保留中間的連字號
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
                 const originalWord = word;
-                if (vocabulary[cleanWord]) {
-                    const data = vocabulary[cleanWord];
-                    const isFav = favoriteWords.has(cleanWord);
+                const rootWord = getSmartLookupRoot(cleanWord);
+                
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
                     return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${cleanWord}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
-                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"<br><span class="text-sm text-gray-300 not-italic">${data.exampleZh}</span></div>
                     </span></span>`;
                 }
                 return originalWord;
@@ -1210,7 +1528,7 @@
         }
         
         window.speakAndShowDef = function(e, word) {
-            e.stopPropagation(); 
+            if(e) e.stopPropagation(); 
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
@@ -1218,22 +1536,14 @@
             synth.speak(utterance);
         }
 
-        window.speakWord = function(word) {
-            synth.cancel(); 
-            const utterance = new SpeechSynthesisUtterance(word);
-            if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.rate = 0.9; 
-            synth.speak(utterance);
-        }
-
-        window.toggleFavorite = function(e, word) {
+        window.toggleFavorite = function(e, rootWord) {
             if(e) e.stopPropagation();
-            if (favoriteWords.has(word)) {
-                favoriteWords.delete(word);
-                updateHeartIcon(word, false);
+            if (favoriteWords.has(rootWord)) {
+                favoriteWords.delete(rootWord);
+                updateHeartIcon(rootWord, false);
             } else {
-                favoriteWords.add(word);
-                updateHeartIcon(word, true);
+                favoriteWords.add(rootWord);
+                updateHeartIcon(rootWord, true);
                 confetti({
                     particleCount: 30,
                     spread: 40,
@@ -1248,12 +1558,12 @@
             window.saveUserData();
         }
 
-        function updateHeartIcon(word, isFav) {
-            const icons = document.querySelectorAll(`#heart-${word}`);
+        function updateHeartIcon(rootWord, isFav) {
+            const icons = document.querySelectorAll(`#heart-${rootWord}`);
             icons.forEach(icon => {
                 icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
             });
-            const tableIcons = document.querySelectorAll(`#heart-table-${word}`);
+            const tableIcons = document.querySelectorAll(`#heart-table-${rootWord}`);
             tableIcons.forEach(icon => {
                 icon.className = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
             });
@@ -1284,10 +1594,10 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-red-900/40 border-b border-red-800">
-                                <th class="p-3 font-bold text-gray-300 w-4/12">題目 (Question)</th>
-                                <th class="p-3 font-bold text-gray-300 w-2/12">您的答案</th>
-                                <th class="p-3 font-bold text-gray-300 w-2/12">正確答案</th>
-                                <th class="p-3 font-bold text-gray-300 w-4/12">詳解 (Explanation)</th>
+                                <th class="p-3 font-bold text-gray-300 w-[40%] text-xl">題目 (Question)</th>
+                                <th class="p-3 font-bold text-gray-300 w-[10%] text-xl">您的答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-[10%] text-xl">正確答案</th>
+                                <th class="p-3 font-bold text-gray-300 w-[40%] text-xl">詳解 (Explanation)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700">
@@ -1295,10 +1605,10 @@
                 wrongAnswers.forEach(item => {
                     html += `
                         <tr class="hover:bg-gray-700/50">
-                            <td class="p-3 font-medium text-gray-300">${item.q.q}</td>
-                            <td class="p-3 text-red-400 font-bold"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
-                            <td class="p-3 text-green-400 font-bold"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
-                            <td class="p-3 text-gray-400 text-sm">${item.q.expl}</td>
+                            <td class="p-3 font-medium text-gray-300 text-lg">${item.q.q}</td>
+                            <td class="p-3 text-red-400 font-bold text-lg"><i class="fas fa-times mr-1"></i> ${item.yourAns}</td>
+                            <td class="p-3 text-green-400 font-bold text-lg"><i class="fas fa-check mr-1"></i> ${item.q.ans}</td>
+                            <td class="p-3 text-gray-400 text-base">${item.q.expl}</td>
                         </tr>
                     `;
                 });
@@ -1319,11 +1629,13 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
-                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                            <th class="p-3 font-bold w-[5%] text-lg">收藏</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-[6%] text-lg">詞性</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">例句與翻譯 (Example)</th>
+                            <th class="p-3 font-bold w-[15%] text-lg">衍生字/家族字 (Family)</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">常見搭配詞 (Collocation)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1337,13 +1649,15 @@
                     <tr class="hover:bg-gray-700/50 transition duration-150">
                         <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
                         
-                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl">
+                            ${word} <i class="fas fa-volume-up no-print text-base ml-2 opacity-60 hover:opacity-100 transition cursor-pointer" onclick="window.speakAndShowDef(event, '${word}')" title="點擊發音 (Click to listen)"></i>
                         </td>
 
                         <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-3 text-gray-400 text-base md:text-lg italic">"${data.example}"<br><span class="text-sm md:text-base text-gray-500 not-italic">${data.exampleZh}</span></td>
+                        <td class="p-3 text-gray-400 text-sm md:text-base">${data.family}</td>
+                        <td class="p-3 text-gray-400 text-sm md:text-base">${data.collocation}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1357,16 +1671,17 @@
             if (type === 'mistakes') {
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 5px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">The Megalodon: Is It Still Alive?</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1377,10 +1692,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1393,31 +1708,36 @@
 
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 5px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">The Megalodon: Is It Still Alive?</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-style: italic;">"${data.example}"<br><span style="font-style: normal; font-size: 13px; color: #4b5563;">${data.exampleZh}</span></td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.family}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.collocation}</td>
                             </tr>
                         `;
                     });
@@ -1593,20 +1913,20 @@
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <p class="font-bold text-gray-200 mb-4 text-3xl">${item.q}</p>
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 text-2xl rounded-full border-2 border-gray-600 flex items-center justify-center mr-4 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p class="font-bold mb-2 text-2xl" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1660,11 +1980,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400";
+                statusText.className = "font-bold mb-2 text-2xl text-green-400";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400";
+                statusText.className = "font-bold mb-2 text-2xl text-red-400";
             }
 
             if(!isRestoring) window.saveUserData();
