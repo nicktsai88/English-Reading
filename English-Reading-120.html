@@ -57,16 +57,15 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em; /* Increased for better readability */
+            font-size: 1.75em; /* Updated */
             color: #374151;
             background: #f9fafb;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #2563eb; /* Blue border */
+            padding: 24px; /* Updated */
+            border-radius: 12px; /* Updated */
+            border-left: 6px solid #6366f1 !important; /* Updated */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
             border: 1px solid #e5e7eb;
-            border-left-width: 4px;
         }
 
         @keyframes slideDown {
@@ -212,8 +211,8 @@
         .modal-content {
             background: #ffffff;
             border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
+            width: 98%; /* Updated */
+            max-width: 1600px; /* Updated */
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -228,6 +227,7 @@
             z-index: 2000;
         }
         #login-modal .modal-content {
+            width: 90%;
             max-width: 500px;
             text-align: center;
             padding: 40px;
@@ -311,14 +311,20 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 0; /* 縮小內距以擴大列印範圍 */
+                padding: 0; /* Updated */
             }
             @page {
-                size: A4 portrait;
-                margin: 1cm; /* 縮小列印邊界，從 2cm 改為 1cm */
+                size: A4 landscape; /* Updated */
+                margin: 1cm;
             }
             .no-print {
                 display: none !important;
+            }
+            #print-area table {
+                font-size: 15px !important; /* Updated */
+            }
+            #print-area th, #print-area td {
+                padding: 8px !important; /* Updated */
             }
         }
     </style>
@@ -770,9 +776,9 @@
                 el.disabled = false;
                 el.checked = false;
             });
-            document.querySelectorAll('.quiz-option div').forEach(el => {
+            document.querySelectorAll('.quiz-option div[id*="-icon-"]').forEach(el => {
                 const key = el.id.split('-').pop(); 
-                el.className = "w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg";
+                el.className = "w-12 h-12 text-2xl shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -851,47 +857,371 @@
         let userAnswers = {}; 
         let audioCtx;
 
+        // --- Smart Lookup Map ---
+        const smartLookupMap = {
+            "mysteries": "mystery",
+            "resources": "resource",
+            "gods": "god",
+            "earthquakes": "earthquake",
+            "floods": "flood",
+            "historians": "historian",
+            "argued": "argue",
+            "experts": "expert",
+            "created": "create",
+            "stories": "story",
+            "morals": "moral",
+            "defeated": "defeat",
+            "records": "record",
+            "invented": "invent",
+            "researchers": "researcher",
+            "events": "event",
+            "inspired": "inspire",
+            "islands": "island",
+            "erupted": "erupt",
+            "explosions": "explosion",
+            "destroyed": "destroy",
+            "tsunamis": "tsunami",
+            "waves": "wave",
+            "ruined": "ruin",
+            "cities": "city",
+            "searches": "search",
+            "claimed": "claim",
+            "explorers": "explorer",
+            "places": "place",
+            "represents": "represent",
+            "connects": "connect",
+            "reminds": "remind",
+            "disasters": "disaster",
+            "civilizations": "civilization",
+            "philosophers": "philosopher"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
+
+        // --- Expanded Vocabulary Data ---
         const vocabulary = {
-            "mystery": { pos: "n.", trans: "謎團；神祕的事物", example: "The missing painting remains a great mystery to the police." },
-            "legend": { pos: "n.", trans: "傳說；傳奇", example: "The legend of King Arthur is famous all over the world." },
-            "philosopher": { pos: "n.", trans: "哲學家", example: "Plato was a famous ancient Greek philosopher." },
-            "advanced": { pos: "adj.", trans: "先進的；高等的", example: "Japan has a very advanced railway system." },
-            "navy": { pos: "n.", trans: "海軍", example: "The country used its navy to protect its coastline." },
-            "resource": { pos: "n.", trans: "資源", example: "Water is a very important natural resource." },
-            "greedy": { pos: "adj.", trans: "貪婪的", example: "The greedy man wanted to keep all the money for himself." },
-            "punish": { pos: "v.", trans: "懲罰", example: "The teacher had to punish the student for cheating." },
-            "earthquake": { pos: "n.", trans: "地震", example: "The powerful earthquake shook the buildings in the city." },
-            "argue": { pos: "v.", trans: "爭論；主張", example: "The two friends always argue about which movie is better." },
-            "invent": { pos: "v.", trans: "發明；虛構", example: "Did Thomas Edison invent the light bulb?" },
-            "expert": { pos: "n.", trans: "專家", example: "She is an expert in computer programming." },
-            "politics": { pos: "n.", trans: "政治", example: "Many people do not like talking about politics at dinner." },
-            "moral": { pos: "n.", trans: "道德；教訓", example: "The story teaches a good moral about telling the truth." },
-            "defeat": { pos: "v.", trans: "擊敗；戰勝", example: "Our team hopes to defeat the champions tomorrow." },
-            "record": { pos: "n.", trans: "紀錄；記載", example: "Keep a written record of how much money you spend." },
-            "inspire": { pos: "v.", trans: "啟發；激勵", example: "Her brave actions inspire everyone around her." },
-            "civilization": { pos: "n.", trans: "文明", example: "The ancient Egyptian civilization built the pyramids." },
-            "peaceful": { pos: "adj.", trans: "和平的；寧靜的", example: "They enjoyed a peaceful walk in the park." },
-            "erupt": { pos: "v.", trans: "（火山）爆發", example: "The volcano may erupt at any time." },
-            "explosion": { pos: "n.", trans: "爆炸", example: "We heard a loud explosion coming from the factory." },
-            "destroy": { pos: "v.", trans: "摧毀；破壞", example: "The strong wind could destroy the old wooden house." },
-            "tsunami": { pos: "n.", trans: "海嘯", example: "A warning was issued for a possible tsunami after the earthquake." },
-            "ruin": { pos: "v.", trans: "毀壞；破壞", example: "The heavy rain will ruin our picnic plans." },
-            "empire": { pos: "n.", trans: "帝國", example: "The Roman empire was once the most powerful in the world." },
-            "terrible": { pos: "adj.", trans: "可怕的；糟糕的", example: "He had a terrible headache this morning." },
-            "myth": { pos: "n.", trans: "神話；迷思", example: "It is a myth that bats are blind." },
-            "sunken": { pos: "adj.", trans: "沉沒的", example: "Divers explored the sunken ship at the bottom of the sea." },
-            "continent": { pos: "n.", trans: "大陸；洲", example: "Asia is the largest continent in the world." },
-            "fake": { pos: "adj.", trans: "假的；偽造的", example: "He was arrested for using a fake passport." },
-            "explorer": { pos: "n.", trans: "探險家", example: "Christopher Columbus was a famous explorer." },
-            "proof": { pos: "n.", trans: "證據；證明", example: "Do you have any proof that you own this car?" },
-            "psychology": { pos: "n.", trans: "心理學", example: "Studying psychology helps us understand human behavior." },
-            "represent": { pos: "v.", trans: "代表", example: "The red rose is often used to represent love." },
-            "harmony": { pos: "n.", trans: "和諧；協調", example: "The dogs and cats in her house live in perfect harmony." },
-            "unpredictable": { pos: "adj.", trans: "不可預測的", example: "The weather in the mountains is very unpredictable." },
-            "disaster": { pos: "n.", trans: "災難", example: "The flood was a major natural disaster for the town." },
-            "clever": { pos: "adj.", trans: "聰明的；巧妙的", example: "She is a very clever student who learns quickly." },
-            "curiosity": { pos: "n.", trans: "好奇心", example: "Children have a natural curiosity about the world." },
-            "desire": { pos: "n.", trans: "渴望；慾望", example: "He has a strong desire to travel the world." }
+            "advanced": {
+                pos: "adj.",
+                trans: "先進的；高等的",
+                example: "Japan has a very advanced railway system.",
+                exampleZh: "日本擁有非常先進的鐵路系統。",
+                family: "advance (v./n. 進步)<br>advancement (n. 進展)",
+                collocation: "advanced technology (先進技術)<br>advanced learners (高階學習者)"
+            },
+            "argue": {
+                pos: "v.",
+                trans: "爭論；主張",
+                example: "The two friends always argue about which movie is better.",
+                exampleZh: "這兩個朋友總是為了哪部電影更好看而爭論。",
+                family: "argument (n. 爭論/論點)<br>argumentative (adj. 愛爭論的)",
+                collocation: "argue with someone (與某人爭論)<br>argue for/against (主張贊成/反對)"
+            },
+            "civilization": {
+                pos: "n.",
+                trans: "文明",
+                example: "The ancient Egyptian civilization built the pyramids.",
+                exampleZh: "古埃及文明建造了金字塔。",
+                family: "civilize (v. 使文明)<br>civilized (adj. 文明的)",
+                collocation: "ancient civilization (古代文明)<br>western civilization (西方文明)"
+            },
+            "clever": {
+                pos: "adj.",
+                trans: "聰明的；巧妙的",
+                example: "She is a very clever student who learns quickly.",
+                exampleZh: "她是一位非常聰明的學生，學得很快。",
+                family: "cleverly (adv. 聰明地)<br>cleverness (n. 聰明)",
+                collocation: "clever idea (巧妙的主意)<br>clever solution (聰明的解決方案)"
+            },
+            "continent": {
+                pos: "n.",
+                trans: "大陸；洲",
+                example: "Asia is the largest continent in the world.",
+                exampleZh: "亞洲是世界上最大的洲。",
+                family: "continental (adj. 大陸的)",
+                collocation: "the African continent (非洲大陸)<br>continental drift (大陸漂移)"
+            },
+            "curiosity": {
+                pos: "n.",
+                trans: "好奇心",
+                example: "Children have a natural curiosity about the world.",
+                exampleZh: "兒童對世界有種天生的好奇心。",
+                family: "curious (adj. 好奇的)<br>curiously (adv. 好奇地)",
+                collocation: "natural curiosity (天生的好奇心)<br>satisfy one's curiosity (滿足某人的好奇心)"
+            },
+            "defeat": {
+                pos: "v.",
+                trans: "擊敗；戰勝",
+                example: "Our team hopes to defeat the champions tomorrow.",
+                exampleZh: "我們球隊希望明天能擊敗冠軍隊。",
+                family: "defeat (n. 失敗)",
+                collocation: "admit defeat (承認失敗)<br>narrowly defeat (險勝)"
+            },
+            "desire": {
+                pos: "n.",
+                trans: "渴望；慾望",
+                example: "He has a strong desire to travel the world.",
+                exampleZh: "他有著周遊世界的強烈渴望。",
+                family: "desire (v. 渴望)<br>desirable (adj. 值得擁有的)",
+                collocation: "strong desire (強烈的慾望)<br>desire for success (對成功的渴望)"
+            },
+            "destroy": {
+                pos: "v.",
+                trans: "摧毀；破壞",
+                example: "The strong wind could destroy the old wooden house.",
+                exampleZh: "強風可能會摧毀這間老舊木屋。",
+                family: "destruction (n. 破壞)<br>destructive (adj. 破壞性的)",
+                collocation: "completely destroy (徹底摧毀)<br>destroy the environment (破壞環境)"
+            },
+            "disaster": {
+                pos: "n.",
+                trans: "災難",
+                example: "The flood was a major natural disaster for the town.",
+                exampleZh: "這次洪水對該鎮來說是一場重大的自然災害。",
+                family: "disastrous (adj. 災難性的)",
+                collocation: "natural disaster (自然災害)<br>recipe for disaster (導致災難的做法)"
+            },
+            "earthquake": {
+                pos: "n.",
+                trans: "地震",
+                example: "The powerful earthquake shook the buildings in the city.",
+                exampleZh: "強震震動了城市裡的建築。",
+                family: "(無常見衍生字)",
+                collocation: "massive earthquake (強烈地震)<br>earthquake warning (地震預警)"
+            },
+            "empire": {
+                pos: "n.",
+                trans: "帝國",
+                example: "The Roman empire was once the most powerful in the world.",
+                exampleZh: "羅馬帝國曾是世界上最強大的帝國。",
+                family: "emperor (n. 皇帝)<br>imperial (adj. 帝國的)",
+                collocation: "vast empire (遼闊的帝國)<br>fall of an empire (帝國的覆滅)"
+            },
+            "erupt": {
+                pos: "v.",
+                trans: "（火山）爆發",
+                example: "The volcano may erupt at any time.",
+                exampleZh: "火山可能隨時會爆發。",
+                family: "eruption (n. 爆發)",
+                collocation: "erupt violently (猛烈爆發)<br>anger erupts (怒火爆發)"
+            },
+            "expert": {
+                pos: "n.",
+                trans: "專家",
+                example: "She is an expert in computer programming.",
+                exampleZh: "她是電腦程式設計方面的專家。",
+                family: "expertise (n. 專業知識)<br>expertly (adv. 專業地)",
+                collocation: "medical expert (醫學專家)<br>leading expert (頂尖專家)"
+            },
+            "explorer": {
+                pos: "n.",
+                trans: "探險家",
+                example: "Christopher Columbus was a famous explorer.",
+                exampleZh: "哥倫布是一位著名的探險家。",
+                family: "explore (v. 探索)<br>exploration (n. 探險/勘查)",
+                collocation: "polar explorer (極地探險家)<br>famous explorer (著名的探險家)"
+            },
+            "explosion": {
+                pos: "n.",
+                trans: "爆炸",
+                example: "We heard a loud explosion coming from the factory.",
+                exampleZh: "我們聽到工廠傳來巨大的爆炸聲。",
+                family: "explode (v. 爆炸)<br>explosive (adj. 爆炸性的/n. 炸藥)",
+                collocation: "loud explosion (巨大的爆炸)<br>population explosion (人口爆炸)"
+            },
+            "fake": {
+                pos: "adj.",
+                trans: "假的；偽造的",
+                example: "He was arrested for using a fake passport.",
+                exampleZh: "他因使用偽造護照而被捕。",
+                family: "fake (v./n. 偽造/贗品)",
+                collocation: "fake news (假新聞)<br>fake IDs (假證件)"
+            },
+            "greedy": {
+                pos: "adj.",
+                trans: "貪婪的",
+                example: "The greedy man wanted to keep all the money for himself.",
+                exampleZh: "那個貪婪的人想把所有的錢都據為己有。",
+                family: "greed (n. 貪婪)<br>greedily (adv. 貪婪地)",
+                collocation: "greedy for power (貪戀權力)<br>greedy eater (貪吃的人)"
+            },
+            "harmony": {
+                pos: "n.",
+                trans: "和諧；協調",
+                example: "The dogs and cats in her house live in perfect harmony.",
+                exampleZh: "她家的狗和貓和諧地生活在一起。",
+                family: "harmonious (adj. 和諧的)<br>harmonize (v. 使和諧)",
+                collocation: "live in harmony (和諧共處)<br>social harmony (社會和諧)"
+            },
+            "inspire": {
+                pos: "v.",
+                trans: "啟發；激勵",
+                example: "Her brave actions inspire everyone around her.",
+                exampleZh: "她的勇敢行為激勵了她身邊的每一個人。",
+                family: "inspiration (n. 靈感/啟發)<br>inspiring (adj. 激勵人心的)",
+                collocation: "inspire confidence (激發信心)<br>draw inspiration from (從...汲取靈感)"
+            },
+            "invent": {
+                pos: "v.",
+                trans: "發明；虛構",
+                example: "Did Thomas Edison invent the light bulb?",
+                exampleZh: "湯瑪斯·愛迪生發明了電燈泡嗎？",
+                family: "invention (n. 發明)<br>inventor (n. 發明家)<br>inventive (adj. 有創造力的)",
+                collocation: "invent a story (編造故事)<br>newly invented (新發明的)"
+            },
+            "legend": {
+                pos: "n.",
+                trans: "傳說；傳奇",
+                example: "The legend of King Arthur is famous all over the world.",
+                exampleZh: "亞瑟王的傳說聞名全世界。",
+                family: "legendary (adj. 傳奇般的)",
+                collocation: "local legend (當地的傳奇人物)<br>urban legend (都市傳說)"
+            },
+            "moral": {
+                pos: "n.",
+                trans: "道德；教訓",
+                example: "The story teaches a good moral about telling the truth.",
+                exampleZh: "這個故事教導了關於說實話的良好道德教訓。",
+                family: "morality (n. 道德觀)<br>morally (adv. 道德上)",
+                collocation: "high moral standards (高道德標準)<br>moral support (精神支持)"
+            },
+            "mystery": {
+                pos: "n.",
+                trans: "謎團；神祕的事物",
+                example: "The missing painting remains a great mystery to the police.",
+                exampleZh: "失蹤的畫作對警方來說仍是一個大謎團。",
+                family: "mysterious (adj. 神祕的)<br>mysteriously (adv. 神祕地)",
+                collocation: "solve a mystery (解開謎團)<br>remain a mystery (依然是個謎)"
+            },
+            "myth": {
+                pos: "n.",
+                trans: "神話；迷思",
+                example: "It is a myth that bats are blind.",
+                exampleZh: "蝙蝠是瞎子是一種迷思（錯誤觀點）。",
+                family: "mythical (adj. 神話中的)<br>mythology (n. 神話學)",
+                collocation: "ancient myth (古代神話)<br>popular myth (流行的迷思)"
+            },
+            "navy": {
+                pos: "n.",
+                trans: "海軍",
+                example: "The country used its navy to protect its coastline.",
+                exampleZh: "該國利用海軍保衛其海岸線。",
+                family: "naval (adj. 海軍的)",
+                collocation: "join the navy (加入海軍)<br>navy blue (海軍藍/深藍色)"
+            },
+            "peaceful": {
+                pos: "adj.",
+                trans: "和平的；寧靜的",
+                example: "They enjoyed a peaceful walk in the park.",
+                exampleZh: "他們在公園裡享受了一段寧靜的散步。",
+                family: "peace (n. 和平)<br>peacefully (adv. 和平地)",
+                collocation: "peaceful solution (和平解決方案)<br>peaceful protest (和平抗議)"
+            },
+            "philosopher": {
+                pos: "n.",
+                trans: "哲學家",
+                example: "Plato was a famous ancient Greek philosopher.",
+                exampleZh: "柏拉圖是著名的古希臘哲學家。",
+                family: "philosophy (n. 哲學)<br>philosophical (adj. 哲學的)",
+                collocation: "modern philosopher (現代哲學家)<br>moral philosopher (倫理哲學家)"
+            },
+            "politics": {
+                pos: "n.",
+                trans: "政治",
+                example: "Many people do not like talking about politics at dinner.",
+                exampleZh: "許多人不喜歡在晚餐時談論政治。",
+                family: "political (adj. 政治的)<br>politician (n. 政治家)",
+                collocation: "global politics (全球政治)<br>enter politics (從政)"
+            },
+            "proof": {
+                pos: "n.",
+                trans: "證據；證明",
+                example: "Do you have any proof that you own this car?",
+                exampleZh: "你有任何證明這輛車是你所有的證據嗎？",
+                family: "prove (v. 證明)",
+                collocation: "scientific proof (科學證據)<br>waterproof (adj. 防水的)"
+            },
+            "psychology": {
+                pos: "n.",
+                trans: "心理學",
+                example: "Studying psychology helps us understand human behavior.",
+                exampleZh: "研究心理學有助於我們理解人類行為。",
+                family: "psychologist (n. 心理學家)<br>psychological (adj. 心理的)",
+                collocation: "clinical psychology (臨床心理學)<br>child psychology (兒童心理學)"
+            },
+            "punish": {
+                pos: "v.",
+                trans: "懲罰",
+                example: "The teacher had to punish the student for cheating.",
+                exampleZh: "老師不得不因為學生作弊而懲罰他。",
+                family: "punishment (n. 懲罰)",
+                collocation: "severely punish (嚴厲懲罰)<br>punish by law (依法懲處)"
+            },
+            "record": {
+                pos: "n.",
+                trans: "紀錄；記載",
+                example: "Keep a written record of how much money you spend.",
+                exampleZh: "把你花了多少錢做一份書面紀錄。",
+                family: "record (v. 錄音/錄影/紀錄)",
+                collocation: "world record (世界紀錄)<br>medical record (病歷紀錄)"
+            },
+            "represent": {
+                pos: "v.",
+                trans: "代表",
+                example: "The red rose is often used to represent love.",
+                exampleZh: "紅玫瑰常用來代表愛。",
+                family: "representation (n. 代表/呈現)<br>representative (n. 代表人)",
+                collocation: "represent a country (代表一個國家)<br>legal representation (法律代理)"
+            },
+            "resource": {
+                pos: "n.",
+                trans: "資源",
+                example: "Water is a very important natural resource.",
+                exampleZh: "水是非常重要的自然資源。",
+                family: "resourceful (adj. 足智多謀的)",
+                collocation: "natural resources (自然資源)<br>human resources (人力資源/HR)"
+            },
+            "ruin": {
+                pos: "v.",
+                trans: "毀壞；破壞",
+                example: "The heavy rain will ruin our picnic plans.",
+                exampleZh: "大雨會毀掉我們的野餐計畫。",
+                family: "ruins (n. 廢墟/遺跡)",
+                collocation: "financially ruin (經濟破產)<br>ruin one's reputation (毀壞名譽)"
+            },
+            "sunken": {
+                pos: "adj.",
+                trans: "沉沒的",
+                example: "Divers explored the sunken ship at the bottom of the sea.",
+                exampleZh: "潛水員探索了海底的沉船。",
+                family: "sink (v. 下沉)<br>sinking (n. 沉沒)",
+                collocation: "sunken treasure (沉沒的寶藏)<br>sunken cheeks (凹陷的雙頰)"
+            },
+            "terrible": {
+                pos: "adj.",
+                trans: "可怕的；糟糕的",
+                example: "He had a terrible headache this morning.",
+                exampleZh: "他今天早上頭痛得很厲害。",
+                family: "terribly (adv. 非常/糟糕地)",
+                collocation: "terrible accident (可怕的意外)<br>feel terrible (感覺很糟/深感抱歉)"
+            },
+            "tsunami": {
+                pos: "n.",
+                trans: "海嘯",
+                example: "A warning was issued for a possible tsunami after the earthquake.",
+                exampleZh: "地震後發布了可能發生海嘯的警告。",
+                family: "(無常見衍生字)",
+                collocation: "tsunami wave (海嘯波)<br>deadly tsunami (致命海嘯)"
+            },
+            "unpredictable": {
+                pos: "adj.",
+                trans: "不可預測的",
+                example: "The weather in the mountains is very unpredictable.",
+                exampleZh: "山區的天氣非常不可預測。",
+                family: "predict (v. 預測)<br>predictability (n. 可預測性)",
+                collocation: "highly unpredictable (高度不可預測的)<br>unpredictable behavior (難以捉摸的行為)"
+            }
         };
 
         const articleData = [
@@ -1246,79 +1576,38 @@
             return words.map(word => {
                 // Keep the original punctuation for display
                 const originalWord = word;
-                // Remove punctuation for lookup
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                // Remove punctuation for smart lookup (keeping hyphens if any)
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
                 
-                // --- Smart Lookup Logic: Word Mapping for Variations ---
-                const wordMapping = {
-                    "mysteries": "mystery",
-                    "resources": "resource",
-                    "gods": "god",
-                    "earthquakes": "earthquake",
-                    "floods": "flood",
-                    "historians": "historian",
-                    "argued": "argue",
-                    "experts": "expert",
-                    "created": "create",
-                    "stories": "story",
-                    "morals": "moral",
-                    "defeated": "defeat",
-                    "records": "record",
-                    "invented": "invent",
-                    "researchers": "researcher",
-                    "events": "event",
-                    "inspired": "inspire",
-                    "islands": "island",
-                    "erupted": "erupt",
-                    "explosions": "explosion",
-                    "destroyed": "destroy",
-                    "tsunamis": "tsunami",
-                    "waves": "wave",
-                    "ruined": "ruin",
-                    "cities": "city",
-                    "remembered": "remember",
-                    "turned": "turn",
-                    "searches": "search",
-                    "claimed": "claim",
-                    "explorers": "explorer",
-                    "places": "place",
-                    "represents": "represent",
-                    "connects": "connect",
-                    "reminds": "remind",
-                    "disasters": "disaster"
-                };
+                // Get the root word using smart lookup
+                let rootWord = getSmartLookupRoot(cleanWord);
 
-                let targetKey = cleanWord;
-                if (wordMapping[cleanWord]) {
-                    targetKey = wordMapping[cleanWord];
-                }
-
-                // Check for singular/plural or simple verb forms if not mapped
-                if (!vocabulary[targetKey]) {
-                    if (targetKey.endsWith('s') && vocabulary[targetKey.slice(0, -1)]) {
-                        targetKey = targetKey.slice(0, -1);
-                    } else if (targetKey.endsWith('ed') && vocabulary[targetKey.slice(0, -2)]) {
-                        targetKey = targetKey.slice(0, -2);
-                    } else if (targetKey.endsWith('ing') && vocabulary[targetKey.slice(0, -3)]) {
-                        targetKey = targetKey.slice(0, -3);
+                // Additional fallback for simple plural/past forms if not mapped
+                if (!vocabulary[rootWord]) {
+                    if (rootWord.endsWith('s') && vocabulary[rootWord.slice(0, -1)]) {
+                        rootWord = rootWord.slice(0, -1);
+                    } else if (rootWord.endsWith('ed') && vocabulary[rootWord.slice(0, -2)]) {
+                        rootWord = rootWord.slice(0, -2);
+                    } else if (rootWord.endsWith('ing') && vocabulary[rootWord.slice(0, -3)]) {
+                        rootWord = rootWord.slice(0, -3);
                     }
                 }
 
-                if (vocabulary[targetKey]) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1 text-gray-500 hover:text-pink-500" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1 text-gray-500 hover:text-pink-500" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-blue-800 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-blue-800 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium text-gray-800">${data.trans}</div>
-                        <div class="text-lg text-gray-600 italic border-t border-gray-200 pt-3 leading-relaxed">"${data.example}"</div>
+                        <div class="text-lg text-gray-600 italic border-t border-gray-200 pt-3 leading-relaxed">"${data.example}"<br><span class="text-sm text-gray-500">${data.exampleZh}</span></div>
                     </span></span>`;
                 }
                 return originalWord;
@@ -1326,15 +1615,7 @@
         }
         
         window.speakAndShowDef = function(e, word) {
-            e.stopPropagation(); 
-            synth.cancel(); 
-            const utterance = new SpeechSynthesisUtterance(word);
-            if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.rate = 0.9; 
-            synth.speak(utterance);
-        }
-
-        window.speakWord = function(word) {
+            if(e) e.stopPropagation(); 
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
@@ -1435,11 +1716,13 @@
                 <table class="w-full text-left border-collapse text-gray-800">
                     <thead>
                         <tr class="bg-gray-100 border-b border-gray-200 text-gray-700">
-                            <th class="p-4 font-bold w-1/12 text-lg rounded-tl-lg">收藏</th>
-                            <th class="p-4 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-4 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-4 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-4 font-bold w-5/12 text-lg rounded-tr-lg">例句 (Example)</th>
+                            <th class="p-4 font-bold w-[5%] text-lg rounded-tl-lg">收藏</th>
+                            <th class="p-4 font-bold w-[12%] text-lg">單字 (Word)</th>
+                            <th class="p-4 font-bold w-[6%] text-lg">詞性</th>
+                            <th class="p-4 font-bold w-[12%] text-lg">中文意思 (Meaning)</th>
+                            <th class="p-4 font-bold w-[25%] text-lg">例句與翻譯 (Example)</th>
+                            <th class="p-4 font-bold w-[15%] text-lg">衍生字/家族字</th>
+                            <th class="p-4 font-bold w-[25%] text-lg rounded-tr-lg">常見搭配詞</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -1451,15 +1734,27 @@
                 const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                 html += `
                     <tr class="hover:bg-blue-50/50 transition duration-150">
-                        <td class="p-4 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition text-gray-400 hover:text-pink-500"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-4 text-center">
+                            <button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition text-gray-400 hover:text-pink-500">
+                                <i class="${heartClass}" id="heart-table-${word}"></i>
+                            </button>
+                        </td>
                         
-                        <td class="p-4 font-bold text-blue-700 text-xl md:text-2xl cursor-pointer hover:text-blue-900 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition text-blue-400"></i>
+                        <td class="p-4 font-bold text-blue-700 text-xl md:text-2xl cursor-pointer hover:text-blue-900 transition group" onclick="window.speakAndShowDef(event, '${word}')" title="點擊發音 (Click to listen)">
+                            ${word}
+                            <button class="no-print focus:outline-none" aria-label="Listen">
+                                <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition text-blue-400"></i>
+                            </button>
                         </td>
 
                         <td class="p-4 text-base md:text-lg"><span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-4 text-gray-700 text-lg md:text-xl font-medium">${data.trans}</td>
-                        <td class="p-4 text-gray-500 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-4 text-gray-600 text-base md:text-lg leading-relaxed italic">
+                            "${data.example}"<br>
+                            <span class="text-sm text-gray-500">${data.exampleZh}</span>
+                        </td>
+                        <td class="p-4 text-gray-700 text-sm md:text-base leading-relaxed">${data.family || ''}</td>
+                        <td class="p-4 text-gray-700 text-sm md:text-base leading-relaxed">${data.collocation || ''}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1476,16 +1771,16 @@
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
                         <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 15px;">
-                            <h2 style="font-size: 22px; margin: 0 0 10px 0; color: #4b5563;">${articleTitle}</h2>
-                            <h1 style="font-size: 28px; margin: 0;">錯題本 (Review Mistakes)</h1>
+                            <h1 style="font-size: 26px; margin: 0 0 10px 0;">錯題本 (Review Mistakes)</h1>
+                            <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${articleTitle}</h2>
                         </div>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 10px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 10px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 10px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 10px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1496,10 +1791,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 10px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 10px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 10px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 10px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1513,31 +1808,37 @@
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
                         <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 15px;">
-                            <h2 style="font-size: 22px; margin: 0 0 10px 0; color: #4b5563;">${articleTitle}</h2>
-                            <h1 style="font-size: 28px; margin: 0;">${title}</h1>
+                            <h1 style="font-size: 26px; margin: 0 0 10px 0;">${title}</h1>
+                            <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${articleTitle}</h2>
                         </div>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 18px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 10px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 10px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 10px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 10px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 10px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 10px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 10px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 10px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-style: italic;">
+                                    "${data.example}"<br><span style="font-size: 13px; color: #4b5563;">${data.exampleZh}</span>
+                                </td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.family || ''}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.collocation || ''}</td>
                             </tr>
                         `;
                     });
@@ -1715,20 +2016,20 @@
                 const div = document.createElement('div');
                 div.className = 'bg-white p-6 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md hover:border-blue-300';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-800 mb-6 text-2xl md:text-3xl leading-relaxed">${item.q}</p>
+                    <p class="font-bold text-gray-800 mb-6 text-3xl leading-relaxed">${item.q}</p>
                     <div class="space-y-4" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-4 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-200 hover:bg-gray-50 transition" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-10 h-10 shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white text-lg" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 text-2xl shrink-0 rounded-full border-2 border-gray-400 flex items-center justify-center mr-4 font-bold text-gray-500 transition-colors bg-white" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-700 font-medium text-xl md:text-2xl leading-normal">${item.options[key]}</span>
+                                <span class="text-gray-700 font-medium text-2xl leading-normal">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box mt-6 bg-gray-50 p-6 rounded-lg border-l-4 border-blue-500 text-gray-700 hidden">
-                        <p class="font-bold mb-2 text-xl" id="${item.id}-status"></p>
+                        <p class="font-bold mb-2 text-2xl" id="${item.id}-status"></p>
                         <p class="leading-relaxed">${item.expl}</p>
                     </div>
                 `;
@@ -1783,12 +2084,12 @@
                 explBox.style.borderLeftColor = '#16a34a';
                 explBox.style.backgroundColor = '#f0fdf4';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-600"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-700";
+                statusText.className = "font-bold mb-1 text-green-700 text-2xl";
             } else {
                 explBox.style.borderLeftColor = '#dc2626';
                 explBox.style.backgroundColor = '#fef2f2';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-600"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-700";
+                statusText.className = "font-bold mb-1 text-red-700 text-2xl";
             }
 
             if(!isRestoring) window.saveUserData();
