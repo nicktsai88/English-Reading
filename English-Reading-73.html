@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em;
+            font-size: 1.75em; /* Updated Size */
             color: #d1d5db;
             background: #1f2937;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #8b5cf6; /* Violet border */
+            padding: 24px; /* Updated Padding */
+            border-radius: 12px; /* Updated Border Radius */
+            border-left: 6px solid #6366f1; /* Updated Border */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
+            width: 98%;           /* Updated width */
+            max-width: 1600px;    /* Updated max-width */
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -224,6 +224,7 @@
         }
         #login-modal .modal-content {
             max-width: 500px;
+            width: 90%;
             text-align: center;
             padding: 40px;
         }
@@ -310,11 +311,11 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 20px;
+                padding: 0; /* Updated: 0 padding for max area */
             }
             @page {
-                size: A4 portrait;
-                margin: 2cm;
+                size: A4 landscape; /* Updated: landscape */
+                margin: 1cm;        /* Updated: margin */
             }
             .no-print {
                 display: none !important;
@@ -504,7 +505,7 @@
             
             <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                <h3 class="text-2xl font-bold text-gray-100 flex items-center"> <!-- Updated text size -->
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
@@ -633,6 +634,7 @@
         // --- Configuration ---
         const COLLECTION_NAME = 'English-Reading-73';
         const DOC_GLOBAL = 'global';
+        const ARTICLE_TITLE = "Climbing Mount Everest: The Death Zone"; // Configurable Article Title
 
         // Firebase Config
         const firebaseConfig = {
@@ -647,8 +649,8 @@
 
         let app, db, auth;
         let isFirebaseReady = false;
-        let currentUser = null; // Store current user info {name: string}
-        let unsubscribeUser = null; // Listener for specific user data
+        let currentUser = null; 
+        let unsubscribeUser = null; 
 
         // --- Firebase Initialization ---
         async function initFirebase() {
@@ -801,7 +803,7 @@
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
                 const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                el.className = "w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl"; // Updated class
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -862,7 +864,6 @@
         
         initFirebase();
 
-
         // ---------------------------------------------------------
         // --- Existing App Logic (Attached to Window) ---
         // ---------------------------------------------------------
@@ -877,50 +878,78 @@
         let userScore = 0;
         let favoriteWords = new Set();
         let wrongAnswers = []; 
-        let userAnswers = {}; // Store { qID: "Answer" }
+        let userAnswers = {}; 
         let audioCtx;
 
+        // Smart Lookup Mapping for precise dictionary roots
+        const smartLookupMap = {
+            "summits": "summit",
+            "expeditions": "expedition",
+            "glaciers": "glacier",
+            "exhausted": "exhaust",
+            "hallucinations": "hallucination",
+            "triumphs": "triumph",
+            "tragedies": "tragedy",
+            "mortalities": "mortality",
+            "altitudes": "altitude",
+            "achievements": "achievement",
+            "adjusts": "adjust",
+            "adjusted": "adjust",
+            "drains": "drain",
+            "swells": "swell",
+            "ignores": "ignore",
+            "flocks": "flock",
+            "recovers": "recover",
+            "recovered": "recover",
+            "limits": "limit"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
+
+        // Expanded Vocabulary Data
         const vocabulary = {
-            "summit": { pos: "n.", trans: "頂峰；山頂", example: "Reaching the summit took ten hours of climbing." },
-            "majestic": { pos: "adj.", trans: "雄偉的；莊嚴的", example: "The castle looked majestic on top of the hill." },
-            "merciless": { pos: "adj.", trans: "無情的；殘忍的", example: "The merciless sun beat down on the desert travelers." },
-            "expedition": { pos: "n.", trans: "探險隊；遠征", example: "The scientists organized an expedition to the Antarctica." },
-            "acclimatization": { pos: "n.", trans: "高度適應；水土不服適應", example: "Proper acclimatization is key to avoiding altitude sickness." },
-            "temporary": { pos: "adj.", trans: "暫時的", example: "We set up a temporary camp for the night." },
-            "glacier": { pos: "n.", trans: "冰川", example: "The glacier moves slowly down the mountain valley." },
-            "exhaust": { pos: "v.", trans: "使精疲力盡", example: "The long run will exhaust you if you don't pace yourself." },
-            "ominously": { pos: "adv.", trans: "不祥地", example: "The dark clouds gathered ominously over the city." },
-            "atmospheric": { pos: "adj.", trans: "大氣的", example: "Atmospheric pressure decreases as you go higher." },
-            "supplemental": { pos: "adj.", trans: "補充的；額外的", example: "He takes supplemental vitamins to stay healthy." },
-            "fatal": { pos: "adj.", trans: "致命的", example: "The car accident was fatal for the driver." },
-            "frostbite": { pos: "n.", trans: "凍傷", example: "He lost two toes to frostbite during the winter hike." },
-            "hallucination": { pos: "n.", trans: "幻覺", example: "Lack of sleep can sometimes cause hallucinations." },
-            "coordination": { pos: "n.", trans: "協調性", example: "Dancing requires good physical coordination." },
-            "obsessed": { pos: "adj.", trans: "著迷的；無法自拔的", example: "She is obsessed with that new video game." },
-            "desperate": { pos: "adj.", trans: "絕望的；極度渴望的", example: "The hungry dog was desperate for food." },
-            "triumph": { pos: "n.", trans: "勝利；巨大成就", example: "Winning the championship was a great triumph." },
-            "tragedy": { pos: "n.", trans: "悲劇", example: "The sinking of the Titanic was a terrible tragedy." },
-            "allure": { pos: "n.", trans: "誘惑力；魅力", example: "The allure of the big city attracts many young people." },
-            "grim": { pos: "adj.", trans: "嚴酷的；陰森的", example: "The doctor gave us a grim report on his health." },
-            "confront": { pos: "v.", trans: "面對；對抗", example: "You must confront your fears to overcome them." },
-            "mortality": { pos: "n.", trans: "必死性；死亡數", example: "Humans are aware of their own mortality." },
-            "fragile": { pos: "adj.", trans: "脆弱的", example: "Handle the glass carefully; it is very fragile." },
-            "raw": { pos: "adj.", trans: "原始的；未加工的", example: "The raw power of the storm destroyed the house." },
-            "altitude": { pos: "n.", trans: "海拔；高度", example: "The plane is flying at an altitude of 30,000 feet." },
-            "achievement": { pos: "n.", trans: "成就", example: "Graduating from college is a major achievement." },
-            "accessible": { pos: "adj.", trans: "易接近的；可進入的", example: "The ramp makes the building accessible to wheelchairs." },
-            "adjust": { pos: "v.", trans: "調整；適應", example: "It took time to adjust to the new time zone." },
-            "patience": { pos: "n.", trans: "耐心", example: "Teaching children requires a lot of patience." },
-            "drain": { pos: "v.", trans: "耗盡；排出", example: "The hard work seemed to drain all his energy." },
-            "severe": { pos: "adj.", trans: "嚴重的", example: "He suffered a severe injury to his leg." },
-            "swell": { pos: "v.", trans: "腫脹", example: "Her ankle began to swell after she twisted it." },
-            "ignore": { pos: "v.", trans: "忽視；不理會", example: "Don't ignore the warning signs on the road." },
-            "flock": { pos: "v.", trans: "聚集；蜂擁", example: "Tourists flock to the beach in the summer." },
-            "littered": { pos: "adj.", trans: "遍布垃圾（或雜物）的", example: "The floor was littered with toys." },
-            "recover": { pos: "v.", trans: "尋回；恢復", example: "Police managed to recover the stolen painting." },
-            "awe": { pos: "n.", trans: "敬畏", example: "We watched in awe as the rocket launched." },
-            "humble": { pos: "adj.", trans: "謙卑的；渺小的", example: "He remained humble despite his success." },
-            "limit": { pos: "n.", trans: "極限；限制", example: "You need to know your physical limit when exercising." }
+            "accessible": { pos: "adj.", trans: "易接近的；可進入的", example: "The ramp makes the building accessible to wheelchairs.", exampleZh: "(斜坡使得這棟建築可供輪椅進入。)", family: "access (v./n. 存取/路徑)<br>accessibility (n. 易接近性)", collocation: "wheelchair accessible (輪椅可通行)<br>easily accessible (容易到達的)" },
+            "acclimatization": { pos: "n.", trans: "高度適應；適應環境", example: "Proper acclimatization is key to avoiding altitude sickness.", exampleZh: "(正確的高度適應是避免高山症的關鍵。)", family: "acclimatize (v. 適應)<br>climate (n. 氣候)", collocation: "acclimatization period (適應期)<br>acclimatization process (適應過程)" },
+            "achievement": { pos: "n.", trans: "成就", example: "Graduating from college is a major achievement.", exampleZh: "(大學畢業是一項重大的成就。)", family: "achieve (v. 達成)<br>achievable (adj. 可達成的)", collocation: "major achievement (重大成就)<br>sense of achievement (成就感)" },
+            "adjust": { pos: "v.", trans: "調整；適應", example: "It took time to adjust to the new time zone.", exampleZh: "(花了一些時間才適應新的時區。)", family: "adjustment (n. 調整)<br>adjustable (adj. 可調整的)", collocation: "adjust to (適應...)<br>make adjustments (做出調整)" },
+            "allure": { pos: "n.", trans: "誘惑力；魅力", example: "The allure of the big city attracts many young people.", exampleZh: "(大城市的魅力吸引了許多年輕人。)", family: "alluring (adj. 迷人的/誘惑的)", collocation: "the allure of (...的誘惑力)<br>irresistible allure (不可抗拒的魅力)" },
+            "altitude": { pos: "n.", trans: "海拔；高度", example: "The plane is flying at an altitude of 30,000 feet.", exampleZh: "(飛機正飛行在三萬英尺的高空。)", family: "altitudinal (adj. 高度的)", collocation: "high altitude (高海拔)<br>at an altitude of (在...的高度)" },
+            "atmospheric": { pos: "adj.", trans: "大氣的", example: "Atmospheric pressure decreases as you go higher.", exampleZh: "(大氣壓力會隨著高度增加而降低。)", family: "atmosphere (n. 大氣/氣氛)", collocation: "atmospheric pressure (大氣壓力)<br>atmospheric conditions (大氣狀況)" },
+            "awe": { pos: "n.", trans: "敬畏", example: "We watched in awe as the rocket launched.", exampleZh: "(我們敬畏地看著火箭發射。)", family: "awesome (adj. 極好的/令人敬畏的)<br>awe-inspiring (adj. 令人嘆為觀止的)", collocation: "in awe of (對...感到敬畏)<br>stand in awe (肅然起敬)" },
+            "confront": { pos: "v.", trans: "面對；對抗", example: "You must confront your fears to overcome them.", exampleZh: "(你必須面對你的恐懼才能克服它們。)", family: "confrontation (n. 對抗)<br>confrontational (adj. 挑釁的/對抗性的)", collocation: "confront fears (面對恐懼)<br>confront a problem (面對問題)" },
+            "coordination": { pos: "n.", trans: "協調性", example: "Dancing requires good physical coordination.", exampleZh: "(跳舞需要良好的肢體協調性。)", family: "coordinate (v. 協調)<br>coordinator (n. 協調者)", collocation: "physical coordination (肢體協調)<br>hand-eye coordination (手眼協調)" },
+            "desperate": { pos: "adj.", trans: "絕望的；極度渴望的", example: "The hungry dog was desperate for food.", exampleZh: "(那隻飢餓的狗極度渴望食物。)", family: "desperation (n. 絕望)<br>desperately (adv. 拼命地/極度地)", collocation: "desperate for (極度渴望...)<br>desperate situation (絕望的處境)" },
+            "drain": { pos: "v.", trans: "耗盡；排出", example: "The hard work seemed to drain all his energy.", exampleZh: "(辛苦的工作似乎耗盡了他所有的精力。)", family: "drainage (n. 排水系統)<br>draining (adj. 令人筋疲力竭的)", collocation: "drain energy (耗盡精力)<br>brain drain (人才流失)" },
+            "exhaust": { pos: "v.", trans: "使精疲力盡", example: "The long run will exhaust you if you don't pace yourself.", exampleZh: "(如果你不調整配速，長跑會讓你精疲力竭。)", family: "exhaustion (n. 疲憊)<br>exhaustive (adj. 詳盡的)", collocation: "exhaust all possibilities (窮盡所有可能)<br>exhaust fumes (廢氣)" },
+            "expedition": { pos: "n.", trans: "探險隊；遠征", example: "The scientists organized an expedition to the Antarctica.", exampleZh: "(科學家們組織了一次前往南極洲的探險。)", family: "expeditionary (adj. 遠征的/探險的)", collocation: "scientific expedition (科學探險)<br>go on an expedition (去探險)" },
+            "fatal": { pos: "adj.", trans: "致命的", example: "The car accident was fatal for the driver.", exampleZh: "(那場車禍對駕駛人來說是致命的。)", family: "fatality (n. 死亡人數/災難)<br>fatally (adv. 致命地)", collocation: "fatal accident (致命事故)<br>fatal flaw (致命缺陷)" },
+            "flock": { pos: "v.", trans: "聚集；蜂擁", example: "Tourists flock to the beach in the summer.", exampleZh: "(夏季遊客蜂擁至海灘。)", family: "flock (n. 群)", collocation: "flock to (蜂擁而至)<br>a flock of birds (一群鳥)" },
+            "fragile": { pos: "adj.", trans: "脆弱的", example: "Handle the glass carefully; it is very fragile.", exampleZh: "(小心拿取玻璃杯；它非常脆弱。)", family: "fragility (n. 脆弱)", collocation: "fragile state (脆弱的狀態)<br>fragile glass (易碎玻璃)" },
+            "frostbite": { pos: "n.", trans: "凍傷", example: "He lost two toes to frostbite during the winter hike.", exampleZh: "(在冬日健行中，他因為凍傷失去了兩根腳趾。)", family: "frostbitten (adj. 凍傷的)", collocation: "suffer from frostbite (遭受凍傷)<br>severe frostbite (嚴重凍傷)" },
+            "glacier": { pos: "n.", trans: "冰川", example: "The glacier moves slowly down the mountain valley.", exampleZh: "(冰川緩慢地沿著山谷向下移動。)", family: "glacial (adj. 冰川的/緩慢的)", collocation: "melting glacier (消融中的冰川)<br>glacier movement (冰川運動)" },
+            "grim": { pos: "adj.", trans: "嚴酷的；陰森的", example: "The doctor gave us a grim report on his health.", exampleZh: "(醫生給了我們一份關於他健康狀況的嚴酷報告。)", family: "grimly (adv. 嚴肅地/冷酷地)", collocation: "grim reality (嚴酷的現實)<br>grim future (暗淡的前途)" },
+            "hallucination": { pos: "n.", trans: "幻覺", example: "Lack of sleep can sometimes cause hallucinations.", exampleZh: "(睡眠不足有時會引起幻覺。)", family: "hallucinate (v. 出現幻覺)<br>hallucinatory (adj. 幻覺的)", collocation: "cause hallucinations (引起幻覺)<br>auditory hallucination (幻聽)" },
+            "humble": { pos: "adj.", trans: "謙卑的；渺小的", example: "He remained humble despite his success.", exampleZh: "(儘管獲得了成功，他仍然保持謙遜。)", family: "humility (n. 謙遜)<br>humbly (adv. 謙卑地)", collocation: "humble beginnings (出身微寒)<br>remain humble (保持謙卑)" },
+            "ignore": { pos: "v.", trans: "忽視；不理會", example: "Don't ignore the warning signs on the road.", exampleZh: "(不要忽視路上的警告標誌。)", family: "ignorance (n. 無知)<br>ignorant (adj. 無知的)", collocation: "ignore advice (不聽建議)<br>completely ignore (完全忽視)" },
+            "limit": { pos: "n.", trans: "極限；限制", example: "You need to know your physical limit when exercising.", exampleZh: "(運動時你需要了解自己的體力極限。)", family: "limitation (n. 限制)<br>limited (adj. 有限的)", collocation: "push the limit (挑戰極限)<br>time limit (時間限制)" },
+            "littered": { pos: "adj.", trans: "遍布...的", example: "The floor was littered with toys.", exampleZh: "(地板上到處亂放著玩具。)", family: "litter (v./n. 亂丟垃圾/垃圾)", collocation: "littered with (布滿了...)<br>litter the street (在街上亂丟垃圾)" },
+            "majestic": { pos: "adj.", trans: "雄偉的；莊嚴的", example: "The castle looked majestic on top of the hill.", exampleZh: "(山頂上的城堡看起來非常雄偉。)", family: "majesty (n. 威嚴/陛下)<br>majestically (adv. 雄偉地)", collocation: "majestic mountain (雄偉的山峰)<br>majestic view (壯麗的景色)" },
+            "merciless": { pos: "adj.", trans: "無情的；殘忍的", example: "The merciless sun beat down on the desert travelers.", exampleZh: "(無情的陽光照射在沙漠旅人身上。)", family: "mercy (n. 慈悲)<br>merciful (adj. 仁慈的)", collocation: "merciless sun (毒辣的太陽)<br>merciless killer (殘忍的殺手)" },
+            "mortality": { pos: "n.", trans: "必死性；死亡率", example: "Humans are aware of their own mortality.", exampleZh: "(人類意識到自己終有一死。)", family: "mortal (adj. 會死的 n. 凡人)", collocation: "mortality rate (死亡率)<br>infant mortality (嬰兒死亡率)" },
+            "obsessed": { pos: "adj.", trans: "著迷的；無法自拔的", example: "She is obsessed with that new video game.", exampleZh: "(她對那款新遊戲著迷不已。)", family: "obsession (n. 執念/痴迷)<br>obsessive (adj. 強迫性的)", collocation: "obsessed with (著迷於...)<br>become obsessed (變得痴迷)" },
+            "ominously": { pos: "adv.", trans: "不祥地", example: "The dark clouds gathered ominously over the city.", exampleZh: "(烏雲不祥地聚集在城市上空。)", family: "ominous (adj. 不祥的)", collocation: "gather ominously (不祥地聚集)<br>look ominously (看起來不吉利)" },
+            "patience": { pos: "n.", trans: "耐心", example: "Teaching children requires a lot of patience.", exampleZh: "(教導孩子需要很大的耐心。)", family: "patient (adj. 有耐心的/n. 病人)<br>patiently (adv. 耐心地)", collocation: "have patience (有耐心)<br>lose patience (失去耐心)" },
+            "raw": { pos: "adj.", trans: "原始的；未加工的", example: "The raw power of the storm destroyed the house.", exampleZh: "(暴風雨原始且強大的力量摧毀了房屋。)", family: "rawness (n. 原始/生硬)<br>raw material (原料)<br>raw emotion (原始的情感)", collocation: "raw power (原始力量)<br>raw data (原始數據)" },
+            "recover": { pos: "v.", trans: "尋回；恢復", example: "Police managed to recover the stolen painting.", exampleZh: "(警察成功找回了失竊的畫作。)", family: "recovery (n. 恢復/找回)", collocation: "recover from (從...恢復)<br>recover a body (尋獲遺體)" },
+            "severe": { pos: "adj.", trans: "嚴重的", example: "He suffered a severe injury to his leg.", exampleZh: "(他的腿部受了重傷。)", family: "severity (n. 嚴重性)<br>severely (adv. 嚴重地)", collocation: "severe damage (嚴重損壞)<br>severe weather (惡劣天氣)" },
+            "summit": { pos: "n.", trans: "頂峰；山頂", example: "Reaching the summit took ten hours of climbing.", exampleZh: "(到達山頂花了十個小時的攀爬。)", family: "(無常見衍生字)", collocation: "reach the summit (登頂)<br>summit meeting (高峰會)" },
+            "supplemental": { pos: "adj.", trans: "補充的；額外的", example: "He takes supplemental vitamins to stay healthy.", exampleZh: "(他服用補充維他命以保持健康。)", family: "supplement (v./n. 補充)<br>supplementary (adj. 補充的)", collocation: "supplemental income (額外收入)<br>supplemental information (補充資訊)" },
+            "swell": { pos: "v.", trans: "腫脹", example: "Her ankle began to swell after she twisted it.", exampleZh: "(她的腳踝扭傷後開始腫脹。)", family: "swollen (adj. 腫脹的)<br>swelling (n. 腫塊/腫脹)", collocation: "swell with pride (洋洋得意/充滿自豪)<br>swollen eyes (腫脹的眼睛)" },
+            "temporary": { pos: "adj.", trans: "暫時的", example: "We set up a temporary camp for the night.", exampleZh: "(我們搭建了一個臨時營地過夜。)", family: "temporarily (adv. 暫時地)", collocation: "temporary solution (臨時解決方案)<br>temporary job (臨時工作)" },
+            "tragedy": { pos: "n.", trans: "悲劇", example: "The sinking of the Titanic was a terrible tragedy.", exampleZh: "(泰坦尼克號的沉沒是一場可怕的悲劇。)", family: "tragic (adj. 悲劇性的)<br>tragically (adv. 不幸地)", collocation: "terrible tragedy (可怕的悲劇)<br>personal tragedy (個人悲劇)" },
+            "triumph": { pos: "n.", trans: "勝利；巨大成就", example: "Winning the championship was a great triumph.", exampleZh: "(贏得冠軍是一項巨大的勝利。)", family: "triumphant (adj. 勝利的/得意洋洋的)<br>triumphantly (adv. 勝利地)", collocation: "great triumph (偉大的勝利)<br>sense of triumph (勝利感)" }
         };
 
         const articleData = [
@@ -1190,51 +1219,26 @@
             return words.map(word => {
                 // Keep the original punctuation for display
                 const originalWord = word;
-                // Remove punctuation for lookup
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
                 
-                // --- Smart Lookup Logic: Word Mapping for Variations ---
-                const wordMapping = {
-                    "summits": "summit",
-                    "expeditions": "expedition",
-                    "glaciers": "glacier",
-                    "exhausted": "exhaust",
-                    "hallucinations": "hallucination",
-                    "triumphs": "triumph",
-                    "tragedies": "tragedy",
-                    "mortalities": "mortality",
-                    "altitudes": "altitude",
-                    "achievements": "achievement",
-                    "adjusts": "adjust",
-                    "drains": "drain",
-                    "swells": "swell",
-                    "ignores": "ignore",
-                    "flocks": "flock",
-                    "recovers": "recover",
-                    "recovered": "recover",
-                    "limits": "limit"
-                };
+                // Enhanced punctuation removal (keeps hyphens)
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
+                const rootWord = getSmartLookupRoot(cleanWord);
 
-                let targetKey = cleanWord;
-                if (wordMapping[cleanWord]) {
-                    targetKey = wordMapping[cleanWord];
-                }
-
-                if (vocabulary[targetKey]) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
-                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"<br><span class="text-sm">${data.exampleZh}</span></div>
                     </span></span>`;
                 }
                 return originalWord;
@@ -1266,12 +1270,14 @@
             } else {
                 favoriteWords.add(word);
                 updateHeartIcon(word, true);
-                confetti({
-                    particleCount: 30,
-                    spread: 40,
-                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
-                    colors: ['#f472b6']
-                });
+                if (e) {
+                    confetti({
+                        particleCount: 30,
+                        spread: 40,
+                        origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
+                        colors: ['#f472b6']
+                    });
+                }
             }
             document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
             if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
@@ -1351,11 +1357,13 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
-                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                            <th class="p-3 font-bold w-[5%] text-lg">收藏</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-[6%] text-lg">詞性</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">例句與翻譯 (Example & Translation)</th>
+                            <th class="p-3 font-bold w-[15%] text-lg">衍生字/家族字</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">常見搭配詞</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1370,12 +1378,17 @@
                         <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
                         
                         <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition no-print"></i>
                         </td>
 
                         <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-3 text-gray-400 text-lg md:text-xl leading-relaxed">
+                            <span class="italic text-gray-300">"${data.example}"</span><br>
+                            <span class="text-sm text-gray-500">${data.exampleZh}</span>
+                        </td>
+                        <td class="p-3 text-gray-400 text-base leading-relaxed">${data.family}</td>
+                        <td class="p-3 text-gray-400 text-base leading-relaxed">${data.collocation}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1389,16 +1402,19 @@
             if (type === 'mistakes') {
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">
+                            ${ARTICLE_TITLE}
+                        </h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1409,10 +1425,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1425,31 +1441,41 @@
 
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">
+                            ${ARTICLE_TITLE}
+                        </h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">
+                                    <div style="font-style: italic; margin-bottom: 4px;">"${data.example}"</div>
+                                    <div style="color: #4b5563; font-size: 13px;">${data.exampleZh}</div>
+                                </td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.family}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.collocation}</td>
                             </tr>
                         `;
                     });
@@ -1625,20 +1651,20 @@
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <p class="font-bold text-gray-200 mb-4 text-3xl">${item.q}</p>
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p class="font-bold mb-2 text-2xl" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1692,11 +1718,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400";
+                statusText.className = "font-bold mb-2 text-2xl text-green-400";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400";
+                statusText.className = "font-bold mb-2 text-2xl text-red-400";
             }
 
             if(!isRestoring) window.saveUserData();
