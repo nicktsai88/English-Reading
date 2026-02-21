@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em;
+            font-size: 1.75em; /* 更新：字體加大 */
             color: #d1d5db;
             background: #1f2937;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #8b5cf6; /* Violet border */
+            padding: 24px; /* 更新：內距加大 */
+            border-radius: 12px; /* 更新：圓角加大 */
+            border-left: 6px solid #6366f1; /* 更新：左側提示線加粗變色 */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -93,8 +93,8 @@
         .vocab-tooltip {
             visibility: hidden;
             width: max-content;
-            min-width: 240px; 
-            max-width: 320px;
+            min-width: 280px; 
+            max-width: 400px;
             background-color: #0f172a; /* Darker blue/black */
             color: #fff;
             text-align: left;
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 98%;
-            max-width: 900px;
+            width: 98%; /* 更新：寬度佔比 98% */
+            max-width: 1600px; /* 更新：放寬最大寬度限制 */
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -293,7 +293,7 @@
             transform: scale(0.98);
         }
 
-        /* Print Styles */
+        /* Print Styles - 更新：全面升級 A4 橫式設定與表格參數 */
         @media print {
             body * {
                 visibility: hidden;
@@ -310,14 +310,21 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 20px;
+                padding: 0; /* 最大化可視範圍 */
             }
             @page {
-                size: A4 portrait;
-                margin: 2cm;
+                size: A4 landscape; /* A4 橫式最佳化 */
+                margin: 1cm;
             }
             .no-print {
                 display: none !important;
+            }
+            /* 列印表格基礎設定 */
+            .print-table {
+                font-size: 15px !important;
+            }
+            .print-table th, .print-table td {
+                padding: 8px !important;
             }
         }
     </style>
@@ -493,7 +500,7 @@
                 </button>
             </div>
 
-            <!-- Article Container -->
+            <!-- Article Container (字體設定維持原樣) -->
             <div id="article-display" class="prose max-w-none text-gray-300 text-xl md:text-2xl leading-loose tracking-wide space-y-8">
                 <!-- Content injected by JS -->
             </div>
@@ -504,7 +511,8 @@
             
             <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                <!-- 更新：測驗標題字體加大 (text-2xl) -->
+                <h3 class="text-2xl font-bold text-gray-100 flex items-center">
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
@@ -633,6 +641,7 @@
         // --- Configuration ---
         const COLLECTION_NAME = 'English-Reading-3';
         const DOC_GLOBAL = 'global';
+        const ARTICLE_MAIN_TITLE = 'Minecraft: Building a Virtual World'; // 列印時使用的標題
 
         // Firebase Config
         const firebaseConfig = {
@@ -801,7 +810,8 @@
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
                 const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                // 更新：圓圈樣式也必須與新字體同步重置
+                el.className = "w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-4 font-bold text-gray-400 text-2xl transition-colors";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -880,47 +890,267 @@
         let userAnswers = {}; // Store { qID: "Answer" }
         let audioCtx;
 
+        // 更新：智慧單字查詢映射表 (處理複數、時態變化，對應回字根)
+        const smartLookupMap = {
+            "released": "release",
+            "architects": "architect",
+            "constructing": "construct",
+            "creations": "creation",
+            "encouraging": "encourage",
+            "features": "feature",
+            "gathering": "gather",
+            "generated": "generate",
+            "modifications": "modification",
+            "structures": "structure",
+            "collaborating": "collaborate"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
+
+        // 更新：擴充後的單字表資料結構
         const vocabulary = {
-            "programmer": { pos: "n.", trans: "程式設計師", example: "The programmer wrote code to create the new app." },
-            "release": { pos: "v.", trans: "發行；釋出", example: "The movie studio will release the film next summer." },
-            "realistic": { pos: "adj.", trans: "逼真的；寫實的", example: "The special effects in the movie were very realistic." },
-            "graphics": { pos: "n.", trans: "圖形；繪圖", example: "This new computer has amazing graphics for gaming." },
-            "pixelated": { pos: "adj.", trans: "像素化的", example: "The image was low quality and looked pixelated." },
-            "phenomenon": { pos: "n.", trans: "現象", example: "The K-pop band became a worldwide phenomenon." },
-            "sandbox": { pos: "n.", trans: "沙盒（遊戲類型）", example: "In a sandbox game, you can explore freely without a set story." },
-            "virtual": { pos: "adj.", trans: "虛擬的", example: "We held a virtual meeting over the internet." },
-            "landscape": { pos: "n.", trans: "景觀；風景", example: "The desert landscape was beautiful at sunset." },
-            "generate": { pos: "v.", trans: "產生；生成", example: "The solar panels generate electricity for the house." },
-            "resources": { pos: "n.", trans: "資源", example: "Water and oil are valuable natural resources." },
-            "shelter": { pos: "n.", trans: "庇護所", example: "We built a shelter to stay dry during the rain." },
-            "craft": { pos: "v.", trans: "製作；工藝", example: "You can craft a table using wood and nails." },
-            "strategy": { pos: "n.", trans: "策略", example: "Winning the chess game requires a good strategy." },
-            "opportunity": { pos: "n.", trans: "機會", example: "This job is a great opportunity for you to learn." },
-            "unlimited": { pos: "adj.", trans: "無限的", example: "The buffet offers unlimited food for a fixed price." },
-            "access": { pos: "v.", trans: "存取；使用", example: "Students can access the library books online." },
-            "structure": { pos: "n.", trans: "結構；建築物", example: "The Eiffel Tower is a famous steel structure." },
-            "canvas": { pos: "n.", trans: "畫布", example: "The artist painted a beautiful portrait on the canvas." },
-            "imagination": { pos: "n.", trans: "想像力", example: "Use your imagination to write a creative story." },
-            "architect": { pos: "n.", trans: "建築師", example: "The architect designed a modern house with big windows." },
-            "construct": { pos: "v.", trans: "建造", example: "The city plans to construct a new bridge next year." },
-            "interactive": { pos: "adj.", trans: "互動的", example: "The museum has interactive exhibits for children." },
-            "feature": { pos: "n.", trans: "特色；功能", example: "One cool feature of this phone is its camera." },
-            "logic": { pos: "n.", trans: "邏輯", example: "Computer programming is based on math and logic." },
-            "engineering": { pos: "n.", trans: "工程學", example: "He is studying engineering to build robots." },
-            "encourage": { pos: "v.", trans: "鼓勵", example: "Teachers should encourage students to ask questions." },
-            "community": { pos: "n.", trans: "社群；社區", example: "The local community helped clean up the park." },
-            "immense": { pos: "adj.", trans: "巨大的", example: "The ocean is an immense body of water." },
-            "creation": { pos: "n.", trans: "創作品", example: "The painting is his latest artistic creation." },
-            "modification": { pos: "n.", trans: "修改；模組", example: "We made a slight modification to the plan." },
-            "dimension": { pos: "n.", trans: "維度；空間", example: "Science fiction stories often involve travel to another dimension." },
-            "collaborate": { pos: "v.", trans: "合作", example: "The two singers decided to collaborate on a new song." },
-            "immersive": { pos: "adj.", trans: "身臨其境的", example: "The VR game was so immersive that I forgot where I was." },
-            "inspire": { pos: "v.", trans: "啟發；激勵", example: "Her speech helped inspire many young people." },
-            "creativity": { pos: "n.", trans: "創造力", example: "Drawing and painting are good ways to express creativity." },
-            "entertainment": { pos: "n.", trans: "娛樂", example: "Movies and games provide entertainment for people." },
-            "unique": { pos: "adj.", trans: "獨特的", example: "Each snowflake has a unique shape." },
-            "gather": { pos: "v.", trans: "收集；聚集", example: "The squirrels gather nuts for the winter." },
-            "attack": { pos: "v.", trans: "攻擊", example: "The lion prepared to attack its prey." }
+            "access": {
+                pos: "v.", trans: "存取；使用",
+                example: "Students can access the library books online.", exampleZh: "(學生可以在線上存取圖書館的書籍。)",
+                family: "accessible (adj. 易於取得的)<br>accessibility (n. 易用性/無障礙)",
+                collocation: "access to information (獲取資訊)<br>easy access (容易取得)"
+            },
+            "architect": {
+                pos: "n.", trans: "建築師",
+                example: "The architect designed a modern house with big windows.", exampleZh: "(建築師設計了一棟有大窗戶的現代房屋。)",
+                family: "architecture (n. 建築學/建築風格)<br>architectural (adj. 建築的)",
+                collocation: "landscape architect (景觀設計師)<br>chief architect (首席建築師)"
+            },
+            "attack": {
+                pos: "v.", trans: "攻擊",
+                example: "The lion prepared to attack its prey.", exampleZh: "(獅子準備攻擊獵物。)",
+                family: "attack (n. 攻擊)<br>attacker (n. 攻擊者)",
+                collocation: "physical attack (物理攻擊)<br>under attack (受到攻擊)"
+            },
+            "canvas": {
+                pos: "n.", trans: "畫布",
+                example: "The artist painted a beautiful portrait on the canvas.", exampleZh: "(藝術家在畫布上畫了一幅美麗的肖像。)",
+                family: "(無特別常見衍生字)",
+                collocation: "blank canvas (空白畫布)<br>oil on canvas (油畫)"
+            },
+            "collaborate": {
+                pos: "v.", trans: "合作",
+                example: "The two singers decided to collaborate on a new song.", exampleZh: "(這兩位歌手決定合作一首新歌。)",
+                family: "collaboration (n. 合作)<br>collaborative (adj. 合作的)",
+                collocation: "collaborate with (與...合作)<br>collaborate on a project (合作專案)"
+            },
+            "community": {
+                pos: "n.", trans: "社群；社區",
+                example: "The local community helped clean up the park.", exampleZh: "(當地社區協助清理了公園。)",
+                family: "communal (adj. 共享的/社區的)",
+                collocation: "local community (當地社區)<br>online community (線上社群)"
+            },
+            "construct": {
+                pos: "v.", trans: "建造",
+                example: "The city plans to construct a new bridge next year.", exampleZh: "(這座城市計畫明年建造一座新橋。)",
+                family: "construction (n. 建設)<br>constructive (adj. 建設性的)",
+                collocation: "construct a building (建造建築物)<br>under construction (施工中)"
+            },
+            "craft": {
+                pos: "v.", trans: "製作；工藝",
+                example: "You can craft a table using wood and nails.", exampleZh: "(你可以用木材和釘子製作一張桌子。)",
+                family: "craft (n. 手工藝)<br>craftsmanship (n. 工藝/技術)",
+                collocation: "arts and crafts (美術與工藝)<br>finely crafted (精心製作的)"
+            },
+            "creation": {
+                pos: "n.", trans: "創作品",
+                example: "The painting is his latest artistic creation.", exampleZh: "(這幅畫是他最新的藝術創作。)",
+                family: "create (v. 創造)<br>creator (n. 創作者)<br>creative (adj. 有創造力的)",
+                collocation: "artistic creation (藝術創作)<br>job creation (創造就業機會)"
+            },
+            "creativity": {
+                pos: "n.", trans: "創造力",
+                example: "Drawing and painting are good ways to express creativity.", exampleZh: "(畫畫是表達創造力的好方法。)",
+                family: "creative (adj. 有創造力的)<br>creatively (adv. 有創造力地)",
+                collocation: "express creativity (表達創造力)<br>spark creativity (激發創造力)"
+            },
+            "dimension": {
+                pos: "n.", trans: "維度；空間",
+                example: "Science fiction stories often involve travel to another dimension.", exampleZh: "(科幻故事經常涉及前往另一個維度的旅行。)",
+                family: "dimensional (adj. ...維的)",
+                collocation: "three-dimensional (3D/三維的)<br>new dimension (新境界/新維度)"
+            },
+            "encourage": {
+                pos: "v.", trans: "鼓勵",
+                example: "Teachers should encourage students to ask questions.", exampleZh: "(老師應該鼓勵學生發問。)",
+                family: "encouragement (n. 鼓勵)<br>encouraging (adj. 令人鼓舞的)",
+                collocation: "strongly encourage (強烈鼓勵)<br>encourage someone to (鼓勵某人去做...)"
+            },
+            "engineering": {
+                pos: "n.", trans: "工程學",
+                example: "He is studying engineering to build robots.", exampleZh: "(他正在學習工程學以建造機器人。)",
+                family: "engineer (n. 工程師)",
+                collocation: "software engineering (軟體工程)<br>civil engineering (土木工程)"
+            },
+            "entertainment": {
+                pos: "n.", trans: "娛樂",
+                example: "Movies and games provide entertainment for people.", exampleZh: "(電影和遊戲為人們提供娛樂。)",
+                family: "entertain (v. 娛樂/款待)<br>entertaining (adj. 有趣的)",
+                collocation: "entertainment industry (娛樂產業)<br>provide entertainment (提供娛樂)"
+            },
+            "feature": {
+                pos: "n.", trans: "特色；功能",
+                example: "One cool feature of this phone is its camera.", exampleZh: "(這款手機的一個超酷特色是它的相機。)",
+                family: "feature (v. 以...為特色)",
+                collocation: "key feature (關鍵特色)<br>new feature (新功能)"
+            },
+            "gather": {
+                pos: "v.", trans: "收集；聚集",
+                example: "The squirrels gather nuts for the winter.", exampleZh: "(松鼠收集堅果以備過冬。)",
+                family: "gathering (n. 聚會/收集)",
+                collocation: "gather information (收集資訊)<br>gather around (聚集在一起)"
+            },
+            "generate": {
+                pos: "v.", trans: "產生；生成",
+                example: "The solar panels generate electricity for the house.", exampleZh: "(太陽能板為這棟房子發電。)",
+                family: "generation (n. 產生/世代)<br>generator (n. 發電機)",
+                collocation: "generate income (產生收入)<br>generate electricity (發電)"
+            },
+            "graphics": {
+                pos: "n.", trans: "圖形；繪圖",
+                example: "This new computer has amazing graphics for gaming.", exampleZh: "(這台新電腦的遊戲圖形效能令人驚豔。)",
+                family: "graphic (adj. 生動的/圖解的)<br>graphically (adv. 圖像化地)",
+                collocation: "computer graphics (電腦圖形/CG)<br>high-quality graphics (高品質圖形)"
+            },
+            "imagination": {
+                pos: "n.", trans: "想像力",
+                example: "Use your imagination to write a creative story.", exampleZh: "(發揮你的想像力寫一個有創意的故事。)",
+                family: "imagine (v. 想像)<br>imaginative (adj. 富有想像力的)",
+                collocation: "vivid imagination (豐富的想像力)<br>capture the imagination (吸引人的想像)"
+            },
+            "immense": {
+                pos: "adj.", trans: "巨大的",
+                example: "The ocean is an immense body of water.", exampleZh: "(海洋是巨大的水體。)",
+                family: "immensely (adv. 極度地/非常)<br>immensity (n. 巨大)",
+                collocation: "immense pressure (巨大的壓力)<br>immense wealth (巨額財富)"
+            },
+            "immersive": {
+                pos: "adj.", trans: "身臨其境的",
+                example: "The VR game was so immersive that I forgot where I was.", exampleZh: "(這款VR遊戲太有沉浸感了，讓我忘了自己身在何處。)",
+                family: "immerse (v. 使沉浸於)<br>immersion (n. 沉浸)",
+                collocation: "immersive experience (沉浸式體驗)<br>immersive environment (沉浸式環境)"
+            },
+            "inspire": {
+                pos: "v.", trans: "啟發；激勵",
+                example: "Her speech helped inspire many young people.", exampleZh: "(她的演講啟發了許多年輕人。)",
+                family: "inspiration (n. 靈感/啟發)<br>inspiring (adj. 激勵人心的)",
+                collocation: "inspire confidence (激發信心)<br>draw inspiration from (從...獲取靈感)"
+            },
+            "interactive": {
+                pos: "adj.", trans: "互動的",
+                example: "The museum has interactive exhibits for children.", exampleZh: "(這間博物館有供兒童參與的互動式展覽。)",
+                family: "interact (v. 互動)<br>interaction (n. 互動/交流)",
+                collocation: "interactive whiteboard (互動式電子白板)<br>highly interactive (高度互動的)"
+            },
+            "landscape": {
+                pos: "n.", trans: "景觀；風景",
+                example: "The desert landscape was beautiful at sunset.", exampleZh: "(日落時分的沙漠景觀非常美麗。)",
+                family: "landscaping (n. 景觀設計)<br>landscaper (n. 景觀設計師)",
+                collocation: "beautiful landscape (美麗的風景)<br>urban landscape (城市景觀)"
+            },
+            "logic": {
+                pos: "n.", trans: "邏輯",
+                example: "Computer programming is based on math and logic.", exampleZh: "(電腦程式設計是建立在數學和邏輯基礎上的。)",
+                family: "logical (adj. 合邏輯的)<br>logically (adv. 邏輯上)",
+                collocation: "common sense and logic (常理與邏輯)<br>flawless logic (無懈可擊的邏輯)"
+            },
+            "modification": {
+                pos: "n.", trans: "修改；模組",
+                example: "We made a slight modification to the plan.", exampleZh: "(我們對計畫做了一些微調。)",
+                family: "modify (v. 修改)<br>modified (adj. 修改過的)",
+                collocation: "make a modification (進行修改)<br>slight modification (輕微的修改)"
+            },
+            "opportunity": {
+                pos: "n.", trans: "機會",
+                example: "This job is a great opportunity for you to learn.", exampleZh: "(這份工作對你來說是個很棒的學習機會。)",
+                family: "opportune (adj. 適時的)",
+                collocation: "golden opportunity (千載難逢的機會)<br>miss an opportunity (錯失機會)"
+            },
+            "phenomenon": {
+                pos: "n.", trans: "現象",
+                example: "The K-pop band became a worldwide phenomenon.", exampleZh: "(這個韓國流行樂團成了一種全球現象。)",
+                family: "phenomenal (adj. 非凡的/驚人的)<br>複數形：phenomena",
+                collocation: "natural phenomenon (自然現象)<br>global phenomenon (全球性現象)"
+            },
+            "pixelated": {
+                pos: "adj.", trans: "像素化的",
+                example: "The image was low quality and looked pixelated.", exampleZh: "(這張圖片畫質很低，看起來有像素顆粒感。)",
+                family: "pixel (n. 像素)<br>pixelate (v. 使像素化)",
+                collocation: "pixelated image (像素化的圖片)<br>highly pixelated (嚴重像素化的)"
+            },
+            "programmer": {
+                pos: "n.", trans: "程式設計師",
+                example: "The programmer wrote code to create the new app.", exampleZh: "(程式設計師編寫了程式碼來創建這個新應用程式。)",
+                family: "program (n. 程式 v. 編程)<br>programming (n. 程式設計)",
+                collocation: "computer programmer (電腦程式設計師)<br>skilled programmer (熟練的程式設計師)"
+            },
+            "realistic": {
+                pos: "adj.", trans: "逼真的；寫實的",
+                example: "The special effects in the movie were very realistic.", exampleZh: "(這部電影的特效非常逼真。)",
+                family: "real (adj. 真實的)<br>reality (n. 現實)",
+                collocation: "realistic expectations (切合實際的期望)<br>highly realistic (高度逼真的)"
+            },
+            "release": {
+                pos: "v.", trans: "發行；釋出",
+                example: "The movie studio will release the film next summer.", exampleZh: "(電影公司將於明年夏天發行這部電影。)",
+                family: "release (n. 發布/釋放)",
+                collocation: "press release (新聞稿)<br>new release (新發行/新上市)"
+            },
+            "resources": {
+                pos: "n.", trans: "資源",
+                example: "Water and oil are valuable natural resources.", exampleZh: "(水和石油是寶貴的自然資源。)",
+                family: "resource (n. 資源)<br>resourceful (adj. 足智多謀的)",
+                collocation: "natural resources (自然資源)<br>human resources (人力資源/HR)"
+            },
+            "sandbox": {
+                pos: "n.", trans: "沙盒（遊戲類型）",
+                example: "In a sandbox game, you can explore freely without a set story.", exampleZh: "(在沙盒遊戲中，你可以自由探索，沒有固定的劇情。)",
+                family: "sand (n. 沙)<br>box (n. 箱子)",
+                collocation: "sandbox game (沙盒遊戲)<br>sandbox environment (沙盒環境)"
+            },
+            "shelter": {
+                pos: "n.", trans: "庇護所",
+                example: "We built a shelter to stay dry during the rain.", exampleZh: "(我們建了一個庇護所來躲雨。)",
+                family: "shelter (v. 庇護/躲避)<br>sheltered (adj. 受保護的)",
+                collocation: "animal shelter (動物收容所)<br>take shelter (避難/躲避)"
+            },
+            "strategy": {
+                pos: "n.", trans: "策略",
+                example: "Winning the chess game requires a good strategy.", exampleZh: "(贏得西洋棋比賽需要好的策略。)",
+                family: "strategic (adj. 策略性的)<br>strategist (n. 戰略家)",
+                collocation: "business strategy (商業策略)<br>marketing strategy (行銷策略)"
+            },
+            "structure": {
+                pos: "n.", trans: "結構；建築物",
+                example: "The Eiffel Tower is a famous steel structure.", exampleZh: "(艾菲爾鐵塔是一座著名的鋼鐵結構建築。)",
+                family: "structural (adj. 結構的)<br>structurally (adv. 在結構上)",
+                collocation: "complex structure (複雜的結構)<br>social structure (社會結構)"
+            },
+            "unique": {
+                pos: "adj.", trans: "獨特的",
+                example: "Each snowflake has a unique shape.", exampleZh: "(每一片雪花都有獨特的形狀。)",
+                family: "uniquely (adv. 獨特地)<br>uniqueness (n. 獨特性)",
+                collocation: "unique opportunity (難得的機會)<br>unique features (獨特的功能)"
+            },
+            "unlimited": {
+                pos: "adj.", trans: "無限的",
+                example: "The buffet offers unlimited food for a fixed price.", exampleZh: "(自助餐以固定價格提供無限量的食物。)",
+                family: "limit (n./v. 限制)<br>limited (adj. 有限的)",
+                collocation: "unlimited access (無限存取/通行無阻)<br>unlimited possibilities (無限的可能性)"
+            },
+            "virtual": {
+                pos: "adj.", trans: "虛擬的",
+                example: "We held a virtual meeting over the internet.", exampleZh: "(我們透過網路舉行了一場虛擬會議。)",
+                family: "virtually (adv. 幾乎/虛擬地)<br>virtuality (n. 虛擬性)",
+                collocation: "virtual reality (VR/虛擬實境)<br>virtual meeting (線上虛擬會議)"
+            }
         };
 
         const articleData = [
@@ -1186,24 +1416,31 @@
              container.appendChild(img);
         }
 
+        // 更新：升級版的 processWords，套用智慧查詢映射
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                // 精準去標點邏輯，保留連字號
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
+                // 取得智慧字根
+                const rootWord = getSmartLookupRoot(cleanWord);
                 const originalWord = word;
-                if (vocabulary[cleanWord]) {
-                    const data = vocabulary[cleanWord];
-                    const isFav = favoriteWords.has(cleanWord);
+                
+                // 以 rootWord 進行字典比對
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
+                    // 發音使用文章原字 cleanWord，ID 綁定字根 rootWord
                     return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${cleanWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${cleanWord}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${cleanWord}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
                         <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
@@ -1213,7 +1450,7 @@
         }
         
         window.speakAndShowDef = function(e, word) {
-            e.stopPropagation(); 
+            if(e) e.stopPropagation(); 
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
@@ -1221,6 +1458,7 @@
             synth.speak(utterance);
         }
 
+        // 為了相容某些舊有的呼叫，保留 speakWord
         window.speakWord = function(word) {
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
@@ -1237,12 +1475,14 @@
             } else {
                 favoriteWords.add(word);
                 updateHeartIcon(word, true);
-                confetti({
-                    particleCount: 30,
-                    spread: 40,
-                    origin: { x: e ? e.clientX / window.innerWidth : 0.5, y: e ? e.clientY / window.innerHeight : 0.5 },
-                    colors: ['#f472b6']
-                });
+                if(e) {
+                    confetti({
+                        particleCount: 30,
+                        spread: 40,
+                        origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
+                        colors: ['#f472b6']
+                    });
+                }
             }
             document.getElementById('study-list-count').innerText = `目前收藏: ${favoriteWords.size} 個單字`;
             if(document.getElementById('study-modal').style.display === 'flex') window.openStudyModal();
@@ -1315,6 +1555,7 @@
             document.getElementById(id).style.display = 'none';
         }
 
+        // 更新：全新網頁版單字表/學習清單的欄位比例分配與結構
         function generateTableHTML(wordList, type) {
             if (!wordList || wordList.length === 0) return '';
             wordList.sort();
@@ -1322,11 +1563,13 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
-                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                            <th class="p-3 font-bold text-lg" style="width: 5%;">收藏</th>
+                            <th class="p-3 font-bold text-lg" style="width: 12%;">單字 (Word)</th>
+                            <th class="p-3 font-bold text-lg" style="width: 6%;">詞性</th>
+                            <th class="p-3 font-bold text-lg" style="width: 12%;">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold text-lg" style="width: 25%;">例句與翻譯</th>
+                            <th class="p-3 font-bold text-lg" style="width: 15%;">衍生字/家族字</th>
+                            <th class="p-3 font-bold text-lg" style="width: 25%;">常見搭配詞</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1338,38 +1581,55 @@
                 const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-500";
                 html += `
                     <tr class="hover:bg-gray-700/50 transition duration-150">
-                        <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-3 text-center">
+                            <button onclick="window.toggleFavorite(event, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition">
+                                <i class="${heartClass}" id="heart-table-${word}"></i>
+                            </button>
+                        </td>
                         
-                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl group">
+                            ${word}
+                            <button onclick="window.speakAndShowDef(event, '${word}')" class="no-print ml-2 text-violet-400 hover:text-violet-200 transition" title="點擊發音">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
                         </td>
 
                         <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-3">
+                            <div class="text-gray-300 text-lg italic">"${data.example}"</div>
+                            <div class="text-gray-500 text-base mt-1">${data.exampleZh}</div>
+                        </td>
+                        <td class="p-3 text-gray-400 text-base md:text-lg">${data.family}</td>
+                        <td class="p-3 text-gray-400 text-base md:text-lg">${data.collocation}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
             return html;
         }
 
+        // 更新：升級版的列印渲染與最佳化設定
         window.printList = function(type) {
             const printArea = document.getElementById('print-area');
             let content = '';
             
+            // 加入主標題注入
+            const mainTitleHTML = `<h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${ARTICLE_MAIN_TITLE}</h2>`;
+            
             if (type === 'mistakes') {
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        ${mainTitleHTML}
+                        <table class="print-table" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1380,10 +1640,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black;">${item.q.q}</td>
+                                <td style="border: 1px solid black; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1396,31 +1656,39 @@
 
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 10px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        ${mainTitleHTML}
+                        <table class="print-table" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black;">${data.trans}</td>
+                                <td style="border: 1px solid black;">
+                                    <div style="font-style: italic; margin-bottom: 4px;">"${data.example}"</div>
+                                    <div style="color: #4b5563; font-size: 0.9em;">${data.exampleZh}</div>
+                                </td>
+                                <td style="border: 1px solid black;">${data.family}</td>
+                                <td style="border: 1px solid black;">${data.collocation}</td>
                             </tr>
                         `;
                     });
@@ -1595,21 +1863,24 @@
             quizData.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
+                
+                // 更新：題目(Question)字體改為 text-3xl
+                // 更新：選項(Option)容器加上 p-5 內距加大，圓圈圖示加大 (w-12 h-12 text-2xl)，文字改為 text-2xl
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
-                    <div class="space-y-3" id="${item.id}-options">
+                    <p class="font-bold text-gray-200 mb-6 text-3xl">${item.q}</p>
+                    <div class="space-y-4" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-4 font-bold text-gray-400 text-2xl transition-colors shrink-0" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p class="font-bold mb-2" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1660,14 +1931,16 @@
             const statusText = document.getElementById(`${questionId}-status`);
             
             explBox.style.display = 'block';
+            
+            // 更新：解析的對錯提示標題加上 text-2xl
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400";
+                statusText.className = "font-bold mb-2 text-green-400 text-2xl";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400";
+                statusText.className = "font-bold mb-2 text-red-400 text-2xl";
             }
 
             if(!isRestoring) window.saveUserData();
