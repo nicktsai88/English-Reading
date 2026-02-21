@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em;
+            font-size: 1.75em;
             color: #d1d5db;
             background: #1f2937;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #8b5cf6; /* Violet border */
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 6px solid #6366f1; /* Violet border */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
+            width: 98%;
+            max-width: 1600px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -310,11 +310,11 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 20px;
+                padding: 0;
             }
             @page {
-                size: A4 portrait;
-                margin: 2cm;
+                size: A4 landscape;
+                margin: 1cm;
             }
             .no-print {
                 display: none !important;
@@ -504,7 +504,7 @@
             
             <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                <h3 class="text-2xl font-bold text-gray-100 flex items-center">
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
@@ -801,7 +801,7 @@
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
                 const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                el.className = "w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -880,47 +880,343 @@
         let userAnswers = {}; // Store { qID: "Answer" }
         let audioCtx;
 
+        const smartLookupMap = {
+            "plunges": "plunge",
+            "conquests": "conquest",
+            "descended": "descend",
+            "expeditions": "expedition",
+            "adaptations": "adaptation",
+            "organisms": "organism",
+            "pollutants": "pollutant",
+            "origins": "origin",
+            "banned": "ban"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
+
         const vocabulary = {
-            "abyss": { pos: "n.", trans: "深淵", example: "Looking down into the abyss, he felt dizzy." },
-            "inaccessible": { pos: "adj.", trans: "難以接近的", example: "The remote island is inaccessible by boat in winter." },
-            "frontier": { pos: "n.", trans: "邊疆；新領域", example: "Space is often called the final frontier." },
-            "crust": { pos: "n.", trans: "地殼；外殼", example: "The Earth's crust is made of solid rock." },
-            "plunge": { pos: "v.", trans: "驟降；投入", example: "The car plunged off the cliff into the sea." },
-            "perspective": { pos: "n.", trans: "觀點；透視", example: "Traveling gives you a new perspective on life." },
-            "perpetual": { pos: "adj.", trans: "永恆的；長期的", example: "The region lives in perpetual darkness during winter." },
-            "hostile": { pos: "adj.", trans: "惡劣的；敵對的", example: "The desert is a hostile environment for humans." },
-            "conquest": { pos: "n.", trans: "征服", example: "The conquest of Mount Everest was a historic achievement." },
-            "descend": { pos: "v.", trans: "下降", example: "The elevator began to descend to the lobby." },
-            "unprecedented": { pos: "adj.", trans: "史無前例的", example: "The team enjoyed unprecedented success this season." },
-            "expedition": { pos: "n.", trans: "探險；遠征", example: "They planned an expedition to the Amazon rainforest." },
-            "hydrostatic": { pos: "adj.", trans: "靜水壓力的", example: "Submarines must resist immense hydrostatic pressure." },
-            "atmospheric": { pos: "adj.", trans: "大氣的", example: "Atmospheric conditions can affect radio signals." },
-            "equivalent": { pos: "adj.", trans: "等同的", example: "One dollar is roughly equivalent to 150 yen." },
-            "implode": { pos: "v.", trans: "內爆", example: "The weak structure caused the tank to implode." },
-            "penetrate": { pos: "v.", trans: "穿透", example: "The sunlight could not penetrate the thick clouds." },
-            "lethal": { pos: "adj.", trans: "致命的", example: "High doses of radiation can be lethal." },
-            "geologically": { pos: "adv.", trans: "地質上地", example: "The area is geologically unstable due to volcanoes." },
-            "subduction": { pos: "n.", trans: "隱沒作用", example: "Subduction zones are where earthquakes often occur." },
-            "tectonic": { pos: "adj.", trans: "地殼構造的", example: "Tectonic plates move very slowly over time." },
-            "barren": { pos: "adj.", trans: "貧瘠的", example: "The land was barren and could not support crops." },
-            "thriving": { pos: "adj.", trans: "繁榮的；茂盛的", example: "The coral reef is a thriving ecosystem." },
-            "ecosystem": { pos: "n.", trans: "生態系統", example: "Pollution damages the delicate marine ecosystem." },
-            "adaptation": { pos: "n.", trans: "適應", example: "Camouflage is an important adaptation for survival." },
-            "photosynthesis": { pos: "n.", trans: "光合作用", example: "Plants use photosynthesis to create energy from sunlight." },
-            "organism": { pos: "n.", trans: "生物；有機體", example: "Bacteria are microscopic organisms." },
-            "translucent": { pos: "adj.", trans: "半透明的", example: "The translucent glass let in some light but blurred the view." },
-            "cartilage": { pos: "n.", trans: "軟骨", example: "Sharks have skeletons made of cartilage, not bone." },
-            "withstand": { pos: "v.", trans: "承受；抵擋", example: "The bridge was built to withstand strong winds." },
-            "resilient": { pos: "adj.", trans: "有韌性的；適應力強的", example: "Children are often more resilient than adults." },
-            "isolated": { pos: "adj.", trans: "孤立的", example: "The village is isolated from the rest of the world." },
-            "immune": { pos: "adj.", trans: "免疫的；不受影響的", example: "No one is immune to the effects of aging." },
-            "disturbing": { pos: "adj.", trans: "令人不安的", example: "The news report contained some disturbing images." },
-            "pollutant": { pos: "n.", trans: "污染物", example: "Factories release chemical pollutants into the river." },
-            "ban": { pos: "v.", trans: "禁止", example: "The city decided to ban smoking in public parks." },
-            "food chain": { pos: "n.", trans: "食物鏈", example: "Plankton is at the bottom of the marine food chain." },
-            "origin": { pos: "n.", trans: "起源", example: "The origin of the universe is still studied by scientists." },
-            "essential": { pos: "adj.", trans: "必要的", example: "Water is essential for all life on Earth." },
-            "grim": { pos: "adj.", trans: "嚴酷的；令人沮喪的", example: "The future looks grim if we don't solve this problem." }
+            "abyss": { 
+                pos: "n.", 
+                trans: "深淵", 
+                example: "Looking down into the abyss, he felt dizzy.", 
+                exampleZh: "(向下望著深淵，他感到一陣暈眩。)",
+                family: "abyssal (adj. 深淵的)",
+                collocation: "edge of the abyss (深淵邊緣)<br>yawning abyss (張開大口的深淵)"
+            },
+            "adaptation": { 
+                pos: "n.", 
+                trans: "適應", 
+                example: "Camouflage is an important adaptation for survival.", 
+                exampleZh: "(偽裝是生存中一項重要的適應機制。)",
+                family: "adapt (v. 適應)<br>adaptable (adj. 適應力強的)",
+                collocation: "biological adaptation (生物適應)<br>make adaptations (做出調整)"
+            },
+            "atmospheric": { 
+                pos: "adj.", 
+                trans: "大氣的", 
+                example: "Atmospheric conditions can affect radio signals.", 
+                exampleZh: "(大氣狀況會影響無線電訊號。)",
+                family: "atmosphere (n. 大氣/氣氛)",
+                collocation: "atmospheric pressure (大氣壓力)<br>atmospheric science (大氣科學)"
+            },
+            "ban": { 
+                pos: "v.", 
+                trans: "禁止", 
+                example: "The city decided to ban smoking in public parks.", 
+                exampleZh: "(這座城市決定禁止在公共公園吸菸。)",
+                family: "ban (n. 禁令)",
+                collocation: "lift a ban (解除禁令)<br>total ban (全面禁止)"
+            },
+            "barren": { 
+                pos: "adj.", 
+                trans: "貧瘠的", 
+                example: "The land was barren and could not support crops.", 
+                exampleZh: "(這塊土地很貧瘠，無法種植作物。)",
+                family: "barrenness (n. 荒蕪/貧瘠)",
+                collocation: "barren land (荒地)<br>barren desert (荒涼的沙漠)"
+            },
+            "cartilage": { 
+                pos: "n.", 
+                trans: "軟骨", 
+                example: "Sharks have skeletons made of cartilage, not bone.", 
+                exampleZh: "(鯊魚的骨架是由軟骨而非骨頭組成的。)",
+                family: "cartilaginous (adj. 軟骨的)",
+                collocation: "joint cartilage (關節軟骨)<br>ear cartilage (耳軟骨)"
+            },
+            "conquest": { 
+                pos: "n.", 
+                trans: "征服", 
+                example: "The conquest of Mount Everest was a historic achievement.", 
+                exampleZh: "(征服聖母峰是一項歷史性的成就。)",
+                family: "conquer (v. 征服)<br>conqueror (n. 征服者)",
+                collocation: "military conquest (軍事征服)<br>make a conquest (進行征服)"
+            },
+            "crust": { 
+                pos: "n.", 
+                trans: "地殼；外殼", 
+                example: "The Earth's crust is made of solid rock.", 
+                exampleZh: "(地殼是由堅硬的岩石構成的。)",
+                family: "crusty (adj. 有硬殼的)",
+                collocation: "Earth's crust (地殼)<br>bread crust (麵包皮)"
+            },
+            "descend": { 
+                pos: "v.", 
+                trans: "下降", 
+                example: "The elevator began to descend to the lobby.", 
+                exampleZh: "(電梯開始降往大廳。)",
+                family: "descent (n. 下降)<br>descendant (n. 後裔)",
+                collocation: "descend from (起源於/由...傳下)<br>slowly descend (緩緩下降)"
+            },
+            "disturbing": { 
+                pos: "adj.", 
+                trans: "令人不安的", 
+                example: "The news report contained some disturbing images.", 
+                exampleZh: "(新聞報導包含了一些令人不安的影像。)",
+                family: "disturb (v. 打擾)<br>disturbance (n. 干擾)",
+                collocation: "disturbing news (令人不安的消息)<br>deeply disturbing (深感不安的)"
+            },
+            "ecosystem": { 
+                pos: "n.", 
+                trans: "生態系統", 
+                example: "Pollution damages the delicate marine ecosystem.", 
+                exampleZh: "(污染破壞了脆弱的海洋生態系統。)",
+                family: "ecological (adj. 生態的)<br>ecology (n. 生態學)",
+                collocation: "fragile ecosystem (脆弱的生態系統)<br>balanced ecosystem (平衡的生態系統)"
+            },
+            "equivalent": { 
+                pos: "adj.", 
+                trans: "等同的", 
+                example: "One dollar is roughly equivalent to 150 yen.", 
+                exampleZh: "(一美元大約等同於 150 日圓。)",
+                family: "equivalence (n. 對等)",
+                collocation: "be equivalent to (等同於...)<br>functional equivalent (功能對等物)"
+            },
+            "essential": { 
+                pos: "adj.", 
+                trans: "必要的", 
+                example: "Water is essential for all life on Earth.", 
+                exampleZh: "(水對地球上所有的生命都是必要的。)",
+                family: "essence (n. 本質/精華)<br>essentially (adv. 本質上)",
+                collocation: "play an essential role (扮演必要角色)<br>essential nutrients (必需營養素)"
+            },
+            "expedition": { 
+                pos: "n.", 
+                trans: "探險；遠征", 
+                example: "They planned an expedition to the Amazon rainforest.", 
+                exampleZh: "(他們計畫前往亞馬遜雨林探險。)",
+                family: "expedite (v. 加快)<br>expeditionary (adj. 遠征的)",
+                collocation: "scientific expedition (科學考察)<br>go on an expedition (去探險)"
+            },
+            "food chain": { 
+                pos: "n.", 
+                trans: "食物鏈", 
+                example: "Plankton is at the bottom of the marine food chain.", 
+                exampleZh: "(浮游生物位於海洋食物鏈的最底層。)",
+                family: "(由 food + chain 組成)",
+                collocation: "top of the food chain (食物鏈頂端)<br>marine food chain (海洋食物鏈)"
+            },
+            "frontier": { 
+                pos: "n.", 
+                trans: "邊疆；新領域", 
+                example: "Space is often called the final frontier.", 
+                exampleZh: "(太空常被稱為最後的疆界。)",
+                family: "(無特別常見衍生字)",
+                collocation: "push the frontiers (開拓新領域)<br>scientific frontier (科學前沿)"
+            },
+            "geologically": { 
+                pos: "adv.", 
+                trans: "地質上地", 
+                example: "The area is geologically unstable due to volcanoes.", 
+                exampleZh: "(由於火山原因，該地區在地質上是不穩定的。)",
+                family: "geology (n. 地質學)<br>geological (adj. 地質的)",
+                collocation: "geologically active (地質活動活躍的)<br>geologically unstable (地質不穩定的)"
+            },
+            "grim": { 
+                pos: "adj.", 
+                trans: "嚴酷的；令人沮喪的", 
+                example: "The future looks grim if we don't solve this problem.", 
+                exampleZh: "(如果我們不解決這個問題，未來看起來很嚴峻。)",
+                family: "grimly (adv. 嚴肅地/冷酷地)",
+                collocation: "grim reality (嚴酷的現實)<br>grim face (嚴肅的臉色)"
+            },
+            "hostile": { 
+                pos: "adj.", 
+                trans: "惡劣的；敵對的", 
+                example: "The desert is a hostile environment for humans.", 
+                exampleZh: "(沙漠對人類來說是個惡劣的環境。)",
+                family: "hostility (n. 敵意)",
+                collocation: "hostile environment (惡劣環境)<br>hostile takeover (惡意併購)"
+            },
+            "hydrostatic": { 
+                pos: "adj.", 
+                trans: "靜水壓力的", 
+                example: "Submarines must resist immense hydrostatic pressure.", 
+                exampleZh: "(潛水艇必須抵擋巨大的靜水壓力。)",
+                family: "hydrostatics (n. 流體靜力學)",
+                collocation: "hydrostatic pressure (靜水壓力)<br>hydrostatic testing (水壓測試)"
+            },
+            "immune": { 
+                pos: "adj.", 
+                trans: "免疫的；不受影響的", 
+                example: "No one is immune to the effects of aging.", 
+                exampleZh: "(沒有人能對老化的影響免疫。)",
+                family: "immunity (n. 免疫力)<br>immunize (v. 使免疫)",
+                collocation: "immune system (免疫系統)<br>be immune to (對...免疫)"
+            },
+            "implode": { 
+                pos: "v.", 
+                trans: "內爆", 
+                example: "The weak structure caused the tank to implode.", 
+                exampleZh: "(脆弱的結構導致儲槽內爆。)",
+                family: "implosion (n. 內爆)",
+                collocation: "implode from pressure (因壓力內爆)<br>suddenly implode (突然內爆)"
+            },
+            "inaccessible": { 
+                pos: "adj.", 
+                trans: "難以接近的", 
+                example: "The remote island is inaccessible by boat in winter.", 
+                exampleZh: "(這座偏遠島嶼在冬天無法乘船到達。)",
+                family: "access (v./n. 進入)<br>accessible (adj. 可進入的)",
+                collocation: "remain inaccessible (依然難以進入)<br>virtually inaccessible (幾乎無法到達)"
+            },
+            "isolated": { 
+                pos: "adj.", 
+                trans: "孤立的", 
+                example: "The village is isolated from the rest of the world.", 
+                exampleZh: "(這個村莊與世隔絕。)",
+                family: "isolate (v. 孤立)<br>isolation (n. 隔離)",
+                collocation: "isolated area (孤立地區)<br>socially isolated (社交孤立)"
+            },
+            "lethal": { 
+                pos: "adj.", 
+                trans: "致命的", 
+                example: "High doses of radiation can be lethal.", 
+                exampleZh: "(高劑量的輻射可能是致命的。)",
+                family: "lethality (n. 致命性)",
+                collocation: "lethal weapon (致命武器)<br>lethal dose (致死劑量)"
+            },
+            "organism": { 
+                pos: "n.", 
+                trans: "生物；有機體", 
+                example: "Bacteria are microscopic organisms.", 
+                exampleZh: "(細菌是微小的生物。)",
+                family: "organic (adj. 有機的)<br>organize (v. 組織)",
+                collocation: "living organism (生物/活體)<br>microscopic organism (微小生物)"
+            },
+            "origin": { 
+                pos: "n.", 
+                trans: "起源", 
+                example: "The origin of the universe is still studied by scientists.", 
+                exampleZh: "(宇宙的起源仍由科學家研究中。)",
+                family: "original (adj. 原創的)<br>originate (v. 起源於)",
+                collocation: "country of origin (原產國)<br>point of origin (起點/起源點)"
+            },
+            "penetrate": { 
+                pos: "v.", 
+                trans: "穿透", 
+                example: "The sunlight could not penetrate the thick clouds.", 
+                exampleZh: "(陽光無法穿透厚雲層。)",
+                family: "penetration (n. 穿透)<br>penetrating (adj. 銳利的/滲透的)",
+                collocation: "penetrate the surface (穿透表面)<br>penetrate the market (打入市場)"
+            },
+            "perpetual": { 
+                pos: "adj.", 
+                trans: "永恆的；長期的", 
+                example: "The region lives in perpetual darkness during winter.", 
+                exampleZh: "(該地區在冬季處於永恆的黑暗中。)",
+                family: "perpetually (adv. 永久地)<br>perpetuate (v. 使永存)",
+                collocation: "perpetual motion (永恆運動)<br>perpetual fear (長期的恐懼)"
+            },
+            "perspective": { 
+                pos: "n.", 
+                trans: "觀點；透視", 
+                example: "Traveling gives you a new perspective on life.", 
+                exampleZh: "(旅行能帶給你新的人生觀。)",
+                family: "(無常見衍生字)",
+                collocation: "gain a new perspective (獲得新觀點)<br>historical perspective (歷史觀點)"
+            },
+            "photosynthesis": { 
+                pos: "n.", 
+                trans: "光合作用", 
+                example: "Plants use photosynthesis to create energy from sunlight.", 
+                exampleZh: "(植物利用光合作用將陽光轉化為能量。)",
+                family: "photosynthetic (adj. 光合作用的)",
+                collocation: "process of photosynthesis (光合作用過程)<br>rate of photosynthesis (光合作用率)"
+            },
+            "plunge": { 
+                pos: "v.", 
+                trans: "驟降；投入", 
+                example: "The car plunged off the cliff into the sea.", 
+                exampleZh: "(汽車從懸崖墜入大海。)",
+                family: "(無常見衍生字)",
+                collocation: "plunge into (投入/跳入)<br>take the plunge (冒險嘗試/採取大膽行動)"
+            },
+            "pollutant": { 
+                pos: "n.", 
+                trans: "污染物", 
+                example: "Factories release chemical pollutants into the river.", 
+                exampleZh: "(工廠向河流排放化學污染物。)",
+                family: "pollute (v. 污染)<br>pollution (n. 污染)",
+                collocation: "harmful pollutants (有害污染物)<br>air pollutants (空氣污染物)"
+            },
+            "resilient": { 
+                pos: "adj.", 
+                trans: "有韌性的；適應力強的", 
+                example: "Children are often more resilient than adults.", 
+                exampleZh: "(兒童通常比成年人更有韌性。)",
+                family: "resilience (n. 韌性/彈性)",
+                collocation: "resilient to change (適應變化的)<br>resilient economy (具韌性的經濟)"
+            },
+            "subduction": { 
+                pos: "n.", 
+                trans: "隱沒作用", 
+                example: "Subduction zones are where earthquakes often occur.", 
+                exampleZh: "(隱沒帶是經常發生地震的地方。)",
+                family: "subduct (v. 隱沒)",
+                collocation: "subduction zone (隱沒帶)<br>tectonic subduction (板塊隱沒)"
+            },
+            "tectonic": { 
+                pos: "adj.", 
+                trans: "地殼構造的", 
+                example: "Tectonic plates move very slowly over time.", 
+                exampleZh: "(地殼板塊隨時間非常緩慢地移動。)",
+                family: "tectonics (n. 構造學)",
+                collocation: "tectonic plates (板塊)<br>tectonic shift (地殼變動/重大轉變)"
+            },
+            "thriving": { 
+                pos: "adj.", 
+                trans: "繁榮的；茂盛的", 
+                example: "The coral reef is a thriving ecosystem.", 
+                exampleZh: "(珊瑚礁是一個繁盛的生態系統。)",
+                family: "thrive (v. 繁榮/蓬勃發展)",
+                collocation: "thriving business (興隆的生意)<br>thriving community (繁榮的社區)"
+            },
+            "translucent": { 
+                pos: "adj.", 
+                trans: "半透明的", 
+                example: "The translucent glass let in some light but blurred the view.", 
+                exampleZh: "(半透明玻璃透進一些光線，但模糊了視線。)",
+                family: "translucency (n. 半透明)",
+                collocation: "translucent skin (半透明的肌膚)<br>translucent paper (描圖紙/半透明紙)"
+            },
+            "unprecedented": { 
+                pos: "adj.", 
+                trans: "史無前例的", 
+                example: "The team enjoyed unprecedented success this season.", 
+                exampleZh: "(該團隊在本賽季獲得了史無前例的成功。)",
+                family: "precedent (n. 先例)",
+                collocation: "unprecedented growth (史無前例的成長)<br>unprecedented event (前所未有的事件)"
+            },
+            "withstand": { 
+                pos: "v.", 
+                trans: "承受；抵擋", 
+                example: "The bridge was built to withstand strong winds.", 
+                exampleZh: "(這座橋是為了承受強風而建造的。)",
+                family: "(無常見衍生字)",
+                collocation: "withstand pressure (承受壓力)<br>withstand the test of time (經得起時間考驗)"
+            }
         };
 
         const articleData = [
@@ -1193,44 +1489,26 @@
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                // Keep the original punctuation for display
                 const originalWord = word;
-                // Remove punctuation for lookup
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
-                
-                // --- Smart Lookup Logic: Word Mapping for Variations ---
-                const wordMapping = {
-                    "plunges": "plunge",
-                    "conquests": "conquest",
-                    "descended": "descend",
-                    "expeditions": "expedition",
-                    "adaptations": "adaptation",
-                    "organisms": "organism",
-                    "pollutants": "pollutant",
-                    "origins": "origin",
-                    "banned": "ban"
-                };
+                // 更精準的去標點邏輯（保留連字號）
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
+                const rootWord = getSmartLookupRoot(cleanWord);
 
-                let targetKey = cleanWord;
-                if (wordMapping[cleanWord]) {
-                    targetKey = wordMapping[cleanWord];
-                }
-
-                if (vocabulary[targetKey]) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
-                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
+                        <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"<br><span class="text-sm text-gray-500 not-italic">${data.exampleZh}</span></div>
                     </span></span>`;
                 }
                 return originalWord;
@@ -1238,7 +1516,7 @@
         }
         
         window.speakAndShowDef = function(e, word) {
-            e.stopPropagation(); 
+            if (e) e.stopPropagation(); 
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
@@ -1347,11 +1625,13 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
-                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                            <th class="p-3 font-bold w-[5%] text-lg">收藏</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-[6%] text-lg">詞性</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">例句與翻譯 (Example & Translation)</th>
+                            <th class="p-3 font-bold w-[15%] text-lg">衍生字/家族字 (Word Family)</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">常見搭配詞 (Collocation)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1365,13 +1645,20 @@
                     <tr class="hover:bg-gray-700/50 transition duration-150">
                         <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
                         
-                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl group">
+                            <span class="cursor-pointer hover:text-violet-200 transition" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
+                                ${word}
+                            </span>
+                            <button onclick="window.speakAndShowDef(event, '${word}')" class="no-print ml-2 text-violet-300 hover:text-white focus:outline-none transition" title="點擊發音 (Click to listen)">
+                                <i class="fas fa-volume-up text-base opacity-75 group-hover:opacity-100"></i>
+                            </button>
                         </td>
 
                         <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-3 text-gray-400 text-lg italic">"${data.example}"<br><span class="text-gray-500 text-base not-italic">${data.exampleZh}</span></td>
+                        <td class="p-3 text-gray-300 text-base">${data.family}</td>
+                        <td class="p-3 text-gray-300 text-base">${data.collocation}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1382,19 +1669,22 @@
             const printArea = document.getElementById('print-area');
             let content = '';
             
+            const articleTitleHtml = `<h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">The Mariana Trench: Bottom of the World</h2>`;
+
             if (type === 'mistakes') {
                 content = `
-                    <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                    <div style="font-family: 'Times New Roman', serif; color: black; font-size: 15px !important;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        ${articleTitleHtml}
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1405,10 +1695,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1420,32 +1710,37 @@
                 wordList.sort();
 
                 content = `
-                    <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                    <div style="font-family: 'Times New Roman', serif; color: black; font-size: 15px !important;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        ${articleTitleHtml}
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-style: italic;">"${data.example}"<br><span style="font-style: normal; color: #4b5563;">${data.exampleZh}</span></td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.family}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.collocation}</td>
                             </tr>
                         `;
                     });
@@ -1621,20 +1916,20 @@
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <p class="font-bold text-gray-200 mb-4 text-3xl">${item.q}</p>
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p class="font-bold mb-1 text-2xl" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1688,11 +1983,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400";
+                statusText.className = "font-bold mb-1 text-green-400 text-2xl";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400";
+                statusText.className = "font-bold mb-1 text-red-400 text-2xl";
             }
 
             if(!isRestoring) window.saveUserData();
