@@ -57,12 +57,12 @@
         .explanation-box {
             display: none; /* Hidden by default */
             margin-top: 15px;
-            font-size: 1.3em;
+            font-size: 1.75em;
             color: #d1d5db;
             background: #1f2937;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #8b5cf6; /* Violet border */
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 6px solid #6366f1; /* Changed to requested color width */
             animation: slideDown 0.3s ease-out;
             line-height: 1.6;
         }
@@ -207,8 +207,8 @@
         .modal-content {
             background: #1f2937;
             border-radius: 16px;
-            width: 90%;
-            max-width: 900px;
+            width: 98%;
+            max-width: 1600px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -310,11 +310,11 @@
                 top: 0;
                 width: 100%;
                 background: white;
-                padding: 20px;
+                padding: 0; /* 最大化可視範圍 */
             }
             @page {
-                size: A4 portrait;
-                margin: 2cm;
+                size: A4 landscape;
+                margin: 1cm;
             }
             .no-print {
                 display: none !important;
@@ -504,7 +504,7 @@
             
             <!-- Quiz Header with Restart Button -->
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-gray-700 pb-4">
-                <h3 class="text-xl font-bold text-gray-100 flex items-center">
+                <h3 class="text-2xl font-bold text-gray-100 flex items-center">
                     <span class="bg-violet-900 text-violet-300 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-violet-700">
                         <i class="fas fa-pen"></i>
                     </span>
@@ -633,6 +633,7 @@
         // --- Configuration ---
         const COLLECTION_NAME = 'English-Reading-121';
         const DOC_GLOBAL = 'global';
+        const ARTICLE_TITLE = "The Bugatti Chiron: A Masterpiece of Engineering";
 
         // Firebase Config
         const firebaseConfig = {
@@ -647,8 +648,8 @@
 
         let app, db, auth;
         let isFirebaseReady = false;
-        let currentUser = null; // Store current user info {name: string}
-        let unsubscribeUser = null; // Listener for specific user data
+        let currentUser = null; 
+        let unsubscribeUser = null; 
 
         // --- Firebase Initialization ---
         async function initFirebase() {
@@ -764,7 +765,6 @@
             });
         }
 
-        // Exposed function to save data
         window.saveUserData = async () => {
             if (!currentUser || !isFirebaseReady) return;
             updateConnectionStatus('loading', '同步中...');
@@ -775,7 +775,7 @@
                     favorites: Array.from(favoriteWords),
                     mistakes: wrongAnswers,
                     progressIndex: currentSentenceIndex,
-                    quizAnswers: userAnswers, // Save the map of answers
+                    quizAnswers: userAnswers, 
                     lastUpdated: new Date()
                 }, { merge: true });
             } catch (e) {
@@ -784,7 +784,6 @@
             }
         };
 
-        // Reset Quiz Data
         window.resetQuiz = async () => {
             if(!confirm("確定要重新開始測驗嗎？這將會清除您的作答紀錄與分數。(Are you sure you want to restart the quiz?)")) return;
             
@@ -800,8 +799,8 @@
                 el.checked = false;
             });
             document.querySelectorAll('.quiz-option div').forEach(el => {
-                const key = el.id.split('-').pop(); // get A, B, C...
-                el.className = "w-10 h-10 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors";
+                const key = el.id.split('-').pop(); 
+                el.className = "w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl";
                 el.innerHTML = key;
             });
             document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'none');
@@ -847,11 +846,11 @@
             const dot = container.querySelector('.status-dot');
             const label = container.querySelector('.status-text');
             
-            dot.className = 'status-dot'; // reset
-            dot.classList.add(status); // loading, success, error
+            dot.className = 'status-dot'; 
+            dot.classList.add(status); 
             label.innerText = text;
 
-            container.className = 'status-container'; // reset
+            container.className = 'status-container'; 
             container.classList.add(status);
         }
 
@@ -877,50 +876,51 @@
         let userScore = 0;
         let favoriteWords = new Set();
         let wrongAnswers = []; 
-        let userAnswers = {}; // Store { qID: "Answer" }
+        let userAnswers = {}; 
         let audioCtx;
 
+        // Expanded Vocabulary Data
         const vocabulary = {
-            "pinnacle": { pos: "n.", trans: "巔峰；頂點", example: "Winning the gold medal was the pinnacle of her career." },
-            "successor": { pos: "n.", trans: "繼任者；接班人", example: "The prince is the successor to the throne." },
-            "unparalleled": { pos: "adj.", trans: "無與倫比的", example: "The artist showed unparalleled talent in his painting." },
-            "exclusive": { pos: "adj.", trans: "獨有的；奢華的", example: "The club is very exclusive and hard to join." },
-            "compromise": { pos: "v.", trans: "妥協；讓步", example: "We cannot compromise on safety standards." },
-            "magnitude": { pos: "n.", trans: "規模；重要性", example: "They didn't realize the magnitude of the problem." },
-            "staggering": { pos: "adj.", trans: "驚人的", example: "The construction cost a staggering amount of money." },
-            "equivalent": { pos: "adj.", trans: "等同的", example: "One meter is equivalent to 100 centimeters." },
-            "configuration": { pos: "n.", trans: "配置；結構", example: "The computer has a unique memory configuration." },
-            "displacement": { pos: "n.", trans: "排氣量；位移", example: "The engine has a large displacement for more power." },
-            "sophisticated": { pos: "adj.", trans: "精密的；複雜的", example: "The plane uses highly sophisticated technology." },
-            "radiator": { pos: "n.", trans: "散熱器", example: "The car overheated because the radiator was broken." },
-            "accelerate": { pos: "v.", trans: "加速", example: "You need to accelerate to pass the truck." },
-            "distinctive": { pos: "adj.", trans: "獨特的", example: "Zebras have distinctive black and white stripes." },
-            "channel": { pos: "v.", trans: "引導；輸送", example: "The ditch helps to channel water away from the house." },
-            "aerodynamics": { pos: "n.", trans: "空氣動力學", example: "Good aerodynamics helps cars save fuel." },
-            "crucial": { pos: "adj.", trans: "關鍵的", example: "Water is crucial for survival." },
-            "flush": { pos: "adj.", trans: "齊平的", example: "The door handle sits flush with the door panel." },
-            "resistance": { pos: "n.", trans: "阻力；抵抗", example: "Air resistance slows down the moving car." },
-            "airborne": { pos: "adj.", trans: "升空的；飛行中的", example: "The plane became airborne after a long run." },
-            "fascinating": { pos: "adj.", trans: "迷人的", example: "Space travel is a fascinating subject." },
-            "limit": { pos: "v.", trans: "限制", example: "Please limit your speech to five minutes." },
-            "potential": { pos: "n.", trans: "潛力", example: "She has the potential to be a great leader." },
-            "insert": { pos: "v.", trans: "插入", example: "Please insert your coin into the machine." },
-            "activate": { pos: "v.", trans: "啟動", example: "Press the button to activate the alarm." },
-            "suspension": { pos: "n.", trans: "懸吊系統", example: "The car's suspension absorbs bumps in the road." },
-            "stiffen": { pos: "v.", trans: "變硬；僵硬", example: "The mixture will stiffen as it cools down." },
-            "function": { pos: "v.", trans: "運作", example: "Does the machine function properly?" },
-            "ritual": { pos: "n.", trans: "儀式；慣例", example: "Morning coffee is part of my daily ritual." },
-            "velocity": { pos: "n.", trans: "速度", example: "The rocket reached a high velocity quickly." },
-            "undertaking": { pos: "n.", trans: "任務；事業", example: "Building the bridge was a massive undertaking." },
-            "sanctuary": { pos: "n.", trans: "聖地；避難所", example: "My bedroom is my personal sanctuary." },
-            "strip": { pos: "v.", trans: "剝去；拆除", example: "They decided to strip the old wallpaper off the wall." },
-            "customize": { pos: "v.", trans: "客製化", example: "You can customize the color of your new shoes." },
-            "testament": { pos: "n.", trans: "證明；見證", example: "The monument is a testament to their bravery." },
-            "marvel": { pos: "n.", trans: "奇蹟", example: "The pyramids are a marvel of ancient engineering." },
-            "circulate": { pos: "v.", trans: "循環", example: "The fan helps circulate air in the room." },
-            "unleash": { pos: "v.", trans: "釋放", example: "The storm unleashed its fury on the coast." },
-            "excessive": { pos: "adj.", trans: "過度的", example: "Excessive speed is a major cause of accidents." },
-            "feature": { pos: "v.", trans: "以...為特色", example: "The new movie will feature huge explosions." }
+            "accelerate": { pos: "v.", trans: "加速", example: "You need to accelerate to pass the truck.", exampleZh: "你需要加速才能超越那輛卡車。", family: "acceleration (n. 加速)<br>accelerator (n. 加速器/油門)", collocation: "accelerate growth (加速增長)<br>accelerate rapidly (迅速加速)" },
+            "activate": { pos: "v.", trans: "啟動", example: "Press the button to activate the alarm.", exampleZh: "按下按鈕以啟動警報。", family: "activation (n. 啟動)<br>active (adj. 活躍的)", collocation: "activate an account (開通帳號)<br>voice-activated (語音啟動的)" },
+            "aerodynamics": { pos: "n.", trans: "空氣動力學", example: "Good aerodynamics helps cars save fuel.", exampleZh: "良好的空氣動力學設計有助於汽車節省燃料。", family: "aerodynamic (adj. 空氣動力學的)", collocation: "principles of aerodynamics (空氣動力學原理)<br>improve aerodynamics (改善空氣動力特性)" },
+            "airborne": { pos: "adj.", trans: "升空的；飛行中的", example: "The plane became airborne after a long run.", exampleZh: "飛機在長距離滑行後升空了。", family: "(由 air + borne 組成)", collocation: "become airborne (升空)<br>airborne bacteria (空氣傳播的細菌)" },
+            "channel": { pos: "v.", trans: "引導；輸送", example: "The ditch helps to channel water away from the house.", exampleZh: "溝渠有助於將水引離房子。", family: "channel (n. 頻道/管道)", collocation: "channel energy into (將精力投入於...)<br>official channels (官方管道)" },
+            "circulate": { pos: "v.", trans: "循環", example: "The fan helps circulate air in the room.", exampleZh: "電扇有助於房內的空氣循環。", family: "circulation (n. 循環/發行量)", collocation: "blood circulation (血液循環)<br>circulate a rumor (散布謠言)" },
+            "compromise": { pos: "v.", trans: "妥協；讓步", example: "We cannot compromise on safety standards.", exampleZh: "我們不能在安全標準上做出讓步。", family: "compromise (n. 妥協)", collocation: "reach a compromise (達成妥協)<br>compromise one's integrity (損害某人的操守)" },
+            "configuration": { pos: "n.", trans: "配置；結構", example: "The computer has a unique memory configuration.", exampleZh: "這台電腦有獨特的記憶體配置。", family: "configure (v. 配置/設定)", collocation: "system configuration (系統配置)<br>basic configuration (基本結構)" },
+            "crucial": { pos: "adj.", trans: "關鍵的", example: "Water is crucial for survival.", exampleZh: "水對於生存至關重要。", family: "crucially (adv. 關鍵地)", collocation: "play a crucial role (扮演關鍵角色)<br>crucial decision (重大決策)" },
+            "customize": { pos: "v.", trans: "客製化", example: "You can customize the color of your new shoes.", exampleZh: "你可以客製化新鞋的顏色。", family: "customer (n. 顧客)<br>custom (adj. 訂製的)", collocation: "fully customized (完全客製化的)<br>customize a settings (自訂設定)" },
+            "displacement": { pos: "n.", trans: "排氣量；位移", example: "The engine has a large displacement for more power.", exampleZh: "這顆引擎排氣量很大，以提供更強的動力。", family: "displace (v. 取代/移位)", collocation: "engine displacement (引擎排氣量)<br>mass displacement (大規模流離失所)" },
+            "distinctive": { pos: "adj.", trans: "獨特的", example: "Zebras have distinctive black and white stripes.", exampleZh: "斑馬有獨特的黑白條紋。", family: "distinction (n. 區別)<br>distinct (adj. 明確的)", collocation: "distinctive feature (獨特的特徵)<br>distinctive smell (獨特的氣味)" },
+            "equivalent": { pos: "adj.", trans: "等同的", example: "One meter is equivalent to 100 centimeters.", exampleZh: "一公尺等同於一百公分。", family: "equivalence (n. 對等)", collocation: "be equivalent to (等同於...)<br>functional equivalent (功能對等物)" },
+            "excessive": { pos: "adj.", trans: "過度的", example: "Excessive speed is a major cause of accidents.", exampleZh: "超速是造成事故的主要原因。", family: "excess (n. 過量/過度)<br>exceed (v. 超過)", collocation: "excessive drinking (酗酒/過度飲酒)<br>excessive force (過度武力)" },
+            "exclusive": { pos: "adj.", trans: "獨有的；奢華的", example: "The club is very exclusive and hard to join.", exampleZh: "這間俱樂部非常高端（排外），很難加入。", family: "exclude (v. 排除)<br>exclusively (adv. 專門地)", collocation: "exclusive rights (獨家權利)<br>exclusive interview (獨家專訪)" },
+            "fascinating": { pos: "adj.", trans: "迷人的", example: "Space travel is a fascinating subject.", exampleZh: "太空旅行是一個迷人的主題。", family: "fascinate (v. 使著迷)<br>fascination (n. 入迷)", collocation: "find something fascinating (覺得某事很迷人)<br>fascinating story (引人入勝的故事)" },
+            "feature": { pos: "v.", trans: "以...為特色", example: "The new movie will feature huge explosions.", exampleZh: "這部新電影將以巨大的爆炸場面為特色。", family: "feature (n. 特徵/特色)", collocation: "feature prominent guests (請到重量級嘉賓)<br>be featured in (在...中演出/刊登)" },
+            "flush": { pos: "adj.", trans: "齊平的", example: "The door handle sits flush with the door panel.", exampleZh: "門把手與門板齊平。", family: "(常見動詞義：臉紅/沖水)", collocation: "flush mount (嵌入式安裝)<br>be flush with (與...齊平)" },
+            "function": { pos: "v.", trans: "運作", example: "Does the machine function properly?", exampleZh: "這台機器運作正常嗎？", family: "functional (adj. 功能性的)<br>malfunction (n./v. 故障)", collocation: "function normally (正常運作)<br>social function (社會功能)" },
+            "insert": { pos: "v.", trans: "插入", example: "Please insert your coin into the machine.", exampleZh: "請將硬幣插入機器中。", family: "insertion (n. 插入)<br>insert (n. 插入物)", collocation: "insert a key (插入鑰匙)<br>insert a comment (插入評論)" },
+            "limit": { pos: "v.", trans: "限制", example: "Please limit your speech to five minutes.", exampleZh: "請將您的演講限制在五分鐘內。", family: "limit (n. 限制/極限)<br>limited (adj. 有限的)", collocation: "limit the scope (限制範圍)<br>limit access (限制進入)" },
+            "magnitude": { pos: "n.", trans: "規模；重要性", example: "They didn't realize the magnitude of the problem.", exampleZh: "他們沒有意識到問題的嚴重性/規模。", family: "magnify (v. 放大)", collocation: "order of magnitude (數量級)<br>magnitude of an earthquake (地震震級)" },
+            "marvel": { pos: "n.", trans: "奇蹟", example: "The pyramids are a marvel of ancient engineering.", exampleZh: "金字塔是古代工程學的奇蹟。", family: "marvelous (adj. 棒極了的)<br>marvel (v. 驚嘆)", collocation: "engineering marvel (工程奇蹟)<br>marvel at (對...感到驚嘆)" },
+            "pinnacle": { pos: "n.", trans: "巔峰；頂點", example: "Winning the gold medal was the pinnacle of her career.", exampleZh: "贏得金牌是她職業生涯的巔峰。", family: "(無常見衍生字)", collocation: "reach the pinnacle of (達到...的頂峰)<br>pinnacle of success (成功的頂點)" },
+            "potential": { pos: "n.", trans: "潛力", example: "She has the potential to be a great leader.", exampleZh: "她有成為偉大領導者的潛力。", family: "potentially (adv. 可能地)", collocation: "reach one's potential (發揮潛力)<br>market potential (市場潛力)" },
+            "radiator": { pos: "n.", trans: "散熱器", example: "The car overheated because the radiator was broken.", exampleZh: "因為散熱器壞了，汽車過熱了。", family: "radiate (v. 輻射/散發)<br>radiation (n. 輻射)", collocation: "radiator fan (散熱風扇)<br>central heating radiator (暖氣片)" },
+            "resistance": { pos: "n.", trans: "阻力；抵抗", example: "Air resistance slows down the moving car.", exampleZh: "空氣阻力減慢了行駛中汽車的速度。", family: "resist (v. 抵抗)<br>resistant (adj. 有抵抗力的)", collocation: "drag resistance (阻力)<br>resistance to change (對改變的抵制)" },
+            "ritual": { pos: "n.", trans: "儀式；慣例", example: "Morning coffee is part of my daily ritual.", exampleZh: "早晨喝咖啡是我日常慣例的一部分。", family: "ritualistic (adj. 儀式性的)", collocation: "daily ritual (日常慣例)<br>religious ritual (宗教儀式)" },
+            "sanctuary": { pos: "n.", trans: "聖地；避難所", example: "My bedroom is my personal sanctuary.", exampleZh: "臥室是我個人的避風港。", family: "(原意指神聖的地方)", collocation: "bird sanctuary (鳥類保護區)<br>seek sanctuary (尋求庇護)" },
+            "sophisticated": { pos: "adj.", trans: "精密的；複雜的", example: "The plane uses highly sophisticated technology.", exampleZh: "這架飛機使用了高度精密的技術。", family: "sophistication (n. 精緻/老練)", collocation: "sophisticated equipment (精密設備)<br>sophisticated lifestyle (精緻的生活方式)" },
+            "staggering": { pos: "adj.", trans: "驚人的", example: "The construction cost a staggering amount of money.", exampleZh: "這項建築工程花費了驚人的金錢。", family: "stagger (v. 搖晃/使大吃一驚)", collocation: "staggering success (驚人的成功)<br>staggering debt (驚人的債務)" },
+            "stiffen": { pos: "v.", trans: "變硬；僵硬", example: "The mixture will stiffen as it cools down.", exampleZh: "混合物冷卻後會變硬。", family: "stiff (adj. 僵硬的/硬的)", collocation: "stiffen the muscles (使肌肉僵硬)<br>stiffen the resolve (堅定決心)" },
+            "strip": { pos: "v.", trans: "剝去；拆除", example: "They decided to strip the old wallpaper off the wall.", exampleZh: "他們決定剝掉牆上的舊壁紙。", family: "strip (n. 條/帶)", collocation: "strip away (剝離)<br>strip a car (拆解汽車零件)" },
+            "successor": { pos: "n.", trans: "繼任者；接班人", example: "The prince is the successor to the throne.", exampleZh: "王子是王位的繼承人。", family: "succeed (v. 成功/接替)<br>succession (n. 連續/繼承)", collocation: "direct successor (直接繼任者)<br>appoint a successor (指定接班人)" },
+            "suspension": { pos: "n.", trans: "懸吊系統", example: "The car's suspension absorbs bumps in the road.", exampleZh: "汽車的懸吊系統吸收了路面的顛簸。", family: "suspend (v. 懸掛/停職)", collocation: "suspension bridge (吊橋)<br>independent suspension (獨立懸吊)" },
+            "testament": { pos: "n.", trans: "證明；見證", example: "The monument is a testament to their bravery.", exampleZh: "這座紀念碑是他們勇敢的見證。", family: "testify (v. 證明/作證)", collocation: "a testament to (對...的證明)<br>Last Will and Testament (最後的遺囑)" },
+            "undertaking": { pos: "n.", trans: "任務；事業", example: "Building the bridge was a massive undertaking.", exampleZh: "造橋是一項艱鉅的任務/工程。", family: "undertake (v. 承擔/開始進行)", collocation: "massive undertaking (龐大的任務)<br>commercial undertaking (商業經營)" },
+            "unleash": { pos: "v.", trans: "釋放", example: "The storm unleashed its fury on the coast.", exampleZh: "風暴在海岸上釋放了它的威力。", family: "leash (n. 皮帶 v. 束縛)", collocation: "unleash potential (釋放潛力)<br>unleash a response (引發反應)" },
+            "unparalleled": { pos: "adj.", trans: "無與倫比的", example: "The artist showed unparalleled talent in his painting.", exampleZh: "這位藝術家在繪畫中展現了無與倫比的天賦。", family: "parallel (adj. 平行的 n. 相似之處)", collocation: "unparalleled success (空前的成功)<br>unparalleled beauty (絕代之美)" },
+            "velocity": { pos: "n.", trans: "速度", example: "The rocket reached a high velocity quickly.", exampleZh: "火箭迅速達到了很高的速度。", family: "(與 speed 的差別在於方向性)", collocation: "high velocity (高速)<br>terminal velocity (終端速度)" }
         };
 
         const articleData = [
@@ -1186,73 +1186,67 @@
              container.appendChild(img);
         }
 
+        // --- Smart Lookup Logic: Word Mapping for Variations ---
+        const smartLookupMap = {
+            "successors": "successor",
+            "radiators": "radiator",
+            "features": "feature",
+            "limits": "limit",
+            "functions": "function",
+            "adjustments": "adjustment",
+            "velocities": "velocity",
+            "undertakings": "undertaking",
+            "sanctuaries": "sanctuary",
+            "stripped": "strip",
+            "customized": "customize",
+            "circulates": "circulate",
+            "unleashed": "unleash",
+            "compromised": "compromise",
+            "pinnacles": "pinnacle",
+            "marvels": "marvel",
+            "configurations": "configuration",
+            "displacements": "displacement",
+            "stiffens": "stiffen",
+            "accelerates": "accelerate",
+            "channels": "channel",
+            "resists": "resistance",
+            "inserts": "insert",
+            "activates": "activate",
+            "customizes": "customize",
+            "testaments": "testament",
+            "equivalents": "equivalent",
+            "magnitudes": "magnitude",
+            "compromises": "compromise",
+            "exclusives": "exclusive",
+            "unparalleleds": "unparalleled"
+        };
+
+        function getSmartLookupRoot(word) {
+            return smartLookupMap[word] || word;
+        }
+
         function processWords(text) {
             const words = text.split(' ');
             return words.map(word => {
-                // Keep the original punctuation for display
                 const originalWord = word;
-                // Remove punctuation for lookup
-                const cleanWord = word.replace(/[.,!?;:()"]/g, "").toLowerCase();
+                // 更精準的去標點邏輯（保留連字號）
+                const cleanWord = word.replace(/^[^a-zA-Z0-9\-]+|[^a-zA-Z0-9\-]+$/g, '').toLowerCase();
                 
-                // --- Smart Lookup Logic: Word Mapping for Variations ---
-                const wordMapping = {
-                    "successors": "successor",
-                    "radiators": "radiator",
-                    "features": "feature",
-                    "limits": "limit",
-                    "functions": "function",
-                    "adjustments": "adjustment",
-                    "velocities": "velocity",
-                    "undertakings": "undertaking",
-                    "sanctuaries": "sanctuary",
-                    "stripped": "strip",
-                    "customized": "customize",
-                    "circulates": "circulate",
-                    "unleashed": "unleash",
-                    "compromised": "compromise",
-                    "pinnacles": "pinnacle",
-                    "marvels": "marvel",
-                    "configurations": "configuration",
-                    "displacements": "displacement",
-                    "stiffens": "stiffen",
-                    "accelerates": "accelerate",
-                    "channels": "channel",
-                    "resists": "resistance",
-                    "inserts": "insert",
-                    "activates": "activate",
-                    "customizes": "customize",
-                    "testaments": "testament",
-                    "marvels": "marvel",
-                    "circulates": "circulate",
-                    "unleashes": "unleash",
-                    "features": "feature",
-                    "equivalents": "equivalent",
-                    "magnitudes": "magnitude",
-                    "compromises": "compromise",
-                    "exclusives": "exclusive",
-                    "unparalleleds": "unparalleled",
-                    "successors": "successor",
-                    "pinnacles": "pinnacle"
-                };
+                const rootWord = getSmartLookupRoot(cleanWord);
 
-                let targetKey = cleanWord;
-                if (wordMapping[cleanWord]) {
-                    targetKey = wordMapping[cleanWord];
-                }
-
-                if (vocabulary[targetKey]) {
-                    const data = vocabulary[targetKey];
-                    const isFav = favoriteWords.has(targetKey);
+                if (vocabulary[rootWord]) {
+                    const data = vocabulary[rootWord];
+                    const isFav = favoriteWords.has(rootWord);
                     const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                     
-                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${targetKey}')">${originalWord}<span class="vocab-tooltip">
+                    return `<span class="vocab-word" onclick="window.speakAndShowDef(event, '${cleanWord}')">${originalWord}<span class="vocab-tooltip">
                         <div class="flex justify-between items-start mb-2">
                             <span class="pos-tag text-sm">${data.pos}</span>
-                            <button onclick="window.toggleFavorite(event, '${targetKey}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
-                                <i class="${heartClass}" id="heart-${targetKey}"></i>
+                            <button onclick="window.toggleFavorite(event, '${rootWord}')" class="text-xl hover:scale-110 transition p-1" title="加入學習清單">
+                                <i class="${heartClass}" id="heart-${rootWord}"></i>
                             </button>
                         </div>
-                        <div class="font-bold text-violet-300 text-2xl mb-2">${targetKey}</div>
+                        <div class="font-bold text-violet-300 text-2xl mb-2">${rootWord}</div>
                         <div class="mb-3 text-lg font-medium">${data.trans}</div>
                         <div class="text-lg text-gray-400 italic border-t border-gray-600 pt-3 leading-relaxed">"${data.example}"</div>
                     </span></span>`;
@@ -1371,11 +1365,13 @@
                 <table class="w-full text-left border-collapse text-gray-200">
                     <thead>
                         <tr class="bg-gray-700 border-b border-gray-600">
-                            <th class="p-3 font-bold w-1/12 text-lg">收藏</th>
-                            <th class="p-3 font-bold w-2/12 text-lg">單字 (Word)</th>
-                            <th class="p-3 font-bold w-1/12 text-lg">詞性</th>
-                            <th class="p-3 font-bold w-3/12 text-lg">中文意思 (Meaning)</th>
-                            <th class="p-3 font-bold w-5/12 text-lg">例句 (Example)</th>
+                            <th class="p-3 font-bold w-[5%] text-lg text-center">收藏</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">單字 (Word)</th>
+                            <th class="p-3 font-bold w-[6%] text-lg text-center">詞性</th>
+                            <th class="p-3 font-bold w-[12%] text-lg">中文意思 (Meaning)</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">例句與翻譯</th>
+                            <th class="p-3 font-bold w-[15%] text-lg">衍生字/家族字</th>
+                            <th class="p-3 font-bold w-[25%] text-lg">常見搭配詞</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
@@ -1387,15 +1383,27 @@
                 const heartClass = isFav ? "fas fa-heart text-pink-500" : "far fa-heart text-gray-400";
                 html += `
                     <tr class="hover:bg-gray-700/50 transition duration-150">
-                        <td class="p-3 text-center"><button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition"><i class="${heartClass}" id="heart-table-${word}"></i></button></td>
+                        <td class="p-3 text-center">
+                            <button onclick="window.toggleFavorite(null, '${word}')" class="text-2xl focus:outline-none hover:scale-110 transition">
+                                <i class="${heartClass}" id="heart-table-${word}"></i>
+                            </button>
+                        </td>
                         
-                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl cursor-pointer hover:text-violet-200 transition group" onclick="window.speakWord('${word}')" title="點擊發音 (Click to listen)">
-                            ${word} <i class="fas fa-volume-up text-base ml-2 opacity-50 group-hover:opacity-100 transition"></i>
+                        <td class="p-3 font-bold text-violet-400 text-xl md:text-2xl">
+                            ${word} 
+                            <button onclick="window.speakAndShowDef(event, '${word}')" class="ml-2 no-print hover:text-violet-200 transition focus:outline-none" title="點擊發音 (Click to listen)">
+                                <i class="fas fa-volume-up text-lg"></i>
+                            </button>
                         </td>
 
-                        <td class="p-3 text-base md:text-lg"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
+                        <td class="p-3 text-base md:text-lg text-center"><span class="bg-violet-900 text-violet-200 px-3 py-1 rounded text-sm md:text-base font-bold">${data.pos}</span></td>
                         <td class="p-3 text-gray-300 text-lg md:text-xl">${data.trans}</td>
-                        <td class="p-3 text-gray-400 text-lg md:text-xl italic">"${data.example}"</td>
+                        <td class="p-3 text-gray-400 text-base md:text-lg">
+                            <div class="italic mb-1 text-gray-300">"${data.example}"</div>
+                            <div class="text-sm text-gray-500">${data.exampleZh}</div>
+                        </td>
+                        <td class="p-3 text-gray-400 text-sm md:text-base leading-relaxed">${data.family}</td>
+                        <td class="p-3 text-gray-400 text-sm md:text-base leading-relaxed">${data.collocation}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -1409,16 +1417,17 @@
             if (type === 'mistakes') {
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             錯題本 (Review Mistakes)
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${ARTICLE_TITLE}</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 35%;">Question</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Your Answer</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">Correct</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 45%;">Explanation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Question</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Your Answer</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 10%;">Correct</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 40%;">Explanation</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1429,10 +1438,10 @@
                     wrongAnswers.forEach(item => {
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.q}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; color: red;">${item.yourAns}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">${item.q.ans}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${item.q.expl}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.q}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; color: red;">${item.yourAns}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center; font-weight: bold;">${item.q.ans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${item.q.expl}</td>
                             </tr>
                         `;
                     });
@@ -1445,31 +1454,39 @@
 
                 content = `
                     <div style="font-family: 'Times New Roman', serif; color: black;">
-                        <h1 style="text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h1 style="text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid black; padding-bottom: 10px;">
                             ${title}
                         </h1>
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <h2 style="text-align: center; color: #6b7280; font-size: 18px; font-weight: normal; margin-top: -10px; margin-bottom: 25px;">${ARTICLE_TITLE}</h2>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 15px !important;">
                             <thead>
                                 <tr style="background-color: #f3f4f6; -webkit-print-color-adjust: exact;">
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Word</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: center; width: 10%;">POS</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 25%;">Meaning</th>
-                                    <th style="border: 1px solid black; padding: 8px; text-align: left; width: 50%;">Example Sentence</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Word</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: center; width: 6%;">POS</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 12%;">Meaning</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 35%;">Example Sentence & Translation</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 15%;">Word Family</th>
+                                    <th style="border: 1px solid black; padding: 8px !important; text-align: left; width: 20%;">Collocation</th>
                                 </tr>
                             </thead>
                             <tbody>
                 `;
                 if (wordList.length === 0) {
-                     content += `<tr><td colspan="4" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
+                     content += `<tr><td colspan="6" style="text-align: center; padding: 20px;">No words in list.</td></tr>`;
                 } else {
                     wordList.forEach(word => {
                         const data = vocabulary[word];
                         content += `
                             <tr>
-                                <td style="border: 1px solid black; padding: 8px; font-weight: bold;">${word}</td>
-                                <td style="border: 1px solid black; padding: 8px; text-align: center;">${data.pos}</td>
-                                <td style="border: 1px solid black; padding: 8px;">${data.trans}</td>
-                                <td style="border: 1px solid black; padding: 8px; font-style: italic;">${data.example}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; font-weight: bold;">${word}</td>
+                                <td style="border: 1px solid black; padding: 8px !important; text-align: center;">${data.pos}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.trans}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">
+                                    <i>"${data.example}"</i><br>
+                                    <span style="color: #4b5563; font-size: 13px;">${data.exampleZh}</span>
+                                </td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.family}</td>
+                                <td style="border: 1px solid black; padding: 8px !important;">${data.collocation}</td>
                             </tr>
                         `;
                     });
@@ -1645,20 +1662,20 @@
                 const div = document.createElement('div');
                 div.className = 'bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm transition hover:border-gray-600';
                 div.innerHTML = `
-                    <p class="font-bold text-gray-200 mb-4 text-xl">${item.q}</p>
+                    <p class="font-bold text-gray-200 mb-4 text-3xl">${item.q}</p>
                     <div class="space-y-3" id="${item.id}-options">
                         ${Object.keys(item.options).map(key => `
-                            <label class="quiz-option flex items-center p-3 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
+                            <label class="quiz-option flex items-center p-5 rounded-lg cursor-pointer border border-gray-700" id="${item.id}-label-${key}">
                                 <input type="radio" name="${item.id}" value="${key}" class="hidden" onclick="window.checkAnswer('${item.id}', '${key}')">
-                                <div class="w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors" id="${item.id}-icon-${key}">
+                                <div class="w-12 h-12 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3 font-bold text-gray-400 transition-colors text-2xl" id="${item.id}-icon-${key}">
                                     ${key}
                                 </div>
-                                <span class="text-gray-300 font-medium text-lg">${item.options[key]}</span>
+                                <span class="text-gray-300 font-medium text-2xl">${item.options[key]}</span>
                             </label>
                         `).join('')}
                     </div>
                     <div id="${item.id}-expl" class="explanation-box">
-                        <p class="font-bold mb-1" id="${item.id}-status"></p>
+                        <p class="font-bold mb-2 text-2xl" id="${item.id}-status"></p>
                         <p>${item.expl}</p>
                     </div>
                 `;
@@ -1712,11 +1729,11 @@
             if (isCorrect) {
                 explBox.style.borderLeftColor = '#10b981';
                 statusText.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> Correct!';
-                statusText.className = "font-bold mb-1 text-green-400";
+                statusText.className = "font-bold mb-2 text-green-400 text-2xl";
             } else {
                 explBox.style.borderLeftColor = '#ef4444';
                 statusText.innerHTML = `<i class="fas fa-times-circle text-red-400"></i> Incorrect. The correct answer is ${questionObj.ans}.`;
-                statusText.className = "font-bold mb-1 text-red-400";
+                statusText.className = "font-bold mb-2 text-red-400 text-2xl";
             }
 
             if(!isRestoring) window.saveUserData();
