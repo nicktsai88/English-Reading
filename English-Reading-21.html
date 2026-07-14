@@ -460,7 +460,8 @@
             <h2 class="text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">The Mystery of the Bermuda Triangle</h2>
             
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 text-sm text-gray-700 rounded-r-lg">
-                <i class="fas fa-mouse-pointer mr-1 text-blue-600"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。
+                <i class="fas fa-mouse-pointer mr-1 text-blue-600"></i> <strong>Tip:</strong> 點擊單字聽發音，點擊 ❤️ 加入學習清單。<br>
+                <span class="text-gray-500 text-xs mt-1 block"><i class="fas fa-info-circle"></i> 建議使用 Microsoft Edge 瀏覽器開啟，以獲得最頂級的 AI 真人發音體驗。</span>
             </div>
 
             <!-- Hidden Message Overlay -->
@@ -1171,15 +1172,21 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
+        // 優化：優先尋找神經網絡/高擬真聲音 (Neural/Natural voices)
         function initVoice() {
             const loadVoices = () => {
                 const voices = synth.getVoices();
                 if (voices.length > 0) {
-                    selectedVoice = voices.find(v => v.name === 'Google US English') || 
-                                    voices.find(v => v.name.includes('Microsoft') && v.name.includes('Natural') && v.lang.includes('en-US')) ||
-                                    voices.find(v => (v.name.includes('Siri') || v.name.includes('Enhanced') || v.name.includes('Premium')) && v.lang.includes('en-US')) ||
-                                    voices.find(v => v.name === 'Samantha') || 
-                                    voices.find(v => v.lang === 'en-US');
+                    // 優先順序：Edge Neural -> Apple Premium -> Google -> Apple Siri/Samantha -> 其他美式英文
+                    selectedVoice = 
+                        voices.find(v => v.name.includes('Online (Natural)') && v.lang.includes('en-US')) || // 微軟 Edge 高音質 Neural 聲音
+                        voices.find(v => v.name.includes('Premium') && v.lang.includes('en-US')) ||          // 蘋果 Premium 高音質
+                        voices.find(v => v.name.includes('Google US English')) ||                            // Google Chrome 高音質
+                        voices.find(v => v.name === 'Samantha') ||                                           // 蘋果 Safari 標準女聲
+                        voices.find(v => v.name.includes('Siri') && v.lang.includes('en-US')) ||             // 蘋果 Siri
+                        voices.find(v => v.name.includes('English') && v.lang.includes('en-US')) ||
+                        voices.find(v => v.lang.includes('en-US')) ||
+                        voices[0];
                 }
             };
             loadVoices();
@@ -1197,14 +1204,13 @@
             sentences = []; 
             
             articleData.forEach((item, index) => {
-                // Image insertion logic
-                if (index === 0) insertImage(displayArea, 'p1.jpg', 'The Bermuda Triangle on a Map');
-                else if (index === 8) insertImage(displayArea, 'p2.jpg', 'Flight 19 Airplanes');
+                // Image insertion logic - Insert BEFORE the paragraph starts
+                if (index === 0) insertImage(displayArea, 'p1.jpg', 'A Dangerous Area');
+                else if (index === 8) insertImage(displayArea, 'p2.jpg', 'The Disappearance of Flight 19');
                 else if (index === 19) insertImage(displayArea, 'p3.jpg', 'Supernatural Theories');
-                else if (index === 27) insertImage(displayArea, 'p4.jpg', 'Violent Ocean Storms');
-                else if (index === 36) insertImage(displayArea, 'p5.jpg', 'Heavy Shipping Traffic');
+                else if (index === 27) insertImage(displayArea, 'p4.jpg', 'Scientific Explanations');
+                else if (index === 36) insertImage(displayArea, 'p5.jpg', 'The Truth Behind the Myth');
                 
-                // Create a new paragraph container at the start of each section
                 if (index === 0 || index === 8 || index === 19 || index === 27 || index === 36) {
                     p = document.createElement('p');
                     p.className = "mb-10 text-gray-800 leading-relaxed"; 
@@ -1223,7 +1229,6 @@
                 p.appendChild(spanEn);
                 sentences.push({ text: item.en, id: `sent-${index}` });
 
-                // Use SPAN instead of DIV to allow valid nesting inside P
                 const spanZh = document.createElement('span');
                 spanZh.className = 'translation-text hidden';
                 spanZh.innerText = item.zh;
@@ -1300,7 +1305,6 @@
                     targetKey = wordMapping[cleanWord];
                 }
 
-                // Check for singular/plural or simple verb forms if not mapped
                 if (!vocabulary[targetKey]) {
                     if (targetKey.endsWith('s') && vocabulary[targetKey.slice(0, -1)]) {
                         targetKey = targetKey.slice(0, -1);
@@ -1337,6 +1341,7 @@
             synth.cancel(); 
             const utterance = new SpeechSynthesisUtterance(word);
             if (selectedVoice) utterance.voice = selectedVoice;
+            // 稍微降速以達到更自然的發音效果
             utterance.rate = 0.9; 
             synth.speak(utterance);
         }
@@ -1476,7 +1481,7 @@
         window.printList = function(type) {
             const printArea = document.getElementById('print-area');
             let content = '';
-            // 設定文章主標題
+            
             const articleTitle = "The Mystery of the Bermuda Triangle"; 
             
             if (type === 'mistakes') {
@@ -1621,7 +1626,9 @@
             const utterance = new SpeechSynthesisUtterance(text);
             
             if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.rate = 1.0; 
+            
+            // 降低語速至 0.9 使真人語音朗讀更具節奏感與說故事感
+            utterance.rate = 0.9; 
             utterance.pitch = 1.0; 
             
             utterance.onend = function() {
